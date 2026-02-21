@@ -1,6 +1,6 @@
 /**
  * @description user model test
- * @author 双越老师
+ * @author milk
  */
 
 const { User } = require('../../src/db/model/index')

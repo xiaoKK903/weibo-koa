@@ -8,7 +8,7 @@ const { loginRedirect } = require("../../middlewares/loginChecks");
 const { getProfileBlogList } = require("../../controller/blog-profile");
 const { getSquareBlogList } = require("../../controller/blog-square");
 const { isExist } = require("../../controller/user");
-const { getFans } = require("../../controller/user-relation");
+
 const { getHomeBlogList } = require("../../controller/blog-home");
 
 // 首页
@@ -20,16 +20,12 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const result = await getHomeBlogList(userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
-  // 获取粉丝
-  const fansResult = await getFans(userId);
-  const { count: fansCount, fansList } = fansResult.data;
-
   await ctx.render("index", {
     userData: {
       userInfo,
       fansData: {
-        count: fansCount,
-        list: fansList,
+        count: 0,
+        list: [],
       },
     },
     blogData: {
@@ -73,14 +69,8 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const result = await getProfileBlogList(curUserName, 0);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
-  // 获取粉丝
-  const fansResult = await getFans(curUserInfo.id);
-  const { count: fansCount, fansList } = fansResult.data;
-
   // 我是否关注了此人？
-  const amIFollowed = fansList.some((item) => {
-    return item.userName === myUserName;
-  });
+  const amIFollowed = false; // 暂时设为false，因为已移除关注功能
 
   await ctx.render("profile", {
     blogData: {

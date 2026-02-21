@@ -26,6 +26,11 @@ if (isProd) {
   };
 }
 
-const seq = new Sequelize(database, user, password, conf);
+const seq = new Sequelize(database, user, password, {
+  ...conf,
+  dialectOptions: {
+    connectTimeout: 60000
+  }
+});
 
 module.exports = seq;

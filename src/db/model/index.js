@@ -1,6 +1,6 @@
 /**
  * @description 数据模型入口文件
- * @author 双越老师
+ * @author milk
  */
 
 const User = require('./User')

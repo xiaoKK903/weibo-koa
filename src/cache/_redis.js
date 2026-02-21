@@ -1,6 +1,6 @@
 /**
  * @description 连接 redis 的方法 get set
- * @author 双越老师
+ * @author milk
  */
 
 const redis = require('redis')

@@ -409,7 +409,7 @@
                             <input type="file" class="form-control-file" accept="image/*" id="file-picture">
                         </div>
                     </div>
-                    <center><button type="submit" class="btn btn-primary-modern" id="btn-submit-info">保存</button></center>
+                    <center><button type="button" class="btn btn-primary-modern" id="btn-submit-info">保存</button></center>
                 </form>
             </div>
 
@@ -480,7 +480,7 @@
                             <div id="repeat-password-error" class="error-message" style="display: none;"></div>
                         </div>
                     </div>
-                    <center><button type="submit" class="btn btn-primary-modern" id="btn-submit-password">修改密码</button></center>
+                    <center><button type="button" class="btn btn-primary-modern" id="btn-submit-password">修改密码</button></center>
                 </form>
             </div>
 
@@ -650,100 +650,116 @@ $(function() {
         })
     })
 
+    $('#info-form').on('submit', function(e) {
+        e.preventDefault();
+    });
+
     var $inputNick = $('#input-nick')
     var $inputCity = $('#input-city')
-    $('#info-form').on('submit', function(e) {
-        e.preventDefault()
-        var nickName = $inputNick.val()
-        var city = $inputCity.val()
-        var picture = $imgPicture.attr('src')
+    $('#btn-submit-info').on('click', function() {
+        try {
+            var nickName = $inputNick.val()
+            var city = $inputCity.val()
+            var picture = $imgPicture.attr('src')
 
-        ajax.patch('/api/user/changeInfo', {
-            nickName,
-            city,
-            picture
-        }, function(err, data) {
-            if (err) {
-                showToast('error', '修改失败', err);
-                return
-            }
-            showToast('success', '修改成功', '基本信息已更新');
-        })
+            ajax.patch('/api/user/changeInfo', {
+                nickName,
+                city,
+                picture
+            }, function(err, data) {
+                if (err) {
+                    showToast('error', '修改失败', err);
+                    return
+                }
+                showToast('success', '修改成功', '基本信息已更新');
+            })
+        } catch (ex) {
+            console.error(ex);
+            showToast('error', '出错了', ex.message);
+        }
     })
+
+    $('#password-form').on('submit', function(e) {
+        e.preventDefault();
+    });
 
     var $inputCurPassword = $('#input-cur-password')
     var $inputNewPassword = $('#input-new-password')
     var $inputNewPasswordRepeat = $('#input-new-password-repeat')
     
-    $('#password-form').on('submit', function(e) {
-        e.preventDefault()
-        var curPassword = $inputCurPassword.val()
-        var newPassword = $inputNewPassword.val()
-        var newPasswordRepeat = $inputNewPasswordRepeat.val()
+    $('#btn-submit-password').on('click', function() {
+        try {
+            var curPassword = $inputCurPassword.val()
+            var newPassword = $inputNewPassword.val()
+            var newPasswordRepeat = $inputNewPasswordRepeat.val()
 
-        $inputCurPassword.removeClass('field-error');
-        $inputNewPassword.removeClass('field-error');
-        $inputNewPasswordRepeat.removeClass('field-error');
-        $('#cur-password-error').hide();
-        $('#repeat-password-error').hide();
+            $inputCurPassword.removeClass('field-error');
+            $inputNewPassword.removeClass('field-error');
+            $inputNewPasswordRepeat.removeClass('field-error');
+            $('#cur-password-error').hide();
+            $('#repeat-password-error').hide();
 
-        var hasError = false;
+            var hasError = false;
 
-        if (!curPassword) {
-            $('#cur-password-error').html('<span>⚠️</span> 请输入当前密码').show();
-            $inputCurPassword.addClass('field-error');
-            hasError = true;
-        }
+            if (!curPassword) {
+                $('#cur-password-error').html('<span>⚠️</span> 请输入当前密码').show();
+                $inputCurPassword.addClass('field-error');
+                hasError = true;
+            }
 
-        if (!newPassword) {
-            showToast('warning', '提示', '请输入新密码');
-            $inputNewPassword.addClass('field-error');
-            hasError = true;
-        } else {
-            var strengthResult = updatePasswordStrength(newPassword);
-            if (strengthResult.level !== 'strong') {
-                showToast('warning', '密码强度不足', '密码必须包含数字、字母、特殊符号三种组合');
+            if (!newPassword) {
+                showToast('warning', '提示', '请输入新密码');
+                $inputNewPassword.addClass('field-error');
+                hasError = true;
+            } else {
+                var strengthResult = updatePasswordStrength(newPassword);
+                if (strengthResult.level !== 'strong') {
+                    showToast('warning', '密码强度不足', '密码必须包含数字、字母、特殊符号三种组合');
+                    $inputNewPassword.addClass('field-error');
+                    hasError = true;
+                }
+            }
+
+            if (!validateRepeatPassword()) {
+                hasError = true;
+            }
+
+            if (curPassword === newPassword && newPassword) {
+                showToast('warning', '提示', '新密码不能与当前密码相同');
                 $inputNewPassword.addClass('field-error');
                 hasError = true;
             }
-        }
 
-        if (!validateRepeatPassword()) {
-            hasError = true;
-        }
-
-        if (curPassword === newPassword && newPassword) {
-            showToast('warning', '提示', '新密码不能与当前密码相同');
-            $inputNewPassword.addClass('field-error');
-            hasError = true;
-        }
-
-        if (hasError) {
-            return;
-        }
-        
-        ajax.patch('/api/user/changePassword', {
-            password: curPassword,
-            newPassword: newPassword
-        }, function(err, data) {
-            if (err) {
-                if (err.includes('原密码')) {
-                    $('#cur-password-error').html('<span>⚠️</span> ' + err).show();
-                    $inputCurPassword.addClass('field-error');
-                } else {
-                    showToast('error', '修改失败', err);
-                }
-                return
+            if (hasError) {
+                return;
             }
-            showToast('success', '修改成功', '密码已更新，请妥善保管');
-            $inputCurPassword.val('')
-            $inputNewPassword.val('')
-            $inputNewPasswordRepeat.val('')
-            updatePasswordStrength('');
-            $inputCurPassword.removeClass('field-error field-success');
-            $inputNewPassword.removeClass('field-error field-success');
-            $inputNewPasswordRepeat.removeClass('field-error field-success');
-        })
+            
+            ajax.patch('/api/user/changePassword', {
+                password: curPassword,
+                newPassword: newPassword
+            }, function(err, data) {
+                if (err) {
+                    if (err.includes('原密码')) {
+                        $('#cur-password-error').html('<span>⚠️</span> ' + err).show();
+                        $inputCurPassword.addClass('field-error');
+                    } else {
+                        showToast('error', '修改失败', err);
+                    }
+                    return
+                }
+                showToast('success', '修改成功', '密码已更新，请妥善保管');
+                $inputCurPassword.val('')
+                $inputNewPassword.val('')
+                $inputNewPasswordRepeat.val('')
+                updatePasswordStrength('');
+                $inputCurPassword.removeClass('field-error field-success');
+                $inputNewPassword.removeClass('field-error field-success');
+                $inputNewPasswordRepeat.removeClass('field-error field-success');
+            })
+        } catch (ex) {
+            console.error(ex);
+            showToast('error', '出错了', ex.message);
+        }
     })
 
     $('#btn-logout').click(function() {

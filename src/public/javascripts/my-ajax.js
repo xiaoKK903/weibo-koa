@@ -49,6 +49,9 @@
             contentType: false,
             processData: false,
             data: formData,
+            xhrFields: {
+                withCredentials: true
+            },
             success: function(res) {
                 if (res.errno !== 0) {
                     // 错误
@@ -72,6 +75,9 @@
             url,
             contentType: 'application/json;charset=UTF-8',
             data: params ? JSON.stringify(params) : '',
+            xhrFields: {
+                withCredentials: true
+            },
             success: function(res) {
                 if (res.errno !== 0) {
                     // 错误

@@ -91,6 +91,7 @@ app.use(
   }),
 );
 
+
 // routes
 app.use(squareAPIRouter.routes(), squareAPIRouter.allowedMethods());
 app.use(profileAPIRouter.routes(), profileAPIRouter.allowedMethods());

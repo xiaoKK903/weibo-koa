@@ -25,10 +25,10 @@
             <div class="comments-section">
                 <h3>评论</h3>
                 <div class="comment-form">
-                    <textarea placeholder="写下你的评论..." class="form-control"></textarea>
-                    <button class="btn btn-primary btn-modern">发表评论</button>
+                    <textarea id="comment-content" placeholder="写下你的评论..." class="form-control"></textarea>
+                    <button id="btn-submit-comment" class="btn btn-primary btn-modern">发表评论</button>
                 </div>
-                <div class="comments-list">
+                <div class="comments-list" id="comments-list">
                     <!-- 评论列表将通过 AJAX 加载 -->
                     <div class="no-comments">暂无评论，快来抢沙发吧！</div>
                 </div>
@@ -191,6 +191,47 @@
     border-radius: 8px;
 }
 
+/* 评论项样式 */
+.comment-item {
+    display: flex;
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-user {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #999;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .weibo-detail {
@@ -219,8 +260,52 @@
 
 <script>
 $(function () {
-    // 评论功能将在后续实现
-    console.log('微博详情页加载完成');
+    const blogId = '<%= blogData.blog.id %>';
+    
+    // 加载评论列表
+    function loadComments() {
+        // 这里应该调用 API 获取评论列表
+        // 暂时使用模拟数据
+        const comments = [];
+        
+        if (comments.length === 0) {
+            $('#comments-list').html('<div class="no-comments">暂无评论，快来抢沙发吧！</div>');
+            return;
+        }
+        
+        let html = '';
+        comments.forEach(comment => {
+            html += `
+                <div class="comment-item">
+                    <img src="${comment.user.picture}" alt="${comment.user.nickName}" class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-user">${comment.user.nickName}</div>
+                        <div class="comment-text">${comment.content}</div>
+                        <div class="comment-time">${comment.createdAtFormat}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        $('#comments-list').html(html);
+    }
+    
+    // 发表评论
+    $('#btn-submit-comment').click(function () {
+        const content = $('#comment-content').val().trim();
+        if (!content) {
+            alert('请输入评论内容');
+            return;
+        }
+        
+        // 这里应该调用 API 发表评论
+        // 暂时使用模拟数据
+        alert('评论功能将在后续实现');
+        $('#comment-content').val('');
+    });
+    
+    // 初始化加载评论
+    loadComments();
 });
 </script>
 

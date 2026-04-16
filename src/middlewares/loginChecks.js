@@ -19,6 +19,7 @@ async function loginCheck(ctx, next) {
   }
   // 未登录
   ctx.body = new ErrorModel(loginCheckFailInfo);
+  return;
 }
 
 /**

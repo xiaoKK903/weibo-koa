@@ -316,10 +316,11 @@ $(function () {
         $.ajax({
             url: '/api/blog/comment/create',
             type: 'POST',
-            data: {
+            contentType: 'application/json',
+            data: JSON.stringify({
                 blogId: blogId,
                 content: content
-            },
+            }),
             success: function (res) {
                 if (res.errno === 0) {
                     // 评论成功，清空输入框并刷新评论列表
@@ -329,7 +330,9 @@ $(function () {
                     alert(res.message || '发表评论失败');
                 }
             },
-            error: function () {
+            error: function (xhr, status, error) {
+                console.error('评论失败:', error);
+                console.error('响应:', xhr.responseText);
                 alert('发表评论失败，请重试');
             }
         });

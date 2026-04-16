@@ -12,6 +12,9 @@ const { loginCheckFailInfo } = require("../model/ErrorInfo");
  * @param {function} next next
  */
 async function loginCheck(ctx, next) {
+  console.log('=== loginCheck middleware ===');
+  console.log('ctx.session:', ctx.session);
+  console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
   if (ctx.session && ctx.session.userInfo) {
     // 已登录
     await next();

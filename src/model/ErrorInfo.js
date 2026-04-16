@@ -79,5 +79,10 @@ module.exports = {
     blogNotExistInfo: {
         errno: 11003,
         message: '微博不存在'
+    },
+    // 创建评论失败
+    createCommentFailInfo: {
+        errno: 11004,
+        message: '创建评论失败，请重试'
     }
 }

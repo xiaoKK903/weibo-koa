@@ -3,8 +3,9 @@
  * @author milk
  */
 
-const { Blog, User, UserRelation } = require('../db/model/index')
+const { Blog, User, UserRelation, Comment } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
+const { timeFormat } = require('../utils/dt')
 
 /**
  * 创建微博
@@ -129,9 +130,58 @@ async function getBlogById(blogId) {
     return formattedBlog
 }
 
+/**
+ * 创建评论
+ * @param {Object} param0 创建评论的数据 { blogId, userId, content }
+ */
+async function createComment({ blogId, userId, content }) {
+    const result = await Comment.create({
+        blogId,
+        userId,
+        content
+    })
+    return result.dataValues
+}
+
+/**
+ * 根据微博ID获取评论列表
+ * @param {number} blogId 微博ID
+ */
+async function getCommentsByBlogId(blogId) {
+    const result = await Comment.findAndCountAll({
+        where: {
+            blogId
+        },
+        order: [
+            ['id', 'desc']
+        ],
+        include: [
+            {
+                model: User,
+                attributes: ['userName', 'nickName', 'picture']
+            }
+        ]
+    })
+
+    // 格式化数据
+    let commentList = result.rows.map(row => row.dataValues)
+    commentList = commentList.map(commentItem => {
+        commentItem.user = formatUser(commentItem.user.dataValues)
+        commentItem.createdAtFormat = timeFormat(commentItem.createdAt)
+        return commentItem
+    })
+
+    return {
+        count: result.count,
+        commentList
+    }
+}
+
 module.exports = {
     createBlog,
     getBlogListByUser,
     getFollowersBlogList,
-    getBlogById
+    getBlogById,
+    createComment,
+    getCommentsByBlogId
 }

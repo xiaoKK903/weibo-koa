@@ -100,8 +100,38 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
     }
 }
 
+/**
+ * 根据ID获取微博详情
+ * @param {number} blogId 微博ID
+ */
+async function getBlogById(blogId) {
+    const result = await Blog.findOne({
+        where: {
+            id: blogId
+        },
+        include: [
+            {
+                model: User,
+                attributes: ['userName', 'nickName', 'picture']
+            }
+        ]
+    })
+
+    if (!result) {
+        return null
+    }
+
+    // 格式化
+    const blog = result.dataValues
+    const formattedBlog = formatBlog(blog)
+    formattedBlog.user = formatUser(formattedBlog.user.dataValues)
+
+    return formattedBlog
+}
+
 module.exports = {
     createBlog,
     getBlogListByUser,
-    getFollowersBlogList
+    getFollowersBlogList,
+    getBlogById
 }

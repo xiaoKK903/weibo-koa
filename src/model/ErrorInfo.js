@@ -74,5 +74,10 @@ module.exports = {
     deleteBlogFailInfo: {
         errno: 11002,
         message: '删除微博失败，请重试'
+    },
+    // 微博不存在
+    blogNotExistInfo: {
+        errno: 11003,
+        message: '微博不存在'
     }
 }

@@ -15,7 +15,7 @@
                         </div>
                     </div>
                     <div class="blog-content">
-                        <div class="content" dangerouslySetInnerHTML={{ __html: blogData.blog.contentFormat }}></div>
+                        <div class="content"><%- blogData.blog.contentFormat %></div>
                         <div class="blog-time"><%= blogData.blog.createdAtFormat %></div>
                     </div>
                 </div>

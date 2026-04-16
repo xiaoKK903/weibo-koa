@@ -18,12 +18,12 @@ const SCHEMA = {
         password: {
             type: 'string',
             maxLength: 255,
-            minLength: 3
+            minLength: 6
         },
         newPassword: {
             type: 'string',
             maxLength: 255,
-            minLength: 3
+            minLength: 6
         },
         nickName: {
             type: 'string',

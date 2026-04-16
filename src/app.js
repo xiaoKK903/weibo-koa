@@ -62,16 +62,6 @@ app.use(
     enableTypes: ["json", "form", "text"],
   }),
 );
-app.use(json());
-app.use(logger());
-app.use(koaStatic(__dirname + "/public"));
-app.use(koaStatic(path.join(__dirname, "..", "uploadFiles")));
-
-app.use(
-  views(__dirname + "/views", {
-    extension: "ejs",
-  }),
-);
 
 // session 配置
 app.keys = [SESSION_SECRET_KEY];
@@ -87,6 +77,17 @@ app.use(
     store: redisStore({
       all: `${REDIS_CONF.host}:${REDIS_CONF.port}`,
     }),
+  }),
+);
+
+app.use(json());
+app.use(logger());
+app.use(koaStatic(__dirname + "/public"));
+app.use(koaStatic(path.join(__dirname, "..", "uploadFiles")));
+
+app.use(
+  views(__dirname + "/views", {
+    extension: "ejs",
   }),
 );
 

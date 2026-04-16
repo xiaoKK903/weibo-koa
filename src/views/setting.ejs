@@ -389,7 +389,7 @@
         <div class="col-8">
             <div class="basic-info-section">
                 <h5 class="margin-bottom-10">基本信息</h5>
-                <form>
+                <form id="info-form">
                     <div class="form-group row">
                         <label for="input-nick" class="col-sm-2 col-form-label">昵称</label>
                         <div class="col-sm-10">
@@ -528,7 +528,7 @@ $(function() {
             toast.fadeOut(300, function() {
                 toast.remove();
             });
-        }, 4000);
+        }, 3000);
     }
 
     function validatePasswordStrength(password) {
@@ -652,7 +652,7 @@ $(function() {
 
     var $inputNick = $('#input-nick')
     var $inputCity = $('#input-city')
-    $('#btn-submit-info').click(function(e) {
+    $('#info-form').on('submit', function(e) {
         e.preventDefault()
         var nickName = $inputNick.val()
         var city = $inputCity.val()
@@ -675,7 +675,7 @@ $(function() {
     var $inputNewPassword = $('#input-new-password')
     var $inputNewPasswordRepeat = $('#input-new-password-repeat')
     
-    $('#btn-submit-password').click(function(e) {
+    $('#password-form').on('submit', function(e) {
         e.preventDefault()
         var curPassword = $inputCurPassword.val()
         var newPassword = $inputNewPassword.val()

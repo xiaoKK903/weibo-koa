@@ -37,7 +37,12 @@
 
         <!-- 右侧边栏 -->
         <div class="col-md-4">
-            <%- include('widgets/user-info') %>
+            <%- include('widgets/user-info', {
+                userInfo: userData.userInfo,
+                isMe: true,
+                amIFollowed: false,
+                atCount: 0
+            });%>
         </div>
     </div>
 </div>

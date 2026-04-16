@@ -265,14 +265,18 @@
 
 <script>
 $(function () {
-    const blogId = '<%= blogData.blog.id %>';
+    const blogId = parseInt('<%= blogData.blog.id %>');
+    console.log('blogId:', blogId);
+    console.log('Type of blogId:', typeof blogId);
     
     // 加载评论列表
     function loadComments() {
+        console.log('Loading comments for blogId:', blogId);
         $.ajax({
             url: `/api/blog/comment/list/${blogId}`,
             type: 'GET',
             success: function (res) {
+                console.log('Load comments response:', res);
                 if (res.errno === 0) {
                     const comments = res.data.commentList;
                     if (comments.length === 0) {
@@ -299,7 +303,9 @@ $(function () {
                     alert(res.message || '加载评论失败');
                 }
             },
-            error: function () {
+            error: function (xhr, status, error) {
+                console.error('Load comments error:', error);
+                console.error('Load comments response:', xhr.responseText);
                 alert('加载评论失败，请重试');
             }
         });
@@ -313,6 +319,9 @@ $(function () {
             return;
         }
         
+        console.log('Submitting comment for blogId:', blogId);
+        console.log('Comment content:', content);
+        
         $.ajax({
             url: '/api/blog/comment/create',
             type: 'POST',
@@ -322,6 +331,7 @@ $(function () {
                 content: content
             }),
             success: function (res) {
+                console.log('Submit comment response:', res);
                 if (res.errno === 0) {
                     // 评论成功，清空输入框并刷新评论列表
                     $('#comment-content').val('');
@@ -331,8 +341,8 @@ $(function () {
                 }
             },
             error: function (xhr, status, error) {
-                console.error('评论失败:', error);
-                console.error('响应:', xhr.responseText);
+                console.error('Submit comment error:', error);
+                console.error('Submit comment response:', xhr.responseText);
                 alert('发表评论失败，请重试');
             }
         });

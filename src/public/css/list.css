@@ -14,13 +14,86 @@
 }
 
 .weibo-list .item-wrapper .content {
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .weibo-list .item-wrapper .content .blog-img {
     float: right;
     width: 100px;
     margin-left: 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 富文本内容样式 */
+.weibo-list .item-wrapper .content :not(.blog-img) {
+    max-width: 100%;
+}
+
+.weibo-list .item-wrapper .content img {
+    max-width: 100%;
+    height: auto;
+    max-height: 200px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
+}
+
+.weibo-list .item-wrapper .content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 12px;
+    margin: 10px 0;
+    color: #666;
+    font-style: italic;
+}
+
+.weibo-list .item-wrapper .content code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.weibo-list .item-wrapper .content pre {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin: 10px 0;
+}
+
+.weibo-list .item-wrapper .content ul,
+.weibo-list .item-wrapper .content ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.weibo-list .item-wrapper .content li {
+    margin: 5px 0;
+}
+
+.weibo-list .item-wrapper .content h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 10px 0;
+    color: #333;
+}
+
+.weibo-list .item-wrapper .content h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 0;
+    color: #333;
+}
+
+/* 调整列表间距 */
+.weibo-list .item-wrapper {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
 }
 
 .weibo-list .item-wrapper .info {

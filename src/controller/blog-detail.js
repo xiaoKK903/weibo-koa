@@ -29,7 +29,7 @@ async function createComment({ blogId, userId, content }) {
         const comment = await createCommentService({
             blogId,
             userId,
-            content: xss(content)
+            content: content
         })
         return new SuccessModel(comment)
     } catch (ex) {

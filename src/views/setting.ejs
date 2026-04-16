@@ -1,86 +1,655 @@
 <%- include('layout/header', { title: '微博 - 设置', isNav: true })%>
 
+<style>
+.password-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+}
+
+.password-section h5 {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.password-section .form-group {
+    margin-bottom: 20px;
+}
+
+.password-section .form-control {
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.password-section .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.password-section .form-control:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    outline: none;
+}
+
+.password-section .col-form-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    padding-top: 12px;
+}
+
+.password-strength-wrapper {
+    margin-top: 8px;
+}
+
+.password-strength-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.strength-segment {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.strength-segment.active-weak {
+    background: linear-gradient(90deg, #ff6b6b, #ffa502);
+}
+
+.strength-segment.active-medium {
+    background: linear-gradient(90deg, #ffa502, #ffd93d);
+}
+
+.strength-segment.active-strong {
+    background: linear-gradient(90deg, #6bcb77, #4dd599);
+}
+
+.password-strength-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.password-strength-text.weak {
+    color: #ff6b6b;
+}
+
+.password-strength-text.medium {
+    color: #ffd93d;
+}
+
+.password-strength-text.strong {
+    color: #6bcb77;
+}
+
+.password-requirements {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.password-requirements-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+}
+
+.requirement-item.valid {
+    color: #6bcb77;
+}
+
+.requirement-item.invalid {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.requirement-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.requirement-item.valid .requirement-icon {
+    background: #6bcb77;
+    color: white;
+}
+
+.requirement-item.invalid .requirement-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 300px;
+    animation: slideIn 0.3s ease;
+    border-left: 4px solid;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast.warning {
+    border-color: #ffa502;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast.warning .toast-icon {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 5px;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: white;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.btn-primary-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-primary-modern:active {
+    transform: translateY(0);
+}
+
+.password-section .btn-primary-modern {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.password-section .btn-primary-modern:hover {
+    background: #f8f9fa;
+}
+
+.section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+    margin: 30px 0;
+}
+
+.basic-info-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.basic-info-section h5 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.basic-info-section .form-control {
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.basic-info-section .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.basic-info-section .col-form-label {
+    font-weight: 500;
+    color: #555;
+    padding-top: 12px;
+}
+
+.logout-section {
+    text-align: center;
+    padding: 20px;
+}
+
+.btn-danger-modern {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.btn-danger-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+}
+
+.field-error {
+    border-color: #ff6b6b !important;
+    background: rgba(255, 107, 107, 0.1) !important;
+}
+
+.field-success {
+    border-color: #6bcb77 !important;
+    background: rgba(107, 203, 119, 0.1) !important;
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.error-message i {
+    margin-right: 5px;
+}
+</style>
+
 <div class="container margin-top-20">
     <div class="row">
-        <!-- 左侧 -->
         <div class="col-8">
-            <h5 class="margin-bottom-10">基本信息</h5>
-            <form>
-                <div class="form-group row">
-                    <label for="input-nick" class="col-sm-2 col-form-label">昵称</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="input-nick" placeholder="请输入昵称" value="<%= nickName%>">
+            <div class="basic-info-section">
+                <h5 class="margin-bottom-10">基本信息</h5>
+                <form>
+                    <div class="form-group row">
+                        <label for="input-nick" class="col-sm-2 col-form-label">昵称</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="input-nick" placeholder="请输入昵称" value="<%= nickName%>">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group row">
-                    <label for="input-city" class="col-sm-2 col-form-label">城市</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="input-city" placeholder="请输入城市" value="<%= city%>">
+                    <div class="form-group row">
+                        <label for="input-city" class="col-sm-2 col-form-label">城市</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="input-city" placeholder="请输入城市" value="<%= city%>">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group row">
-                    <label for="file-picture" class="col-sm-2 col-form-label">头像</label>
-                    <div class="col-sm-10">
-                        <img src="<%= picture%>" style="width: 100px;" class="margin-bottom-10" id="img-picture"/>
-                        <input type="file" class="form-control-file" accept="image/*" id="file-picture">
+                    <div class="form-group row">
+                        <label for="file-picture" class="col-sm-2 col-form-label">头像</label>
+                        <div class="col-sm-10">
+                            <img src="<%= picture%>" style="width: 100px; border-radius: 50%;" class="margin-bottom-10" id="img-picture"/>
+                            <input type="file" class="form-control-file" accept="image/*" id="file-picture">
+                        </div>
                     </div>
-                </div>
-                <center><button type="submit" class="btn btn-primary" id="btn-submit-info">保存</button></center>
-            </form>
+                    <center><button type="submit" class="btn btn-primary-modern" id="btn-submit-info">保存</button></center>
+                </form>
+            </div>
 
-            <hr/>
-            <h5 class="margin-bottom-10">修改密码</h5>
-            <form>
-                <div class="form-group row">
-                    <label for="input-cur-password" class="col-sm-2 col-form-label">当前密码</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input-cur-password" placeholder="请输入当前密码">
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="input-new-password" class="col-sm-2 col-form-label">新密码</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input-new-password" placeholder="请输入新密码">
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="input-new-password-repeat" class="col-sm-2 col-form-label">确认密码</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input-new-password-repeat" placeholder="请输入确认密码">
-                    </div>
-                </div>
-                <center><button type="submit" class="btn btn-primary" id="btn-submit-password">提交</button></center>
-            </form>
+            <div class="section-divider"></div>
 
-            <hr/>
-            <center><button class="btn btn-danger"  id="btn-logout">退出登录</button></center>
+            <div class="password-section">
+                <h5 class="margin-bottom-10">修改密码</h5>
+                <form id="password-form">
+                    <div class="form-group row">
+                        <label for="input-cur-password" class="col-sm-2 col-form-label">当前密码</label>
+                        <div class="col-sm-10">
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control" id="input-cur-password" placeholder="请输入当前密码">
+                                <button type="button" class="password-toggle" data-target="input-cur-password">
+                                    <span class="toggle-icon">👁️</span>
+                                </button>
+                            </div>
+                            <div id="cur-password-error" class="error-message" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="input-new-password" class="col-sm-2 col-form-label">新密码</label>
+                        <div class="col-sm-10">
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control" id="input-new-password" placeholder="请输入新密码">
+                                <button type="button" class="password-toggle" data-target="input-new-password">
+                                    <span class="toggle-icon">👁️</span>
+                                </button>
+                            </div>
+                            <div class="password-strength-wrapper">
+                                <div class="password-strength-bar">
+                                    <div class="strength-segment" id="strength-1"></div>
+                                    <div class="strength-segment" id="strength-2"></div>
+                                    <div class="strength-segment" id="strength-3"></div>
+                                </div>
+                                <div class="password-strength-text" id="strength-text">请输入新密码</div>
+                            </div>
+                            <div class="password-requirements" id="password-requirements">
+                                <div class="password-requirements-title">密码要求</div>
+                                <div class="requirement-item" data-req="length">
+                                    <span class="requirement-icon">✓</span>
+                                    <span>至少 6 个字符</span>
+                                </div>
+                                <div class="requirement-item" data-req="number">
+                                    <span class="requirement-icon">✓</span>
+                                    <span>包含数字</span>
+                                </div>
+                                <div class="requirement-item" data-req="letter">
+                                    <span class="requirement-icon">✓</span>
+                                    <span>包含字母</span>
+                                </div>
+                                <div class="requirement-item" data-req="special">
+                                    <span class="requirement-icon">✓</span>
+                                    <span>包含特殊符号 (!@#$%^&* 等)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="input-new-password-repeat" class="col-sm-2 col-form-label">确认密码</label>
+                        <div class="col-sm-10">
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control" id="input-new-password-repeat" placeholder="请输入确认密码">
+                                <button type="button" class="password-toggle" data-target="input-new-password-repeat">
+                                    <span class="toggle-icon">👁️</span>
+                                </button>
+                            </div>
+                            <div id="repeat-password-error" class="error-message" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <center><button type="submit" class="btn btn-primary-modern" id="btn-submit-password">修改密码</button></center>
+                </form>
+            </div>
 
-        </div> <!-- 左侧结束 -->
+            <div class="section-divider"></div>
 
-        <!-- 右侧 -->
+            <div class="logout-section">
+                <button class="btn btn-danger-modern" id="btn-logout">退出登录</button>
+            </div>
+        </div>
+
         <div class="col-4">
-        </div> <!-- 右侧结束 -->
+        </div>
     </div>
 </div>
 
+<div class="toast-container" id="toast-container"></div>
+
 <script>
 $(function() {
-    // 上传图片
+    function showToast(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        };
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + message + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>');
+        
+        $('#toast-container').append(toast);
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove();
+            });
+        });
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove();
+            });
+        }, 4000);
+    }
+
+    function validatePasswordStrength(password) {
+        var result = {
+            length: password.length >= 6,
+            number: /\d/.test(password),
+            letter: /[a-zA-Z]/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/.test(password)
+        };
+        
+        var score = 0;
+        if (result.length) score++;
+        if (result.number) score++;
+        if (result.letter) score++;
+        if (result.special) score++;
+        
+        if (password.length === 0) {
+            result.level = 'none';
+        } else if (score < 3) {
+            result.level = 'weak';
+        } else if (score < 4) {
+            result.level = 'medium';
+        } else {
+            result.level = 'strong';
+        }
+        
+        return result;
+    }
+
+    function updatePasswordStrength(password) {
+        var result = validatePasswordStrength(password);
+        
+        $('.strength-segment').removeClass('active-weak active-medium active-strong');
+        $('#strength-text').removeClass('weak medium strong').text('请输入新密码');
+        
+        if (result.level === 'none') {
+            $('#strength-text').text('请输入新密码');
+        } else if (result.level === 'weak') {
+            $('#strength-1').addClass('active-weak');
+            $('#strength-text').addClass('weak').text('密码强度：弱');
+        } else if (result.level === 'medium') {
+            $('#strength-1, #strength-2').addClass('active-medium');
+            $('#strength-text').addClass('medium').text('密码强度：中');
+        } else if (result.level === 'strong') {
+            $('#strength-1, #strength-2, #strength-3').addClass('active-strong');
+            $('#strength-text').addClass('strong').text('密码强度：强');
+        }
+        
+        $('.requirement-item').each(function() {
+            var req = $(this).data('req');
+            if (result[req]) {
+                $(this).removeClass('invalid').addClass('valid');
+                $(this).find('.requirement-icon').text('✓');
+            } else {
+                $(this).removeClass('valid').addClass('invalid');
+                $(this).find('.requirement-icon').text('○');
+            }
+        });
+        
+        return result;
+    }
+
+    $('.password-toggle').click(function() {
+        var targetId = $(this).data('target');
+        var $input = $('#' + targetId);
+        var $icon = $(this).find('.toggle-icon');
+        
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.text('🙈');
+        } else {
+            $input.attr('type', 'password');
+            $icon.text('👁️');
+        }
+    });
+
+    $('#input-new-password').on('input', function() {
+        var password = $(this).val();
+        updatePasswordStrength(password);
+        
+        var repeatPassword = $('#input-new-password-repeat').val();
+        if (repeatPassword) {
+            validateRepeatPassword();
+        }
+    });
+
+    function validateRepeatPassword() {
+        var newPassword = $('#input-new-password').val();
+        var repeatPassword = $('#input-new-password-repeat').val();
+        var $error = $('#repeat-password-error');
+        
+        if (repeatPassword && newPassword !== repeatPassword) {
+            $error.html('<span>⚠️</span> 两次密码输入不一致').show();
+            $('#input-new-password-repeat').addClass('field-error');
+            return false;
+        } else {
+            $error.hide();
+            $('#input-new-password-repeat').removeClass('field-error');
+            if (repeatPassword && newPassword === repeatPassword) {
+                $('#input-new-password-repeat').addClass('field-success');
+            }
+            return true;
+        }
+    }
+
+    $('#input-new-password-repeat').on('input', validateRepeatPassword);
+
     var $imgPicture = $('#img-picture')
     var $filePicture = $('#file-picture')
     $filePicture.change(function (e) {
         var file = $filePicture[0].files[0]
         ajax.upload('/api/utils/upload', file, function(err, data) {
             if (err) {
-                alert(err)
+                showToast('error', '上传失败', err);
                 return
             }
-            // 成功
             $imgPicture.attr('src', data.url)
+            showToast('success', '上传成功', '头像已更新');
         })
     })
 
-    // 修改基本信息
     var $inputNick = $('#input-nick')
     var $inputCity = $('#input-city')
     $('#btn-submit-info').click(function(e) {
@@ -95,30 +664,62 @@ $(function() {
             picture
         }, function(err, data) {
             if (err) {
-                alert(err)
+                showToast('error', '修改失败', err);
                 return
             }
-            alert('修改成功')
+            showToast('success', '修改成功', '基本信息已更新');
         })
     })
 
-    // 修改密码
     var $inputCurPassword = $('#input-cur-password')
     var $inputNewPassword = $('#input-new-password')
     var $inputNewPasswordRepeat = $('#input-new-password-repeat')
+    
     $('#btn-submit-password').click(function(e) {
         e.preventDefault()
         var curPassword = $inputCurPassword.val()
         var newPassword = $inputNewPassword.val()
         var newPasswordRepeat = $inputNewPasswordRepeat.val()
 
-        if (newPassword !== newPasswordRepeat) {
-            alert('两次新密码输入不一致')
-            return
+        $inputCurPassword.removeClass('field-error');
+        $inputNewPassword.removeClass('field-error');
+        $inputNewPasswordRepeat.removeClass('field-error');
+        $('#cur-password-error').hide();
+        $('#repeat-password-error').hide();
+
+        var hasError = false;
+
+        if (!curPassword) {
+            $('#cur-password-error').html('<span>⚠️</span> 请输入当前密码').show();
+            $inputCurPassword.addClass('field-error');
+            hasError = true;
         }
-        if (curPassword === newPassword) {
-            alert('新密码和当前密码一致')
-            return
+
+        if (!newPassword) {
+            showToast('warning', '提示', '请输入新密码');
+            $inputNewPassword.addClass('field-error');
+            hasError = true;
+        } else {
+            var strengthResult = updatePasswordStrength(newPassword);
+            if (strengthResult.level !== 'strong') {
+                showToast('warning', '密码强度不足', '密码必须包含数字、字母、特殊符号三种组合');
+                $inputNewPassword.addClass('field-error');
+                hasError = true;
+            }
+        }
+
+        if (!validateRepeatPassword()) {
+            hasError = true;
+        }
+
+        if (curPassword === newPassword && newPassword) {
+            showToast('warning', '提示', '新密码不能与当前密码相同');
+            $inputNewPassword.addClass('field-error');
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
         }
         
         ajax.patch('/api/user/changePassword', {
@@ -126,17 +727,25 @@ $(function() {
             newPassword: newPassword
         }, function(err, data) {
             if (err) {
-                alert(err)
+                if (err.includes('原密码')) {
+                    $('#cur-password-error').html('<span>⚠️</span> ' + err).show();
+                    $inputCurPassword.addClass('field-error');
+                } else {
+                    showToast('error', '修改失败', err);
+                }
                 return
             }
-            alert('修改成功')
+            showToast('success', '修改成功', '密码已更新，请妥善保管');
             $inputCurPassword.val('')
             $inputNewPassword.val('')
             $inputNewPasswordRepeat.val('')
+            updatePasswordStrength('');
+            $inputCurPassword.removeClass('field-error field-success');
+            $inputNewPassword.removeClass('field-error field-success');
+            $inputNewPasswordRepeat.removeClass('field-error field-success');
         })
     })
 
-    // 退出登录
     $('#btn-logout').click(function() {
         if (confirm('是否确定退出登录？') === false) {
             return
@@ -146,10 +755,14 @@ $(function() {
                 console.error(err)
                 return
             }
-            alert('已成功退出')
-            location.href = '/login'
+            showToast('success', '已退出', '您已成功退出登录');
+            setTimeout(function() {
+                location.href = '/login'
+            }, 1000);
         })
     })
+
+    updatePasswordStrength('');
 })
 </script>
 

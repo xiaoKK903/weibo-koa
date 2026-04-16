@@ -29,29 +29,39 @@ module.exports = {
         errno: 10005,
         message: '您尚未登录'
     },
+    // 原密码错误
+    oldPasswordErrorInfo: {
+        errno: 10006,
+        message: '原密码错误，请重新输入'
+    },
     // 修改密码失败
     changePasswordFailInfo: {
-        errno: 10006,
+        errno: 10007,
         message: '修改密码失败，请重试'
+    },
+    // 密码强度不足
+    passwordWeakInfo: {
+        errno: 10011,
+        message: '密码强度不足，必须包含数字、字母、特殊符号三种组合'
     },
     // 上传文件过大
     uploadFileSizeFailInfo: {
-        errno: 10007,
+        errno: 10008,
         message: '上传文件尺寸过大'
     },
     // 修改基本信息失败
     changeInfoFailInfo: {
-        errno: 10008,
+        errno: 10009,
         message: '修改基本信息失败'
     },
     // json schema 校验失败
     jsonSchemaFileInfo: {
-        errno: 10009,
+        errno: 10010,
         message: '数据格式校验错误'
     },
     // 删除用户失败
     deleteUserFailInfo: {
-        errno: 10010,
+        errno: 10012,
         message: '删除用户失败'
     },
 

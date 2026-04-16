@@ -18,6 +18,8 @@ const {
   deleteUserFailInfo,
   changeInfoFailInfo,
   changePasswordFailInfo,
+  oldPasswordErrorInfo,
+  passwordWeakInfo,
 } = require("../model/ErrorInfo");
 const doCrypto = require("../utils/cryp");
 
@@ -132,6 +134,13 @@ async function changeInfo(ctx, { nickName, city, picture }) {
   return new ErrorModel(changeInfoFailInfo);
 }
 
+function validatePasswordStrength(password) {
+  const hasNumber = /\d/.test(password);
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/.test(password);
+  return hasNumber && hasLetter && hasSpecial;
+}
+
 /**
  * 修改密码
  * @param {string} userName 用户名
@@ -139,20 +148,26 @@ async function changeInfo(ctx, { nickName, city, picture }) {
  * @param {string} newPassword 新密码
  */
 async function changePassword(userName, password, newPassword) {
+  const userInfo = await getUserInfo(userName, doCrypto(password));
+  if (!userInfo) {
+    return new ErrorModel(oldPasswordErrorInfo);
+  }
+
+  if (!validatePasswordStrength(newPassword)) {
+    return new ErrorModel(passwordWeakInfo);
+  }
+
   const result = await updateUser(
     {
       newPassword: doCrypto(newPassword),
     },
     {
       userName,
-      password: doCrypto(password),
     },
   );
   if (result) {
-    // 成功
     return new SuccessModel();
   }
-  // 失败
   return new ErrorModel(changePasswordFailInfo);
 }
 

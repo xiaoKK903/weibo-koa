@@ -269,30 +269,40 @@ $(function () {
     
     // 加载评论列表
     function loadComments() {
-        // 这里应该调用 API 获取评论列表
-        // 暂时使用模拟数据
-        const comments = [];
-        
-        if (comments.length === 0) {
-            $('#comments-list').html('<div class="no-comments">暂无评论，快来抢沙发吧！</div>');
-            return;
-        }
-        
-        let html = '';
-        comments.forEach(comment => {
-            html += `
-                <div class="comment-item">
-                    <img src="${comment.user.picture}" alt="${comment.user.nickName}" class="comment-avatar">
-                    <div class="comment-content">
-                        <div class="comment-user">${comment.user.nickName}</div>
-                        <div class="comment-text">${comment.content}</div>
-                        <div class="comment-time">${comment.createdAtFormat}</div>
-                    </div>
-                </div>
-            `;
+        $.ajax({
+            url: `/api/blog/comment/list/${blogId}`,
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    const comments = res.data.commentList;
+                    if (comments.length === 0) {
+                        $('#comments-list').html('<div class="no-comments">暂无评论，快来抢沙发吧！</div>');
+                        return;
+                    }
+                    
+                    let html = '';
+                    comments.forEach(comment => {
+                        html += `
+                            <div class="comment-item">
+                                <img src="${comment.user.picture}" alt="${comment.user.nickName}" class="comment-avatar">
+                                <div class="comment-content">
+                                    <div class="comment-user">${comment.user.nickName}</div>
+                                    <div class="comment-text">${comment.content}</div>
+                                    <div class="comment-time">${comment.createdAtFormat}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    $('#comments-list').html(html);
+                } else {
+                    alert(res.message || '加载评论失败');
+                }
+            },
+            error: function () {
+                alert('加载评论失败，请重试');
+            }
         });
-        
-        $('#comments-list').html(html);
     }
     
     // 发表评论
@@ -303,10 +313,26 @@ $(function () {
             return;
         }
         
-        // 这里应该调用 API 发表评论
-        // 暂时使用模拟数据
-        alert('评论功能将在后续实现');
-        $('#comment-content').val('');
+        $.ajax({
+            url: '/api/blog/comment/create',
+            type: 'POST',
+            data: {
+                blogId: blogId,
+                content: content
+            },
+            success: function (res) {
+                if (res.errno === 0) {
+                    // 评论成功，清空输入框并刷新评论列表
+                    $('#comment-content').val('');
+                    loadComments();
+                } else {
+                    alert(res.message || '发表评论失败');
+                }
+            },
+            error: function () {
+                alert('发表评论失败，请重试');
+            }
+        });
     });
     
     // 初始化加载评论

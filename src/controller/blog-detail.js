@@ -3,9 +3,10 @@
  * @author milk
  */
 
-const { getBlogById } = require('../services/blog')
+const { getBlogById, createComment: createCommentService, getCommentsByBlogId } = require('../services/blog')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
-const { blogNotExistInfo } = require('../model/ErrorInfo')
+const { blogNotExistInfo, createCommentFailInfo } = require('../model/ErrorInfo')
+const xss = require('xss')
 
 /**
  * 获取微博详情
@@ -19,6 +20,35 @@ async function getBlogDetail(blogId) {
     return new SuccessModel(blog)
 }
 
+/**
+ * 创建评论
+ * @param {Object} param0 创建评论的数据 { blogId, userId, content }
+ */
+async function createComment({ blogId, userId, content }) {
+    try {
+        const comment = await createCommentService({
+            blogId,
+            userId,
+            content: xss(content)
+        })
+        return new SuccessModel(comment)
+    } catch (ex) {
+        console.error(ex.message, ex.stack)
+        return new ErrorModel(createCommentFailInfo)
+    }
+}
+
+/**
+ * 获取评论列表
+ * @param {number} blogId 微博ID
+ */
+async function getComments(blogId) {
+    const result = await getCommentsByBlogId(blogId)
+    return new SuccessModel(result)
+}
+
 module.exports = {
-    getBlogDetail
+    getBlogDetail,
+    createComment,
+    getComments
 }

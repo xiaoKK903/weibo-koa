@@ -10,7 +10,6 @@ const { getSquareBlogList } = require("../../controller/blog-square");
 const { isExist } = require("../../controller/user");
 const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
-const { getAtMeCount } = require("../../controller/blog-home");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -85,15 +84,15 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
       userInfo: curUserInfo,
       isMe,
       fansData: {
-        count: fansCount,
-        list: fansList,
+        count: 0,
+        list: [],
       },
       followersData: {
-        count: followersCount,
-        list: followersList,
+        count: 0,
+        list: [],
       },
       amIFollowed,
-      atCount,
+      atCount: 0,
     },
   });
 });
@@ -117,12 +116,6 @@ router.get("/square", loginRedirect, async (ctx, next) => {
 
 // atMe 路由
 router.get("/at-me", loginRedirect, async (ctx, next) => {
-  const { id: userId } = ctx.session.userInfo;
-
-  // 获取 @ 数量
-  const atCountResult = await getAtMeCount(userId);
-  const { count: atCount } = atCountResult.data;
-
   // 渲染页面
   await ctx.render("atMe", {
     blogData: {
@@ -142,8 +135,16 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   const { blogId } = ctx.params;
   const userInfo = ctx.session.userInfo;
 
+  // 转换 blogId 为数字类型
+  const blogIdNum = parseInt(blogId);
+  if (isNaN(blogIdNum)) {
+    // 无效的微博 ID，跳转到首页
+    ctx.redirect("/");
+    return;
+  }
+
   // 获取微博详情
-  const result = await getBlogDetail(blogId);
+  const result = await getBlogDetail(blogIdNum);
   if (result.errno !== 0) {
     // 微博不存在，跳转到首页
     ctx.redirect("/");

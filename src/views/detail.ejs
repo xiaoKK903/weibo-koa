@@ -1,0 +1,227 @@
+<%- include('layout/header', { title: '微博 - 详情', isNav: true })%>
+
+<div class="container">
+    <div class="row">
+        <!-- 左侧内容 -->
+        <div class="col-md-8">
+            <!-- 微博内容 -->
+            <div class="weibo-detail">
+                <div class="weibo-item">
+                    <div class="user-info">
+                        <img src="<%= blogData.blog.user.picture %>" alt="<%= blogData.blog.user.nickName %>" class="avatar">
+                        <div class="user-details">
+                            <div class="nickname"><a href="/profile/<%= blogData.blog.user.userName %>"><%= blogData.blog.user.nickName %></a></div>
+                            <div class="username"><%= blogData.blog.user.userName %></div>
+                        </div>
+                    </div>
+                    <div class="blog-content">
+                        <div class="content" dangerouslySetInnerHTML={{ __html: blogData.blog.contentFormat }}></div>
+                        <div class="blog-time"><%= blogData.blog.createdAtFormat %></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 评论区 -->
+            <div class="comments-section">
+                <h3>评论</h3>
+                <div class="comment-form">
+                    <textarea placeholder="写下你的评论..." class="form-control"></textarea>
+                    <button class="btn btn-primary btn-modern">发表评论</button>
+                </div>
+                <div class="comments-list">
+                    <!-- 评论列表将通过 AJAX 加载 -->
+                    <div class="no-comments">暂无评论，快来抢沙发吧！</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧边栏 -->
+        <div class="col-md-4">
+            <%- include('widgets/user-info') %>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 微博详情页样式 */
+.weibo-detail {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.weibo-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    border: 2px solid #e0e0e0;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.nickname {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.nickname a {
+    color: #333;
+    text-decoration: none;
+}
+
+.nickname a:hover {
+    color: #007bff;
+}
+
+.username {
+    font-size: 13px;
+    color: #999;
+}
+
+.blog-content {
+    flex: 1;
+}
+
+.blog-content .content {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    word-break: break-word;
+}
+
+.blog-content .content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 10px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blog-time {
+    font-size: 13px;
+    color: #999;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f1f1;
+}
+
+/* 评论区样式 */
+.comments-section {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+
+.comments-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.comment-form {
+    margin-bottom: 20px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.comment-form textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    color: white;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+    color: white;
+}
+
+.comments-list {
+    min-height: 100px;
+}
+
+.no-comments {
+    text-align: center;
+    color: #999;
+    padding: 30px 0;
+    font-size: 14px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .weibo-detail {
+        padding: 15px;
+    }
+    
+    .comments-section {
+        padding: 15px;
+    }
+    
+    .avatar {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+    }
+    
+    .nickname {
+        font-size: 14px;
+    }
+    
+    .blog-content .content {
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+$(function () {
+    // 评论功能将在后续实现
+    console.log('微博详情页加载完成');
+});
+</script>
+
+<%- include('layout/footer')%>

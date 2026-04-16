@@ -8,8 +8,9 @@ const { loginRedirect } = require("../../middlewares/loginChecks");
 const { getProfileBlogList } = require("../../controller/blog-profile");
 const { getSquareBlogList } = require("../../controller/blog-square");
 const { isExist } = require("../../controller/user");
-
 const { getHomeBlogList } = require("../../controller/blog-home");
+const { getBlogDetail } = require("../../controller/blog-detail");
+const { getAtMeCount } = require("../../controller/blog-home");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -134,6 +135,31 @@ router.get("/at-me", loginRedirect, async (ctx, next) => {
   });
 
 
+});
+
+// 微博详情页
+router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
+  const { blogId } = ctx.params;
+  const userInfo = ctx.session.userInfo;
+
+  // 获取微博详情
+  const result = await getBlogDetail(blogId);
+  if (result.errno !== 0) {
+    // 微博不存在，跳转到首页
+    ctx.redirect("/");
+    return;
+  }
+
+  const blog = result.data;
+
+  await ctx.render("detail", {
+    userData: {
+      userInfo,
+    },
+    blogData: {
+      blog,
+    },
+  });
 });
 
 module.exports = router;

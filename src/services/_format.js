@@ -46,6 +46,18 @@ function _formatDBTime(obj) {
 }
 
 /**
+ * 提取纯文本并截取摘要
+ * @param {string} html HTML内容
+ * @param {number} length 摘要长度
+ */
+function _getPlainTextSummary(html, length = 80) {
+    // 移除HTML标签
+    const plainText = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
+    // 截取前length个字符
+    return plainText.length > length ? plainText.substring(0, length) + '...' : plainText
+}
+
+/**
  * 格式化微博内容
  * @param {Object} obj 微博数据对象
  */
@@ -61,6 +73,9 @@ function _formatContent(obj) {
             return `<a href="/profile/${userName}">@${nickName}</a>`
         }
     )
+
+    // 添加纯文本摘要
+    obj.contentSummary = _getPlainTextSummary(obj.content)
 
     return obj
 }

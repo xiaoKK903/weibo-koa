@@ -330,6 +330,10 @@ $(function () {
                 blogId: blogId,
                 content: content
             }),
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
             success: function (res) {
                 console.log('Submit comment response:', res);
                 if (res.errno === 0) {

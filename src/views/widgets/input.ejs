@@ -1,6 +1,6 @@
 <!-- 微博输入框 -->
 <div class="margin-bottom-20 padding-bottom-20 border-bottom">
-    <div id="editor-container" style="min-height: 140px;"></div>
+    <div id="editor-container" style="min-height: 160px;"></div>
     <div class="margin-top-15">
         <button class="btn btn-primary btn-modern" id="btn-submit">发表</button>
         &nbsp;
@@ -17,9 +17,10 @@
 /* 编辑器样式 */
 #editor-container {
     border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border-radius: 10px;
     transition: all 0.3s ease;
     margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 #editor-container:focus-within {
@@ -28,14 +29,14 @@
 }
 
 .ql-container {
-    font-size: 14px;
+    font-size: 15px;
     border: none !important;
-    min-height: 140px;
+    min-height: 160px;
 }
 
 .ql-editor {
-    min-height: 140px;
-    padding: 15px 18px;
+    min-height: 160px;
+    padding: 18px 20px;
     line-height: 1.6;
 }
 
@@ -48,17 +49,17 @@
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     border: none;
     border-radius: 8px;
-    padding: 12px 28px;
+    padding: 10px 24px;
     font-weight: 600;
     font-size: 14px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
     color: white;
 }
 
 .btn-modern:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
     color: white;
 }
 
@@ -70,17 +71,18 @@
     border: 2px solid #007bff;
     color: #007bff;
     border-radius: 8px;
-    padding: 10px 20px;
+    padding: 8px 18px;
     font-weight: 500;
     transition: all 0.3s ease;
     background: white;
+    font-size: 14px;
 }
 
 .btn-upload:hover {
     background: #007bff;
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
 /* 图片上传状态 */
@@ -98,71 +100,133 @@
 /* 自定义工具栏 */
 .ql-toolbar.ql-snow {
     border: none !important;
-    border-bottom: 2px solid #e0e0e0 !important;
-    border-radius: 8px 8px 0 0;
-    padding: 10px 15px;
+    border-bottom: 2px solid #f1f1f1 !important;
+    border-radius: 10px 10px 0 0;
+    padding: 12px 20px;
     background: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .ql-toolbar.ql-snow .ql-formats {
-    margin-right: 15px;
+    margin-right: 20px !important;
+    display: flex;
+    align-items: center;
+}
+
+.ql-toolbar.ql-snow .ql-formats:not(:last-child) {
+    border-right: 1px solid #e0e0e0;
+    padding-right: 20px;
 }
 
 .ql-toolbar.ql-snow button {
     transition: all 0.3s ease;
-    border-radius: 4px;
-    border: 1px solid #e0e0e0;
-    background: white;
-    color: #495057;
+    border-radius: 6px !important;
+    border: 1px solid #e0e0e0 !important;
+    background: white !important;
+    color: #495057 !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .ql-toolbar.ql-snow button:hover {
-    background: #e3f2fd;
-    border-color: #007bff;
+    background: #e3f2fd !important;
+    border-color: #007bff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
 }
 
 .ql-toolbar.ql-snow button.ql-active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+    background: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
 }
 
 .ql-toolbar.ql-snow .ql-picker-label {
     transition: all 0.3s ease;
-    border-radius: 4px;
-    border: 1px solid #e0e0e0;
+    border-radius: 6px !important;
+    border: 1px solid #e0e0e0 !important;
+    background: white !important;
+    color: #495057 !important;
+    padding: 4px 12px !important;
+    margin: 0 4px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .ql-toolbar.ql-snow .ql-picker-label:hover {
-    border-color: #007bff;
-    background: #e3f2fd;
+    border-color: #007bff !important;
+    background: #e3f2fd !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
 }
 
 .ql-toolbar.ql-snow .ql-picker-options {
-    border-radius: 0 0 8px 8px;
-    border: 1px solid #e0e0e0;
-    border-top: none;
+    border-radius: 0 0 8px 8px !important;
+    border: 1px solid #e0e0e0 !important;
+    border-top: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ql-toolbar.ql-snow .ql-picker-item {
+    transition: all 0.2s ease;
+    padding: 6px 12px !important;
+}
+
+.ql-toolbar.ql-snow .ql-picker-item:hover {
+    background: #e3f2fd !important;
+}
+
+.ql-toolbar.ql-snow .ql-picker-item.ql-selected {
+    background: #007bff !important;
+    color: white !important;
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
     .btn-modern {
-        padding: 10px 24px;
+        padding: 8px 20px;
         font-size: 13px;
     }
     
     .btn-upload {
-        padding: 8px 16px;
+        padding: 6px 16px;
         font-size: 13px;
     }
     
     .ql-editor {
-        min-height: 120px;
-        padding: 12px 15px;
+        min-height: 140px;
+        padding: 15px 18px;
     }
     
     #editor-container {
-        min-height: 120px;
+        min-height: 140px;
+    }
+    
+    .ql-toolbar.ql-snow {
+        padding: 10px 15px;
+    }
+    
+    .ql-toolbar.ql-snow .ql-formats {
+        margin-right: 15px !important;
+        padding-right: 15px !important;
+    }
+    
+    .ql-toolbar.ql-snow button {
+        width: 28px !important;
+        height: 28px !important;
+        margin: 0 3px !important;
+    }
+    
+    .ql-toolbar.ql-snow .ql-picker-label {
+        padding: 3px 10px !important;
+        height: 28px !important;
+        margin: 0 3px !important;
     }
 }
 </style>

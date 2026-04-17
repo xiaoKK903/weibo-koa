@@ -117,7 +117,8 @@ async function getFollowingList(userId) {
                 }
             ]
         })
-        return result.map(item => item.following)
+        // 返回普通 JavaScript 对象，不是 Sequelize 模型实例
+        return result.map(item => item.following.dataValues)
     } catch (ex) {
         console.error(ex.message, ex.stack)
         return []

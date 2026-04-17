@@ -264,17 +264,13 @@
 /* @ 自动补全下拉列表 */
 .at-dropdown {
     position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     max-height: 200px;
     overflow-y: auto;
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    margin-top: 5px;
+    z-index: 10000;
 }
 
 .at-dropdown-item {
@@ -331,12 +327,12 @@ $(function () {
         placeholder: '分享你的想法...',
         modules: {
             toolbar: [
-                ['bold', 'italic', 'underline', 'strike'],        // 加粗、斜体、下划线、删除线
-                ['blockquote', 'code-block'],                    // 引用、代码块
-                [{ 'header': 1 }, { 'header': 2 }],              // 标题1、标题2
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }],   // 有序列表、无序列表
-                [{ 'color': [] }, { 'background': [] }],         // 文本颜色、背景颜色
-                ['clean']                                        // 清除格式
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'color': [] }, { 'background': [] }],
+                ['clean']
             ]
         }
     });
@@ -350,57 +346,87 @@ $(function () {
         filteredList: []
     };
 
-    // 创建 @ 下拉列表
-    var $atDropdown = $('<div class="at-dropdown" style="display:none; position: absolute; z-index: 1000;"></div>');
-    $('#editor-container').append($atDropdown);
+    // 创建 @ 下拉列表（添加到 body）
+    var $atDropdown = $('<div class="at-dropdown" style="display: none;"></div>');
+    $('body').append($atDropdown);
 
     // 获取关注列表
     var followingList = [];
     try {
-        followingList = JSON.parse('<%- followingList || "[]" %>');
+        var followingListJson = '<%- followingList %>';
+        if (followingListJson && followingListJson !== 'undefined') {
+            followingList = JSON.parse(followingListJson);
+        }
     } catch (ex) {
         followingList = [];
     }
 
+    // 定位下拉列表到光标位置
+    function positionAtDropdown() {
+        var $editor = $('.ql-editor');
+        var editorOffset = $editor.offset();
+        var editorHeight = $editor.outerHeight();
+        
+        // 简单定位：显示在编辑器下方
+        $atDropdown.css({
+            top: editorOffset.top + editorHeight + 5,
+            left: editorOffset.left,
+            width: $editor.outerWidth()
+        });
+    }
+
     // 渲染 @ 下拉列表
     function renderAtDropdown(filterText) {
-        // 如果 filterText 是 undefined 或 null，隐藏下拉列表
         if (filterText === undefined || filterText === null) {
-            $atDropdown.hide();
+            hideAtDropdown();
             return;
         }
 
         // 过滤匹配的用户
-        // 如果 filterText 是空字符串，显示所有关注用户
-        // 否则显示匹配的用户
         atState.filteredList = followingList.filter(function(user) {
             if (filterText === '') {
-                return true; // 显示所有用户
+                return true;
             }
-            return user.nickName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0 ||
-                   user.userName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0;
+            var searchText = filterText.toLowerCase();
+            return (user.nickName && user.nickName.toLowerCase().indexOf(searchText) >= 0) ||
+                   (user.userName && user.userName.toLowerCase().indexOf(searchText) >= 0);
         });
 
         if (atState.filteredList.length === 0) {
-            $atDropdown.hide();
+            hideAtDropdown();
             return;
         }
 
         // 渲染列表
         var html = '';
         atState.filteredList.forEach(function(user, index) {
+            var avatar = user.picture || 'https://dwz.cn/rnTnftZs';
+            var nickname = user.nickName || user.userName || '用户';
+            var username = user.userName || '';
+            
             html += '<div class="at-dropdown-item" data-index="' + index + '">';
-            html += '<img src="' + user.picture + '" class="at-dropdown-avatar">';
+            html += '<img src="' + avatar + '" class="at-dropdown-avatar" onerror="this.src=\'https://dwz.cn/rnTnftZs\'">';
             html += '<div class="at-dropdown-info">';
-            html += '<div class="at-dropdown-nickname">' + user.nickName + '</div>';
-            html += '<div class="at-dropdown-username">@' + user.userName + '</div>';
+            html += '<div class="at-dropdown-nickname">' + nickname + '</div>';
+            html += '<div class="at-dropdown-username">@' + username + '</div>';
             html += '</div>';
             html += '</div>';
         });
+        
         $atDropdown.html(html);
+        positionAtDropdown();
         $atDropdown.show();
         atState.selectedIndex = 0;
+        atState.isActive = true;
         updateAtDropdownSelection();
+    }
+
+    // 隐藏下拉列表
+    function hideAtDropdown() {
+        atState.isActive = false;
+        atState.startIndex = -1;
+        atState.currentText = '';
+        $atDropdown.hide();
     }
 
     // 更新选中状态
@@ -414,19 +440,15 @@ $(function () {
         if (!user || atState.startIndex < 0) return;
 
         // 计算要替换的文本长度
-        var replaceLength = 1 + atState.currentText.length; // @ 符号 + 后面的文本
-        var replacement = '@' + user.nickName + ' - ' + user.userName + ' ';
+        var replaceLength = 1 + atState.currentText.length;
+        var replacement = '@' + (user.nickName || user.userName) + ' - ' + user.userName + ' ';
 
         // 删除旧文本并插入新文本
         quill.deleteText(atState.startIndex, replaceLength);
         quill.insertText(atState.startIndex, replacement);
         quill.setSelection(atState.startIndex + replacement.length);
 
-        // 重置状态
-        atState.isActive = false;
-        atState.startIndex = -1;
-        atState.currentText = '';
-        $atDropdown.hide();
+        hideAtDropdown();
     }
 
     // 监听编辑器内容变化
@@ -434,9 +456,12 @@ $(function () {
         if (source !== 'user') return;
 
         var selection = quill.getSelection();
-        if (!selection) return;
+        if (!selection) {
+            hideAtDropdown();
+            return;
+        }
 
-        // 使用 quill.getText() 获取纯文本，更可靠
+        // 获取纯文本
         var fullText = quill.getText();
         var cursorIndex = selection.index;
         var textBeforeCursor = fullText.substring(0, cursorIndex);
@@ -447,10 +472,8 @@ $(function () {
         if (lastAtIndex >= 0) {
             var textAfterLastAt = textBeforeCursor.substring(lastAtIndex + 1);
             
-            // 检查 @ 后面是否有效（没有空格或换行）
-            // 正则：^[^\s\n]*$ 表示不包含空格和换行
-            if (/^[^\s\n]*$/.test(textAfterLastAt)) {
-                atState.isActive = true;
+            // 检查 @ 后面是否有效（没有空格、换行、标点等）
+            if (/^[a-zA-Z0-9_\u4e00-\u9fa5]*$/.test(textAfterLastAt)) {
                 atState.startIndex = lastAtIndex;
                 atState.currentText = textAfterLastAt;
                 renderAtDropdown(textAfterLastAt);
@@ -459,46 +482,40 @@ $(function () {
         }
         
         // 如果没有找到有效 @，隐藏下拉列表
-        atState.isActive = false;
-        atState.startIndex = -1;
-        atState.currentText = '';
-        $atDropdown.hide();
+        hideAtDropdown();
     });
 
     // 监听键盘事件
     $(document).on('keydown', function(e) {
-        if (atState.isActive && atState.filteredList.length > 0) {
-            switch (e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    if (atState.selectedIndex > 0) {
-                        atState.selectedIndex--;
-                        updateAtDropdownSelection();
-                    }
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    if (atState.selectedIndex < atState.filteredList.length - 1) {
-                        atState.selectedIndex++;
-                        updateAtDropdownSelection();
-                    }
-                    break;
-                case 'Enter':
-                case 'Tab':
-                    e.preventDefault();
-                    var selectedUser = atState.filteredList[atState.selectedIndex];
-                    if (selectedUser) {
-                        insertAtUser(selectedUser);
-                    }
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    atState.isActive = false;
-                    atState.startIndex = -1;
-                    atState.currentText = '';
-                    $atDropdown.hide();
-                    break;
-            }
+        if (!atState.isActive || atState.filteredList.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowUp':
+                e.preventDefault();
+                if (atState.selectedIndex > 0) {
+                    atState.selectedIndex--;
+                    updateAtDropdownSelection();
+                }
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                if (atState.selectedIndex < atState.filteredList.length - 1) {
+                    atState.selectedIndex++;
+                    updateAtDropdownSelection();
+                }
+                break;
+            case 'Enter':
+            case 'Tab':
+                e.preventDefault();
+                var selectedUser = atState.filteredList[atState.selectedIndex];
+                if (selectedUser) {
+                    insertAtUser(selectedUser);
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                hideAtDropdown();
+                break;
         }
     });
 
@@ -517,8 +534,14 @@ $(function () {
     $(document).on('click', function(e) {
         if ($(e.target).closest('.at-dropdown').length === 0 && 
             $(e.target).closest('.ql-editor').length === 0) {
-            atState.isActive = false;
-            $atDropdown.hide();
+            hideAtDropdown();
+        }
+    });
+
+    // 窗口大小改变时重新定位
+    $(window).on('resize', function() {
+        if (atState.isActive) {
+            positionAtDropdown();
         }
     });
 
@@ -574,7 +597,7 @@ $(function () {
         // 发布
         ajax.post('/api/blog/create', {
             content: content,
-            image: '' // 富文本编辑器中已包含图片，不需要单独的 image 字段
+            image: ''
         }, function (err) {
             if (err) {
                 // 失败
@@ -584,7 +607,7 @@ $(function () {
             // 成功
             $filePicture.val('')
             $spanImgName.text('')
-            quill.setText('') // 清空编辑器
+            quill.setText('')
 
             // 刷新页面
             location.href = location.pathname

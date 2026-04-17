@@ -49,8 +49,12 @@
                                     <div class="at-divider">— 评论于 —</div>
                                     <% } %>
                                     <a href="/detail/<%= atItem.blog.id %>" class="at-blog-link" data-at-id="<%= atItem.id %>">
-                                        <span class="at-blog-content"><%= atItem.blog.contentSummary %></span>
+                                        <span class="at-blog-content"><%= atItem.blog.contentSummary || atItem.blog.content %></span>
                                     </a>
+                                </div>
+                                <% } else if (atItem.type === 'comment' && atItem.comment) { %>
+                                <div class="at-comment-preview">
+                                    <span class="at-comment-text"><%= atItem.comment.content %></span>
                                 </div>
                                 <% } %>
                             </div>

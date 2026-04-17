@@ -20,6 +20,10 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const result = await getHomeBlogList(userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
+  // 获取热门帖子（使用广场数据作为热门帖子）
+  const squareResult = await getSquareBlogList(0);
+  const hotPosts = squareResult.data ? squareResult.data.blogList.slice(0, 3) : [];
+
   await ctx.render("index", {
     isLogin: true,
     canReply: true,
@@ -37,6 +41,7 @@ router.get("/", loginRedirect, async (ctx, next) => {
       pageIndex,
       count,
     },
+    hotPosts,
   });
 });
 

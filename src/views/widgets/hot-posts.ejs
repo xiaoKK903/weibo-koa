@@ -1,0 +1,102 @@
+<% if (hotPosts && hotPosts.length > 0) { %>
+<div class="right-item">
+    <div class="right-item-title">
+        <i class="fa fa-fire"></i> 热门帖子
+    </div>
+    <div class="hot-posts-list">
+        <% hotPosts.forEach((post, index) => { %>
+        <div class="hot-post-item">
+            <div class="hot-post-rank">
+                <% if (index < 3) { %>
+                <span class="rank-top"><%= index + 1 %></span>
+                <% } else { %>
+                <span class="rank-normal"><%= index + 1 %></span>
+                <% } %>
+            </div>
+            <div class="hot-post-content">
+                <a href="/detail/<%= post.id %>" class="hot-post-link"><%= post.contentSummary %></a>
+                <div class="hot-post-meta">
+                    <span class="hot-post-user"><%= post.user.nickName %></span>
+                    <span class="hot-post-time"><%= post.createdAtFormat %></span>
+                </div>
+            </div>
+        </div>
+        <% }) %>
+    </div>
+</div>
+<% } %>
+
+<style>
+/* 热门帖子样式 */
+.hot-posts-list {
+    padding: 10px 0;
+}
+
+.hot-post-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.hot-post-item:last-child {
+    border-bottom: none;
+}
+
+.hot-post-rank {
+    width: 30px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+.rank-top {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background-color: #ff4d4f;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.rank-normal {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background-color: #f0f0f0;
+    color: #666;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.hot-post-content {
+    flex: 1;
+}
+
+.hot-post-link {
+    display: block;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 5px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.hot-post-link:hover {
+    color: #007bff;
+}
+
+.hot-post-meta {
+    font-size: 12px;
+    color: #999;
+}
+
+.hot-post-user {
+    margin-right: 10px;
+}
+</style>

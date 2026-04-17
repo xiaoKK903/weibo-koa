@@ -132,7 +132,6 @@ $(function () {
     }
 
     // 回复
-    var $textContent = $('#text-content')
     $('.blog-list-reply').click(function (e) {
         e.preventDefault()
         var $target = $(e.target)
@@ -143,8 +142,19 @@ $(function () {
         var nickName = $target.attr('data-nickName')
 
         // 设置内容并获取焦点
-        $textContent.val(' // @' + nickName + ' - ' + userName + ' : ' + content)
-        setCursor($textContent[0], 0, 0)
+        if (typeof quill !== 'undefined') {
+            // 使用 Quill 编辑器
+            var replyContent = ' // @' + nickName + ' - ' + userName + ' : ' + content
+            quill.setText(replyContent)
+            quill.focus()
+            // 将光标设置到开头
+            quill.setSelection(0, 0)
+        } else if ($('#text-content').length > 0) {
+            // 兼容旧的文本框
+            var $textContent = $('#text-content')
+            $textContent.val(' // @' + nickName + ' - ' + userName + ' : ' + content)
+            setCursor($textContent[0], 0, 0)
+        }
     })
 
     // 点击微博跳转到详情页

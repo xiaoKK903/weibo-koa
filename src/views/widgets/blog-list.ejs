@@ -21,8 +21,9 @@
                 data-content="<%= blog.content%>"
                 data-userName="<%= blog.user.userName%>"
                 data-nickName="<%= blog.user.nickName%>"
+                data-blog-id="<%= blog.id %>"
             >
-                <i class="fa fa-mail-reply"></i> 回复
+                <i class="fa fa-comment"></i> 回复
             </a>
             &nbsp;
             <% } %>
@@ -46,6 +47,18 @@
             <span class="like-count" data-blog-id="<%= blog.id%>"><%= blog.likeCount || 0%></span>
             <% } %>
         </div>
+        <!-- 评论区域（默认隐藏） -->
+        <div class="comment-section" data-blog-id="<%= blog.id %>" style="display: none;">
+            <!-- 评论输入框 -->
+            <div class="comment-input-box">
+                <textarea class="comment-input" placeholder="写下你的评论..."></textarea>
+                <button class="btn-comment-submit" data-blog-id="<%= blog.id %>">发表评论</button>
+            </div>
+            <!-- 评论列表 -->
+            <div class="comment-list-area" data-blog-id="<%= blog.id %>">
+                <div class="no-comments">暂无评论</div>
+            </div>
+        </div>
     </div>
 <% }) %>
 
@@ -56,6 +69,8 @@
     transition: all 0.3s ease;
     padding: 15px;
     border-radius: 8px;
+    margin-bottom: 10px;
+    background: #fff;
 }
 
 .item-wrapper:hover {
@@ -158,6 +173,118 @@
     font-size: 12px;
     color: #6c757d;
 }
+
+/* 评论区域样式 */
+.comment-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* 评论输入框 */
+.comment-input-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.comment-input {
+    flex: 1;
+    min-height: 80px;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.btn-comment-submit {
+    align-self: flex-end;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-comment-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+
+.btn-comment-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 评论列表 */
+.comment-list-area {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.comment-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.comment-content-wrapper {
+    flex: 1;
+}
+
+.comment-user {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.no-comments {
+    text-align: center;
+    color: #999;
+    padding: 15px;
+    font-size: 13px;
+}
 </style>
 
 <script>
@@ -176,37 +303,125 @@ $(function () {
         }
     }
 
-    // 回复
+    // 回复按钮点击事件 - 展开/收起评论区域
     $('.blog-list-reply').click(function (e) {
         e.preventDefault()
         e.stopPropagation()
         var $target = $(e.target)
-
+        var blogId = $target.closest('.blog-list-reply').data('blog-id')
+        
         // 获取内容和用户
-        var content = $target.attr('data-content')
-        var userName = $target.attr('data-userName')
-        var nickName = $target.attr('data-nickName')
-
-        // 设置内容并获取焦点
-        if (typeof window.quill !== 'undefined') {
-            // 使用 Quill 编辑器
-            var replyContent = ' // @' + nickName + ' - ' + userName + ' : ' + content
-            window.quill.setText(replyContent)
-            window.quill.focus()
-            // 将光标设置到开头
-            window.quill.setSelection(0, 0)
-        } else if ($('#text-content').length > 0) {
-            // 兼容旧的文本框
-            var $textContent = $('#text-content')
-            $textContent.val(' // @' + nickName + ' - ' + userName + ' : ' + content)
-            setCursor($textContent[0], 0, 0)
+        var content = $target.closest('.blog-list-reply').attr('data-content')
+        var userName = $target.closest('.blog-list-reply').attr('data-userName')
+        var nickName = $target.closest('.blog-list-reply').attr('data-nickName')
+        
+        // 找到对应的评论区域
+        var $commentSection = $('.comment-section[data-blog-id="' + blogId + '"]')
+        var isVisible = $commentSection.is(':visible')
+        
+        if (isVisible) {
+            // 如果已经显示，则隐藏
+            $commentSection.slideUp(300)
+        } else {
+            // 如果没有显示，则显示并加载评论
+            $commentSection.slideDown(300, function () {
+                // 设置输入框内容
+                var $input = $commentSection.find('.comment-input')
+                $input.val('回复 @' + nickName + '：')
+                $input.focus()
+                
+                // 加载评论
+                loadComments(blogId)
+            })
         }
+    })
+
+    // 加载评论
+    function loadComments(blogId) {
+        var $commentList = $('.comment-list-area[data-blog-id="' + blogId + '"]')
+        
+        $.ajax({
+            url: '/api/blog/comment/list/' + blogId,
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    var comments = res.data.commentList
+                    if (comments.length === 0) {
+                        $commentList.html('<div class="no-comments">暂无评论</div>')
+                        return
+                    }
+                    
+                    var html = ''
+                    comments.forEach(comment => {
+                        html += `
+                            <div class="comment-item">
+                                <img src="${comment.user.picture}" alt="${comment.user.nickName}" class="comment-avatar">
+                                <div class="comment-content-wrapper">
+                                    <div class="comment-user">${comment.user.nickName}</div>
+                                    <div class="comment-text">${comment.content}</div>
+                                    <div class="comment-time">${comment.createdAtFormat}</div>
+                                </div>
+                            </div>
+                        `
+                    })
+                    $commentList.html(html)
+                }
+            },
+            error: function () {
+                $commentList.html('<div class="no-comments">加载评论失败</div>')
+            }
+        })
+    }
+
+    // 发表评论
+    $('.btn-comment-submit').click(function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        var $btn = $(this)
+        var blogId = $btn.data('blog-id')
+        var $input = $btn.closest('.comment-input-box').find('.comment-input')
+        var content = $input.val().trim()
+        
+        if (!content) {
+            alert('请输入评论内容')
+            return
+        }
+        
+        // 禁用按钮，防止重复提交
+        $btn.prop('disabled', true).text('发表中...')
+        
+        $.ajax({
+            url: '/api/blog/comment/create',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                blogId: Number(blogId),
+                content: content
+            }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    // 发表成功，清空输入框并刷新评论列表
+                    $input.val('')
+                    loadComments(blogId)
+                } else {
+                    alert(res.message || '发表评论失败')
+                }
+            },
+            error: function () {
+                alert('发表评论失败，请重试')
+            },
+            complete: function () {
+                // 恢复按钮状态
+                $btn.prop('disabled', false).text('发表评论')
+            }
+        })
     })
 
     // 点击微博跳转到详情页
     $('.item-wrapper').click(function (e) {
-        // 如果点击的是回复按钮、收藏按钮、点赞按钮或图片链接，不跳转
-        if ($(e.target).closest('.blog-list-reply, .blog-collect-btn, .blog-like-btn, .blog-img, a').length > 0) {
+        // 如果点击的是回复按钮、收藏按钮、点赞按钮、评论输入框或图片链接，不跳转
+        if ($(e.target).closest('.blog-list-reply, .blog-collect-btn, .blog-like-btn, .blog-img, a, .comment-section, .comment-input, .btn-comment-submit').length > 0) {
             return
         }
         var blogId = $(this).data('blog-id')

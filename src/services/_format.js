@@ -65,12 +65,17 @@ function _formatContent(obj) {
     obj.contentFormat = obj.content
 
     // 格式化 @
-    // from '哈喽 @张三 - zhangsan 你好'
-    // to '哈喽 <a href="/profile/zhangsan">张三</a> 你好'
+    // 支持两种格式：
+    // 1. '哈喽 @张三 - zhangsan 你好' -> '哈喽 <a href="/profile/zhangsan">@张三</a> 你好'
+    // 2. '哈喽 @zhangsan 你好' -> '哈喽 <a href="/profile/zhangsan">@zhangsan</a> 你好'
     obj.contentFormat = obj.contentFormat.replace(
         REG_FOR_AT_WHO,
-        (matchStr, nickName, userName) => {
-            return `<a href="/profile/${userName}">@${nickName}</a>`
+        (matchStr, nickName, userName1, userName2) => {
+            // 如果是第一种格式，userName1 有值，nickName 有值
+            // 如果是第二种格式，只有 userName2 有值
+            const userName = userName1 || userName2
+            const displayName = nickName || userName2
+            return `<a href="/profile/${userName}">@${displayName}</a>`
         }
     )
 

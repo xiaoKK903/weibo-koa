@@ -19,13 +19,13 @@
                         <div class="blog-time"><%= blogData.blog.createdAtFormat %></div>
                         <% if (locals.isLogin) { %>
                         <div class="blog-actions">
-                            <a href="#" class="blog-collect-btn"
+                            <a href="#" class="blog-collect-btn <%= blogData.blog.isCollected ? 'collected' : ''%>"
                                 data-blog-id="<%= blogData.blog.id%>"
                             >
-                                <i class="fa fa-star-o collect-icon"></i> <span class="collect-text">收藏</span>
+                                <i class="fa <%= blogData.blog.isCollected ? 'fa-star' : 'fa-star-o'%> collect-icon"></i> <span class="collect-text"><%= blogData.blog.isCollected ? '已收藏' : '收藏'%></span>
                             </a>
                             &nbsp;
-                            <span class="collect-count" data-blog-id="<%= blogData.blog.id%>">0</span>
+                            <span class="collect-count" data-blog-id="<%= blogData.blog.id%>"><%= blogData.blog.collectCount || 0%></span>
                         </div>
                         <% } %>
                     </div>
@@ -483,31 +483,7 @@ $(function () {
         }
     })
 
-    // 检查收藏状态
-    function checkCollectStatus() {
-        var blogId = parseInt('<%= blogData.blog.id %>');
-        $.ajax({
-            url: '/api/collect/check',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ blogId: blogId }),
-            xhrFields: { withCredentials: true },
-            success: function (res) {
-                if (res.errno === 0 && res.data.isCollected) {
-                    var $btn = $('.blog-collect-btn')
-                    $btn.addClass('collected')
-                    $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
-                    $btn.find('.collect-text').text('已收藏')
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Check collect status error:', error)
-            }
-        })
-    }
 
-    // 初始化时检查收藏状态
-    checkCollectStatus();
 });
 </script>
 

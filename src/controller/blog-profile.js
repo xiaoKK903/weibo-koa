@@ -11,12 +11,14 @@ const { SuccessModel } = require("../model/ResModel");
  * 获取个人主页微博列表
  * @param {string} userName 用户名
  * @param {number} pageIndex 当前页面
+ * @param {number} userId 当前用户ID
  */
-async function getProfileBlogList(userName, pageIndex = 0) {
+async function getProfileBlogList(userName, pageIndex = 0, userId = null) {
   const result = await getBlogListByUser({
     userName,
     pageIndex,
     pageSize: PAGE_SIZE,
+    userId,
   });
   const blogList = result.blogList;
 

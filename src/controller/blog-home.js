@@ -9,6 +9,7 @@ const { SuccessModel, ErrorModel } = require("../model/ResModel");
 const { createBlogFailInfo } = require("../model/ErrorInfo");
 const { PAGE_SIZE, REG_FOR_AT_WHO } = require("../conf/constant");
 const { getUserInfo } = require("../services/user");
+const { createAtReminder } = require("../services/at");
 
 /**
  * 创建微博
@@ -30,7 +31,7 @@ async function create({ userId, content, image }) {
   );
 
   // 根据用户信息，获取用户 id
-  const atUserIdList = atUserList.map((user) => user.id);
+  const atUserIdList = atUserList.filter(user => user).map((user) => user.id);
 
   try {
     // 创建微博
@@ -39,6 +40,11 @@ async function create({ userId, content, image }) {
       content: xss(content),
       image,
     });
+
+    // 创建 @提醒
+    if (atUserIdList.length > 0) {
+      await createAtReminder(userId, atUserIdList, blog.id, null, 'blog');
+    }
 
     // 返回
     return new SuccessModel(blog);

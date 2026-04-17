@@ -100,7 +100,27 @@ function formatBlog(list) {
     return result
 }
 
+/**
+ * 格式化评论信息
+ * @param {Array|Object} list 评论列表或者单个评论对象
+ */
+function formatComment(list) {
+    if (list == null) {
+        return list
+    }
+
+    if (list instanceof Array) {
+        // 数组
+        return list.map(_formatDBTime)
+    }
+    // 对象
+    let result = list
+    result = _formatDBTime(result)
+    return result
+}
+
 module.exports = {
     formatUser,
-    formatBlog
+    formatBlog,
+    formatComment
 }

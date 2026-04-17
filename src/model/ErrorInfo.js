@@ -84,5 +84,21 @@ module.exports = {
     createCommentFailInfo: {
         errno: 11004,
         message: '创建评论失败，请重试'
+    },
+
+    // 收藏失败
+    collectFailInfo: {
+        errno: 12001,
+        message: '收藏失败，请重试'
+    },
+    // 取消收藏失败
+    cancelCollectFailInfo: {
+        errno: 12002,
+        message: '取消收藏失败，请重试'
+    },
+    // 获取收藏列表失败
+    getCollectsFailInfo: {
+        errno: 12003,
+        message: '获取收藏列表失败，请重试'
     }
 }

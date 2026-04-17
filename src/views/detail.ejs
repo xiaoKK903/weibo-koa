@@ -17,6 +17,17 @@
                     <div class="blog-content">
                         <div class="content"><%- blogData.blog.contentFormat %></div>
                         <div class="blog-time"><%= blogData.blog.createdAtFormat %></div>
+                        <% if (locals.isLogin) { %>
+                        <div class="blog-actions">
+                            <a href="#" class="blog-collect-btn"
+                                data-blog-id="<%= blogData.blog.id%>"
+                            >
+                                <i class="fa fa-star-o collect-icon"></i> <span class="collect-text">收藏</span>
+                            </a>
+                            &nbsp;
+                            <span class="collect-count" data-blog-id="<%= blogData.blog.id%>">0</span>
+                        </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -126,6 +137,56 @@
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #f1f1f1;
+}
+
+/* 收藏按钮样式 */
+.blog-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.blog-collect-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.blog-collect-btn:hover {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.blog-collect-btn.collected {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+}
+
+.blog-collect-btn .collect-icon {
+    margin-right: 6px;
+    transition: all 0.3s ease;
+}
+
+.blog-collect-btn.collected .collect-icon {
+    transform: scale(1.1);
+}
+
+.collect-count {
+    font-size: 13px;
+    color: #6c757d;
+    font-weight: 500;
 }
 
 /* 评论区样式 */
@@ -327,13 +388,14 @@ $(function () {
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                blogId: blogId,
+                blogId: Number(blogId),
                 content: content
             }),
             xhrFields: {
                 withCredentials: true
             },
-            crossDomain: true,
+            dataType: 'json',
+            // crossDomain: true,
             success: function (res) {
                 console.log('Submit comment response:', res);
                 if (res.errno === 0) {
@@ -354,6 +416,98 @@ $(function () {
     
     // 初始化加载评论
     loadComments();
+
+    // 收藏/取消收藏
+    $('.blog-collect-btn').click(function (e) {
+        e.preventDefault()
+        var $btn = $(this)
+        var blogId = $btn.data('blog-id')
+        var isCollected = $btn.hasClass('collected')
+
+        if (isCollected) {
+            // 取消收藏
+            $.ajax({
+                url: '/api/collect/cancel',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ blogId: blogId }),
+                xhrFields: { withCredentials: true },
+                success: function (res) {
+                    if (res.errno === 0) {
+                        // 更新按钮状态
+                        $btn.removeClass('collected')
+                        $btn.find('.collect-icon').removeClass('fa-star').addClass('fa-star-o')
+                        $btn.find('.collect-text').text('收藏')
+                        // 更新收藏数
+                        var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
+                        var count = parseInt($count.text()) || 0
+                        if (count > 0) {
+                            $count.text(count - 1)
+                        }
+                    } else {
+                        alert(res.message || '取消收藏失败')
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Cancel collect error:', error)
+                    alert('取消收藏失败，请重试')
+                }
+            })
+        } else {
+            // 收藏
+            $.ajax({
+                url: '/api/collect/create',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ blogId: blogId }),
+                xhrFields: { withCredentials: true },
+                success: function (res) {
+                    if (res.errno === 0) {
+                        // 更新按钮状态
+                        $btn.addClass('collected')
+                        $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
+                        $btn.find('.collect-text').text('已收藏')
+                        // 更新收藏数
+                        var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
+                        var count = parseInt($count.text()) || 0
+                        $count.text(count + 1)
+                    } else {
+                        alert(res.message || '收藏失败')
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Create collect error:', error)
+                    alert('收藏失败，请重试')
+                }
+            })
+        }
+    })
+
+    // 检查收藏状态
+    function checkCollectStatus() {
+        var blogId = parseInt('<%= blogData.blog.id %>');
+        $.ajax({
+            url: '/api/collect/check',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ blogId: blogId }),
+            xhrFields: { withCredentials: true },
+            success: function (res) {
+                if (res.errno === 0 && res.data.isCollected) {
+                    var $btn = $('.blog-collect-btn')
+                    $btn.addClass('collected')
+                    $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
+                    $btn.find('.collect-text').text('已收藏')
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Check collect status error:', error)
+            }
+        })
+    }
+
+    // 初始化时检查收藏状态
+    checkCollectStatus();
 });
 </script>
 

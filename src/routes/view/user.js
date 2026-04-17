@@ -35,7 +35,9 @@ router.get("/register", async (ctx, next) => {
 });
 
 router.get("/setting", loginRedirect, async (ctx, next) => {
-  await ctx.render("setting", ctx.session.userInfo);
+  // 创建一个新对象，避免EJS修改session中的userInfo
+  const userInfo = Object.assign({}, ctx.session.userInfo);
+  await ctx.render("setting", userInfo);
 });
 
 module.exports = router;

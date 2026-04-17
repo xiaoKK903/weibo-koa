@@ -25,13 +25,21 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const squareResult = await getSquareBlogList(0);
   const hotPosts = squareResult.data ? squareResult.data.blogList.slice(0, 3) : [];
 
+  // 获取关注数和粉丝数
+  const followingCount = await getFollowingCount(userId);
+  const followerCount = await getFollowerCount(userId);
+
   await ctx.render("index", {
     isLogin: true,
     canReply: true,
     userData: {
       userInfo,
       fansData: {
-        count: 0,
+        count: followerCount,
+        list: [],
+      },
+      followersData: {
+        count: followingCount,
         list: [],
       },
     },
@@ -172,10 +180,22 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
 
   const blog = result.data;
 
+  // 获取关注数和粉丝数
+  const followingCount = await getFollowingCount(userInfo.id);
+  const followerCount = await getFollowerCount(userInfo.id);
+
   await ctx.render("detail", {
     isLogin: true,
     userData: {
       userInfo,
+      fansData: {
+        count: followerCount,
+        list: [],
+      },
+      followersData: {
+        count: followingCount,
+        list: [],
+      },
     },
     blogData: {
       blog,

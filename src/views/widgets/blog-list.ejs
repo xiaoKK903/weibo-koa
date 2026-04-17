@@ -134,6 +134,7 @@ $(function () {
     // 回复
     $('.blog-list-reply').click(function (e) {
         e.preventDefault()
+        e.stopPropagation()
         var $target = $(e.target)
 
         // 获取内容和用户
@@ -170,6 +171,7 @@ $(function () {
     // 收藏/取消收藏
     $('.blog-collect-btn').click(function (e) {
         e.preventDefault()
+        e.stopPropagation()
         var $btn = $(this)
         var blogId = $btn.data('blog-id')
         var isCollected = $btn.hasClass('collected')

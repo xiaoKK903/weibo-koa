@@ -111,5 +111,21 @@ module.exports = {
     unfollowFailInfo: {
         errno: 14002,
         message: '取消关注失败，请重试'
+    },
+
+    // 点赞失败
+    likeFailInfo: {
+        errno: 15001,
+        message: '点赞失败，请重试'
+    },
+    // 取消点赞失败
+    cancelLikeFailInfo: {
+        errno: 15002,
+        message: '取消点赞失败，请重试'
+    },
+    // 获取点赞列表失败
+    getLikesFailInfo: {
+        errno: 15003,
+        message: '获取点赞列表失败，请重试'
     }
 }

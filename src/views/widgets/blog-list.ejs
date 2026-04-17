@@ -142,13 +142,13 @@ $(function () {
         var nickName = $target.attr('data-nickName')
 
         // 设置内容并获取焦点
-        if (typeof quill !== 'undefined') {
+        if (typeof window.quill !== 'undefined') {
             // 使用 Quill 编辑器
             var replyContent = ' // @' + nickName + ' - ' + userName + ' : ' + content
-            quill.setText(replyContent)
-            quill.focus()
+            window.quill.setText(replyContent)
+            window.quill.focus()
             // 将光标设置到开头
-            quill.setSelection(0, 0)
+            window.quill.setSelection(0, 0)
         } else if ($('#text-content').length > 0) {
             // 兼容旧的文本框
             var $textContent = $('#text-content')

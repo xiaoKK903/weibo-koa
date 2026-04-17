@@ -8,6 +8,7 @@ const Blog = require('./Blog')
 const Comment = require('./Comment')
 const Collect = require('./Collect')
 const Follow = require('./Follow')
+const Like = require('./Like')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -68,10 +69,28 @@ User.hasMany(Follow, {
     as: 'followerUsers'
 })
 
+// 点赞关联
+Like.belongsTo(User, {
+    foreignKey: 'userId'
+})
+
+Like.belongsTo(Blog, {
+    foreignKey: 'blogId'
+})
+
+User.hasMany(Like, {
+    foreignKey: 'userId'
+})
+
+Blog.hasMany(Like, {
+    foreignKey: 'blogId'
+})
+
 module.exports = {
     User,
     Blog,
     Comment,
     Collect,
-    Follow
+    Follow,
+    Like
 }

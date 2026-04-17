@@ -229,7 +229,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
 
   await ctx.render("square", {
     isLogin: true,
-    canReply: true,
+    canReply: false,
     blogData: {
       isEmpty,
       blogList,

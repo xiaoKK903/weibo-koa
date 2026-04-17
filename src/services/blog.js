@@ -3,7 +3,7 @@
  * @author milk
  */
 
-const { Blog, User, UserRelation, Comment, Collect } = require('../db/model/index')
+const { Blog, User, UserRelation, Comment, Collect, Like } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
 
@@ -71,7 +71,7 @@ async function getBlogListByUser(
         return blogItem
     })
 
-    // 添加收藏状态和收藏数
+    // 添加收藏状态和收藏数、点赞状态和点赞数
     blogList = await Promise.all(blogList.map(async (blogItem) => {
         // 获取收藏数
         const collectCount = await Collect.count({
@@ -91,11 +91,32 @@ async function getBlogListByUser(
             })
             isCollected = !!collect
         }
+
+        // 获取点赞数
+        const likeCount = await Like.count({
+            where: {
+                blogId: blogItem.id
+            }
+        })
+        
+        // 检查当前用户是否点赞
+        let isLiked = false
+        if (userId) {
+            const like = await Like.findOne({
+                where: {
+                    userId,
+                    blogId: blogItem.id
+                }
+            })
+            isLiked = !!like
+        }
         
         return {
             ...blogItem,
             collectCount,
-            isCollected
+            isCollected,
+            likeCount,
+            isLiked
         }
     }))
 
@@ -132,7 +153,7 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         return blogItem
     })
 
-    // 添加收藏状态和收藏数
+    // 添加收藏状态和收藏数、点赞状态和点赞数
     blogList = await Promise.all(blogList.map(async (blogItem) => {
         // 获取收藏数
         const collectCount = await Collect.count({
@@ -152,11 +173,32 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
             })
             isCollected = !!collect
         }
+
+        // 获取点赞数
+        const likeCount = await Like.count({
+            where: {
+                blogId: blogItem.id
+            }
+        })
+        
+        // 检查当前用户是否点赞
+        let isLiked = false
+        if (userId) {
+            const like = await Like.findOne({
+                where: {
+                    userId,
+                    blogId: blogItem.id
+                }
+            })
+            isLiked = !!like
+        }
         
         return {
             ...blogItem,
             collectCount,
-            isCollected
+            isCollected,
+            likeCount,
+            isLiked
         }
     }))
 
@@ -212,11 +254,33 @@ async function getBlogById(blogId, userId = null) {
         })
         isCollected = !!collect
     }
+
+    // 添加点赞状态和点赞数
+    // 获取点赞数
+    const likeCount = await Like.count({
+        where: {
+            blogId: blogId
+        }
+    })
+    
+    // 检查当前用户是否点赞
+    let isLiked = false
+    if (userId) {
+        const like = await Like.findOne({
+            where: {
+                userId,
+                blogId: blogId
+            }
+        })
+        isLiked = !!like
+    }
     
     return {
         ...formattedBlog,
         collectCount,
-        isCollected
+        isCollected,
+        likeCount,
+        isLiked
     }
 }
 

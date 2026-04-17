@@ -1,7 +1,6 @@
 <%- include('layout/header', { title: '微博 - 登录', isNarrow: true })%>
 
-<h1>登录</h1>
-<% if (locals.isLogin) { %>
+<h1>登录</h1><% if (locals.isLogin) { %>
     <p><%= locals.userName%> 您已成功登录，请直接访问<a href="/">首页</a></p>
 <% } else { %>
     <form>

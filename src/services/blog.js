@@ -3,7 +3,7 @@
  * @author milk
  */
 
-const { Blog, User, UserRelation, Comment } = require('../db/model/index')
+const { Blog, User, UserRelation, Comment, Collect } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
 
@@ -22,10 +22,10 @@ async function createBlog({ userId, content, image }) {
 
 /**
  * 根据用户获取微博列表
- * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10 }
+ * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10, userId }
  */
 async function getBlogListByUser(
-    { userName, pageIndex = 0, pageSize = 10 }
+    { userName, pageIndex = 0, pageSize = 10, userId }
 ) {
     // 拼接查询条件
     const userWhereOpts = {}
@@ -62,6 +62,34 @@ async function getBlogListByUser(
         return blogItem
     })
 
+    // 添加收藏状态和收藏数
+    blogList = await Promise.all(blogList.map(async (blogItem) => {
+        // 获取收藏数
+        const collectCount = await Collect.count({
+            where: {
+                blogId: blogItem.id
+            }
+        })
+        
+        // 检查当前用户是否收藏
+        let isCollected = false
+        if (userId) {
+            const collect = await Collect.findOne({
+                where: {
+                    userId,
+                    blogId: blogItem.id
+                }
+            })
+            isCollected = !!collect
+        }
+        
+        return {
+            ...blogItem,
+            collectCount,
+            isCollected
+        }
+    }))
+
     return {
         count: result.count,
         blogList
@@ -95,6 +123,34 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         return blogItem
     })
 
+    // 添加收藏状态和收藏数
+    blogList = await Promise.all(blogList.map(async (blogItem) => {
+        // 获取收藏数
+        const collectCount = await Collect.count({
+            where: {
+                blogId: blogItem.id
+            }
+        })
+        
+        // 检查当前用户是否收藏
+        let isCollected = false
+        if (userId) {
+            const collect = await Collect.findOne({
+                where: {
+                    userId,
+                    blogId: blogItem.id
+                }
+            })
+            isCollected = !!collect
+        }
+        
+        return {
+            ...blogItem,
+            collectCount,
+            isCollected
+        }
+    }))
+
     return {
         count: result.count,
         blogList
@@ -104,8 +160,9 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
 /**
  * 根据ID获取微博详情
  * @param {number} blogId 微博ID
+ * @param {number} userId 当前用户ID
  */
-async function getBlogById(blogId) {
+async function getBlogById(blogId, userId = null) {
     const result = await Blog.findOne({
         where: {
             id: blogId
@@ -127,7 +184,31 @@ async function getBlogById(blogId) {
     const formattedBlog = formatBlog(blog)
     formattedBlog.user = formatUser(formattedBlog.user.dataValues)
 
-    return formattedBlog
+    // 添加收藏状态和收藏数
+    // 获取收藏数
+    const collectCount = await Collect.count({
+        where: {
+            blogId: blogId
+        }
+    })
+    
+    // 检查当前用户是否收藏
+    let isCollected = false
+    if (userId) {
+        const collect = await Collect.findOne({
+            where: {
+                userId,
+                blogId: blogId
+            }
+        })
+        isCollected = !!collect
+    }
+    
+    return {
+        ...formattedBlog,
+        collectCount,
+        isCollected
+    }
 }
 
 /**

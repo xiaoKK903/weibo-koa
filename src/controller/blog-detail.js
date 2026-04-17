@@ -11,9 +11,10 @@ const xss = require('xss')
 /**
  * 获取微博详情
  * @param {number} blogId 微博ID
+ * @param {number} userId 当前用户ID
  */
-async function getBlogDetail(blogId) {
-    const blog = await getBlogById(blogId)
+async function getBlogDetail(blogId, userId = null) {
+    const blog = await getBlogById(blogId, userId)
     if (!blog) {
         return new ErrorModel(blogNotExistInfo)
     }

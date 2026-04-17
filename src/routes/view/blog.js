@@ -68,7 +68,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   }
 
   // 获取微博第一页数据
-  const result = await getProfileBlogList(curUserName, 0);
+  const result = await getProfileBlogList(curUserName, 0, myUserInfo.id);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
   // 我是否关注了此人？
@@ -150,7 +150,7 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   }
 
   // 获取微博详情
-  const result = await getBlogDetail(blogIdNum);
+  const result = await getBlogDetail(blogIdNum, userInfo.id);
   if (result.errno !== 0) {
     // 微博不存在，跳转到首页
     ctx.redirect("/");

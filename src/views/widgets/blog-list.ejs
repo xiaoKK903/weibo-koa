@@ -28,13 +28,13 @@
             <% } %>
             <% if (locals.isLogin) { %>
             <%# 可以收藏 %> 
-            <a href="#" class="blog-collect-btn"
+            <a href="#" class="blog-collect-btn <%= blog.isCollected ? 'collected' : ''%>"
                 data-blog-id="<%= blog.id%>"
             >
-                <i class="fa fa-star-o collect-icon"></i> <span class="collect-text">收藏</span>
+                <i class="fa <%= blog.isCollected ? 'fa-star' : 'fa-star-o'%> collect-icon"></i> <span class="collect-text"><%= blog.isCollected ? '已收藏' : '收藏'%></span>
             </a>
             &nbsp;
-            <span class="collect-count" data-blog-id="<%= blog.id%>">0</span>
+            <span class="collect-count" data-blog-id="<%= blog.id%>"><%= blog.collectCount || 0%></span>
             <% } %>
         </div>
     </div>
@@ -205,26 +205,6 @@ $(function () {
         }
     })
 
-    // 检查收藏状态
-    function checkCollectStatus() {
-        $('.blog-collect-btn').each(function () {
-            var $btn = $(this)
-            var blogId = $btn.data('blog-id')
-            ajax.post('/api/collect/check', {
-                blogId: blogId
-            }, function (err, data) {
-                if (!err && data.isCollected) {
-                    $btn.addClass('collected')
-                    $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
-                    $btn.find('.collect-text').text('已收藏')
-                }
-            })
-        })
-    }
 
-    // 初始化时检查收藏状态
-    if ($('.blog-collect-btn').length > 0) {
-        checkCollectStatus()
-    }
 })
 </script>

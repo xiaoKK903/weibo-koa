@@ -220,8 +220,11 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
 
 // 广场
 router.get("/square", loginRedirect, async (ctx, next) => {
+  const { keyword } = ctx.query;
+  const userId = ctx.session.userInfo?.id;
+  
   // 获取微博数据，第一页
-  const result = await getSquareBlogList(0);
+  const result = await getSquareBlogList(0, keyword, userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data || {};
 
   await ctx.render("square", {
@@ -233,6 +236,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
       pageSize,
       pageIndex,
       count,
+      keyword,
     },
   });
 });

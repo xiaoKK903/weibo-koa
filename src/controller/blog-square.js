@@ -10,9 +10,11 @@ const { getSquareCacheList } = require("../cache/blog");
 /**
  * 获取广场的微博列表
  * @param {number} pageIndex pageIndex
+ * @param {string} keyword 搜索关键词
+ * @param {number} userId 当前用户ID
  */
-async function getSquareBlogList(pageIndex = 0) {
-  const result = await getSquareCacheList(pageIndex, PAGE_SIZE);
+async function getSquareBlogList(pageIndex = 0, keyword = null, userId = null) {
+  const result = await getSquareCacheList(pageIndex, PAGE_SIZE, keyword, userId);
   const blogList = result.blogList;
 
   // 拼接返回数据
@@ -22,6 +24,7 @@ async function getSquareBlogList(pageIndex = 0) {
     pageSize: PAGE_SIZE,
     pageIndex,
     count: result.count,
+    keyword,
   });
 }
 

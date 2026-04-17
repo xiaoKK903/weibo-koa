@@ -24,6 +24,17 @@
             >
                 <i class="fa fa-mail-reply"></i> 回复
             </a>
+            &nbsp;
+            <% } %>
+            <% if (locals.isLogin) { %>
+            <%# 可以收藏 %> 
+            <a href="#" class="blog-collect-btn"
+                data-blog-id="<%= blog.id%>"
+            >
+                <i class="fa fa-star-o collect-icon"></i> <span class="collect-text">收藏</span>
+            </a>
+            &nbsp;
+            <span class="collect-count" data-blog-id="<%= blog.id%>">0</span>
             <% } %>
         </div>
     </div>
@@ -66,6 +77,42 @@
     opacity: 1;
     text-decoration: underline;
 }
+
+/* 收藏按钮样式 */
+.blog-collect-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.blog-collect-btn:hover {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+    text-decoration: none;
+}
+
+.blog-collect-btn.collected {
+    color: #ffc107;
+}
+
+.blog-collect-btn .collect-icon {
+    margin-right: 4px;
+    transition: all 0.3s ease;
+}
+
+.blog-collect-btn.collected .collect-icon {
+    transform: scale(1.1);
+}
+
+.collect-count {
+    font-size: 12px;
+    color: #6c757d;
+}
 </style>
 
 <script>
@@ -102,12 +149,82 @@ $(function () {
 
     // 点击微博跳转到详情页
     $('.item-wrapper').click(function (e) {
-        // 如果点击的是回复按钮或图片链接，不跳转
-        if ($(e.target).closest('.blog-list-reply, .blog-img, a').length > 0) {
+        // 如果点击的是回复按钮、收藏按钮或图片链接，不跳转
+        if ($(e.target).closest('.blog-list-reply, .blog-collect-btn, .blog-img, a').length > 0) {
             return
         }
         var blogId = $(this).data('blog-id')
         window.location.href = '/detail/' + blogId
     })
+
+    // 收藏/取消收藏
+    $('.blog-collect-btn').click(function (e) {
+        e.preventDefault()
+        var $btn = $(this)
+        var blogId = $btn.data('blog-id')
+        var isCollected = $btn.hasClass('collected')
+
+        if (isCollected) {
+            // 取消收藏
+            ajax.post('/api/collect/cancel', {
+                blogId: blogId
+            }, function (err, data) {
+                if (err) {
+                    alert(err)
+                    return
+                }
+                // 更新按钮状态
+                $btn.removeClass('collected')
+                $btn.find('.collect-icon').removeClass('fa-star').addClass('fa-star-o')
+                $btn.find('.collect-text').text('收藏')
+                // 更新收藏数
+                var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
+                var count = parseInt($count.text()) || 0
+                if (count > 0) {
+                    $count.text(count - 1)
+                }
+            })
+        } else {
+            // 收藏
+            ajax.post('/api/collect/create', {
+                blogId: blogId
+            }, function (err, data) {
+                if (err) {
+                    alert(err)
+                    return
+                }
+                // 更新按钮状态
+                $btn.addClass('collected')
+                $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
+                $btn.find('.collect-text').text('已收藏')
+                // 更新收藏数
+                var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
+                var count = parseInt($count.text()) || 0
+                $count.text(count + 1)
+            })
+        }
+    })
+
+    // 检查收藏状态
+    function checkCollectStatus() {
+        $('.blog-collect-btn').each(function () {
+            var $btn = $(this)
+            var blogId = $btn.data('blog-id')
+            ajax.post('/api/collect/check', {
+                blogId: blogId
+            }, function (err, data) {
+                if (!err && data.isCollected) {
+                    $btn.addClass('collected')
+                    $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
+                    $btn.find('.collect-text').text('已收藏')
+                }
+            })
+        })
+    }
+
+    // 初始化时检查收藏状态
+    if ($('.blog-collect-btn').length > 0) {
+        checkCollectStatus()
+    }
 })
 </script>

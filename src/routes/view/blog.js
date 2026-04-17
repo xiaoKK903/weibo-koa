@@ -21,6 +21,8 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
   await ctx.render("index", {
+    isLogin: true,
+    canReply: true,
     userData: {
       userInfo,
       fansData: {
@@ -73,6 +75,8 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const amIFollowed = false; // 暂时设为false，因为已移除关注功能
 
   await ctx.render("profile", {
+    isLogin: true,
+    canReply: true,
     blogData: {
       isEmpty,
       blogList,
@@ -104,6 +108,8 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data || {};
 
   await ctx.render("square", {
+    isLogin: true,
+    canReply: true,
     blogData: {
       isEmpty,
       blogList,
@@ -154,6 +160,7 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   const blog = result.data;
 
   await ctx.render("detail", {
+    isLogin: true,
     userData: {
       userInfo,
     },

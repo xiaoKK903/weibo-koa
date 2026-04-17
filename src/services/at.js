@@ -164,10 +164,12 @@ async function getAtListByUserId(toUserId, pageIndex = 0, pageSize = 10, onlyUnr
             },
             {
                 model: Blog,
+                as: 'blog',
                 attributes: ['id', 'content', 'image', 'createdAt']
             },
             {
                 model: Comment,
+                as: 'comment',
                 attributes: ['id', 'content', 'createdAt']
             }
         ]
@@ -178,8 +180,8 @@ async function getAtListByUserId(toUserId, pageIndex = 0, pageSize = 10, onlyUnr
     // 格式化数据
     const formattedList = atList.map(item => {
         const fromUser = item.fromUser ? formatUser(item.fromUser.dataValues) : null
-        const blog = item.Blog ? formatBlog(item.Blog.dataValues) : null
-        const comment = item.Comment ? formatComment(item.Comment.dataValues) : null
+        const blog = item.blog ? formatBlog(item.blog.dataValues) : null
+        const comment = item.comment ? formatComment(item.comment.dataValues) : null
         
         return {
             id: item.id,

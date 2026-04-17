@@ -91,10 +91,6 @@
                 e.preventDefault()
 
                 // 验证
-                if (isUserNameExist) {
-                    alert('用户名已存在')
-                    return
-                }
                 if (!isPasswordSame) {
                     alert('两次密码不一致')
                     return
@@ -104,18 +100,29 @@
                 var password = $inputPassword.val()
                 var gender = parseInt($selectGender.val())
 
-                // 提交数据
-                ajax.post('/api/user/register', {
-                    userName,
-                    password,
-                    gender
+                // 再次检查用户名是否存在，确保实时性
+                ajax.post('/api/user/isExist', {
+                    userName
                 }, function(err, data) {
-                    if (err) {
-                        alert(err)
+                    if (!err) {
+                        // 用户名已存在
+                        alert('用户名已存在')
                         return
                     }
-                    alert('注册成功，请登录')
-                    location.href = '/login'
+                    
+                    // 用户名可用，提交注册
+                    ajax.post('/api/user/register', {
+                        userName,
+                        password,
+                        gender
+                    }, function(err, data) {
+                        if (err) {
+                            alert(err)
+                            return
+                        }
+                        alert('注册成功，请登录')
+                        location.href = '/login'
+                    })
                 })
             })
         })

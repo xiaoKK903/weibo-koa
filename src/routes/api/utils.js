@@ -11,7 +11,12 @@ const { saveFile } = require('../../controller/utils')
 router.prefix('/api/utils')
 
 // 上传图片
-router.post('/upload', loginCheck, koaFrom(), async (ctx, next) => {
+router.post('/upload', loginCheck, koaFrom({
+    // 配置上传选项
+    multiples: false,
+    keepExtensions: true,
+    maxFileSize: 1024 * 1024 * 10 // 10MB
+}), async (ctx, next) => {
     const file = ctx.req.files['file']
     if (!file) {
         return

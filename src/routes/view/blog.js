@@ -10,6 +10,7 @@ const { getSquareBlogList } = require("../../controller/blog-square");
 const { isExist } = require("../../controller/user");
 const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
+const { checkFollowStatus, getFollowingCount, getFollowerCount } = require("../../services/follow");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -77,7 +78,14 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
   // 我是否关注了此人？
-  const amIFollowed = false; // 暂时设为false，因为已移除关注功能
+  let amIFollowed = false;
+  if (!isMe) {
+    amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
+  }
+
+  // 获取关注数和粉丝数
+  const followingCount = await getFollowingCount(curUserInfo.id);
+  const followerCount = await getFollowerCount(curUserInfo.id);
 
   await ctx.render("profile", {
     isLogin: true,
@@ -93,11 +101,11 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
       userInfo: curUserInfo,
       isMe,
       fansData: {
-        count: 0,
+        count: followerCount,
         list: [],
       },
       followersData: {
-        count: 0,
+        count: followingCount,
         list: [],
       },
       amIFollowed,

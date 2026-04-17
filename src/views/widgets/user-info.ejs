@@ -10,4 +10,17 @@
             @提到我的 (0)
         </a>
     </p>
+<% } else { %>
+    <%# 不是当前登录用户，显示关注按钮%>
+    <div class="margin-top-10">
+        <button class="btn btn-primary btn-sm follow-btn" data-user-id="<%= userInfo.id%>" data-followed="<%= amIFollowed%>">
+            <%= amIFollowed ? '已关注' : '关注' %>
+        </button>
+    </div>
 <% } %>
+
+<div class="margin-top-10">
+    <a href="#" class="follow-count">关注 (<span class="following-count"><%= followersData ? followersData.count : 0%></span>)</a>
+    <span class="margin-left-10 margin-right-10">|</span>
+    <a href="#" class="fan-count">粉丝 (<span class="follower-count"><%= fansData ? fansData.count : 0%></span>)</a>
+</div>

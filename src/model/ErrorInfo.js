@@ -100,5 +100,16 @@ module.exports = {
     getCollectsFailInfo: {
         errno: 12003,
         message: '获取收藏列表失败，请重试'
+    },
+
+    // 关注失败
+    followFailInfo: {
+        errno: 14001,
+        message: '关注失败，请重试'
+    },
+    // 取消关注失败
+    unfollowFailInfo: {
+        errno: 14002,
+        message: '取消关注失败，请重试'
     }
 }

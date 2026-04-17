@@ -22,7 +22,8 @@ async function getSquareCacheList(pageIndex, pageSize, keyword = null, userId = 
     return await getBlogListByUser({ pageIndex, pageSize, keyword, userId });
   }
 
-  const key = `${KEY_PREFIX}${pageIndex}_${pageSize}`;
+  // 缓存 key 包含 userId，确保每个用户的个性化数据（点赞/收藏状态）都能正确缓存
+  const key = `${KEY_PREFIX}${pageIndex}_${pageSize}_${userId || 'guest'}`;
 
   // 尝试获取缓存
   const cacheResult = await get(key);

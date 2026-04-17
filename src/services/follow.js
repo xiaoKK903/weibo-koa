@@ -3,7 +3,7 @@
  * @author milk
  */
 
-const { Follow } = require('../db/model/index')
+const { Follow, User } = require('../db/model/index')
 
 /**
  * 关注用户
@@ -99,10 +99,62 @@ async function getFollowerCount(userId) {
     }
 }
 
+/**
+ * 获取关注列表
+ * @param {number} userId 用户ID
+ */
+async function getFollowingList(userId) {
+    try {
+        const result = await Follow.findAll({
+            where: {
+                followerId: userId
+            },
+            include: [
+                {
+                    model: User,
+                    as: 'following',
+                    attributes: ['id', 'userName', 'nickName', 'picture']
+                }
+            ]
+        })
+        return result.map(item => item.following)
+    } catch (ex) {
+        console.error(ex.message, ex.stack)
+        return []
+    }
+}
+
+/**
+ * 获取粉丝列表
+ * @param {number} userId 用户ID
+ */
+async function getFollowerList(userId) {
+    try {
+        const result = await Follow.findAll({
+            where: {
+                followingId: userId
+            },
+            include: [
+                {
+                    model: User,
+                    as: 'follower',
+                    attributes: ['id', 'userName', 'nickName', 'picture']
+                }
+            ]
+        })
+        return result.map(item => item.follower)
+    } catch (ex) {
+        console.error(ex.message, ex.stack)
+        return []
+    }
+}
+
 module.exports = {
     followUser,
     unfollowUser,
     checkFollowStatus,
     getFollowingCount,
-    getFollowerCount
+    getFollowerCount,
+    getFollowingList,
+    getFollowerList
 }

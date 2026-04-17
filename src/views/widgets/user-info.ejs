@@ -20,7 +20,7 @@
 <% } %>
 
 <div class="margin-top-10">
-    <a href="#" class="follow-count">关注 (<span class="following-count"><%= followersData ? followersData.count : 0%></span>)</a>
+    <a href="/profile/<%= userInfo.userName %>/following" class="follow-count">关注 (<span class="following-count"><%= followersData ? followersData.count : 0%></span>)</a>
     <span class="margin-left-10 margin-right-10">|</span>
-    <a href="#" class="fan-count">粉丝 (<span class="follower-count"><%= fansData ? fansData.count : 0%></span>)</a>
+    <a href="/profile/<%= userInfo.userName %>/follower" class="fan-count">粉丝 (<span class="follower-count"><%= fansData ? fansData.count : 0%></span>)</a>
 </div>

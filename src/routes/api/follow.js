@@ -4,7 +4,7 @@
  */
 
 const router = require("koa-router")();
-const { follow, unfollow, checkFollow, getUserFollowStats } = require("../../controller/follow");
+const { follow, unfollow, checkFollow, getUserFollowStats, getUserFollowingList, getUserFollowerList } = require("../../controller/follow");
 const { loginCheck } = require("../../middlewares/loginChecks");
 
 router.prefix("/api/follow");
@@ -31,6 +31,18 @@ router.post("/check", loginCheck, async (ctx, next) => {
 router.get("/stats/:userId", async (ctx, next) => {
   const { userId } = ctx.params;
   ctx.body = await getUserFollowStats(userId);
+});
+
+// 获取用户的关注列表
+router.get("/following/:userId", async (ctx, next) => {
+  const { userId } = ctx.params;
+  ctx.body = await getUserFollowingList(parseInt(userId));
+});
+
+// 获取用户的粉丝列表
+router.get("/follower/:userId", async (ctx, next) => {
+  const { userId } = ctx.params;
+  ctx.body = await getUserFollowerList(parseInt(userId));
 });
 
 module.exports = router;

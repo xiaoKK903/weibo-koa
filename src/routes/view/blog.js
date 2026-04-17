@@ -10,7 +10,7 @@ const { getSquareBlogList } = require("../../controller/blog-square");
 const { isExist } = require("../../controller/user");
 const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
-const { checkFollowStatus, getFollowingCount, getFollowerCount } = require("../../services/follow");
+const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -118,6 +118,102 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
       },
       amIFollowed,
       atCount: 0,
+    },
+  });
+});
+
+// 关注列表页面
+router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
+  // 已登录用户的信息
+  const myUserInfo = ctx.session.userInfo;
+  const myUserName = myUserInfo.userName;
+
+  let curUserInfo;
+  const { userName: curUserName } = ctx.params;
+  const isMe = myUserName === curUserName;
+  if (isMe) {
+    // 是当前登录用户
+    curUserInfo = myUserInfo;
+  } else {
+    // 不是当前登录用户
+    const existResult = await isExist(curUserName);
+    if (existResult.errno !== 0) {
+      // 用户名不存在
+      ctx.redirect("/");
+      return;
+    }
+    // 用户名存在
+    curUserInfo = existResult.data;
+  }
+
+  // 获取关注列表
+  const followingList = await getFollowingList(curUserInfo.id);
+  const followingCount = await getFollowingCount(curUserInfo.id);
+  const followerCount = await getFollowerCount(curUserInfo.id);
+
+  await ctx.render("following", {
+    isLogin: true,
+    userData: {
+      userInfo: curUserInfo,
+      isMe,
+      list: followingList,
+      count: followingCount,
+      fansData: {
+        count: followerCount,
+        list: [],
+      },
+      followersData: {
+        count: followingCount,
+        list: [],
+      },
+    },
+  });
+});
+
+// 粉丝列表页面
+router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
+  // 已登录用户的信息
+  const myUserInfo = ctx.session.userInfo;
+  const myUserName = myUserInfo.userName;
+
+  let curUserInfo;
+  const { userName: curUserName } = ctx.params;
+  const isMe = myUserName === curUserName;
+  if (isMe) {
+    // 是当前登录用户
+    curUserInfo = myUserInfo;
+  } else {
+    // 不是当前登录用户
+    const existResult = await isExist(curUserName);
+    if (existResult.errno !== 0) {
+      // 用户名不存在
+      ctx.redirect("/");
+      return;
+    }
+    // 用户名存在
+    curUserInfo = existResult.data;
+  }
+
+  // 获取粉丝列表
+  const followerList = await getFollowerList(curUserInfo.id);
+  const followingCount = await getFollowingCount(curUserInfo.id);
+  const followerCount = await getFollowerCount(curUserInfo.id);
+
+  await ctx.render("follower", {
+    isLogin: true,
+    userData: {
+      userInfo: curUserInfo,
+      isMe,
+      list: followerList,
+      count: followerCount,
+      fansData: {
+        count: followerCount,
+        list: [],
+      },
+      followersData: {
+        count: followingCount,
+        list: [],
+      },
     },
   });
 });

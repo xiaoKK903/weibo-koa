@@ -78,6 +78,40 @@
                     设置
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/at">
+                    <i class="fa fa-bell"></i>
+                    消息
+                    <% if (locals.unreadAtCount && locals.unreadAtCount > 0) { %>
+                    <span class="badge badge-danger badge-unread" id="unread-at-count"><%= locals.unreadAtCount %></span>
+                    <% } %>
+                </a>
+            </li>
         </ul>
     </nav>
+    
+    <%# 未读消息徽章样式 %>
+    <style>
+        .badge-unread {
+            position: relative;
+            top: -8px;
+            margin-left: 2px;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
     <% } %>

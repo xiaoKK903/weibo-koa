@@ -6,6 +6,9 @@
 const { getBlogById, createComment: createCommentService, getCommentsByBlogId } = require('../services/blog')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { blogNotExistInfo, createCommentFailInfo } = require('../model/ErrorInfo')
+const { REG_FOR_AT_WHO } = require('../conf/constant')
+const { getUserInfo } = require('../services/user')
+const { createAtReminder } = require('../services/at')
 const xss = require('xss')
 
 /**
@@ -27,11 +30,35 @@ async function getBlogDetail(blogId, userId = null) {
  */
 async function createComment({ blogId, userId, content }) {
     try {
+        // 分析并收集 content 中的 @ 用户
+        // content 格式如 '哈喽 @李四 - lisi 你好 @王五 - wangwu '
+        const atUserNameList = [];
+        content = content.replace(REG_FOR_AT_WHO, (matchStr, nickName, userName) => {
+            // 目的不是 replace 而是获取 userName
+            atUserNameList.push(userName);
+            return matchStr; // 替换不生效，预期
+        });
+
+        // 根据 @ 用户名查询用户信息
+        const atUserList = await Promise.all(
+            atUserNameList.map((userName) => getUserInfo(userName)),
+        );
+
+        // 根据用户信息，获取用户 id
+        const atUserIdList = atUserList.filter(user => user).map((user) => user.id);
+
+        // 创建评论
         const comment = await createCommentService({
             blogId,
             userId,
             content: content
         })
+
+        // 创建 @提醒
+        if (atUserIdList.length > 0) {
+            await createAtReminder(userId, atUserIdList, blogId, comment.id, 'comment');
+        }
+
         return new SuccessModel(comment)
     } catch (ex) {
         console.error(ex.message, ex.stack)

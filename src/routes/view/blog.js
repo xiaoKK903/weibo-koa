@@ -11,11 +11,15 @@ const { isExist } = require("../../controller/user");
 const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
 const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
+const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
   const { id: userId } = userInfo;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userId);
 
   // 获取第一页数据
   const result = await getHomeBlogList(userId);
@@ -32,6 +36,7 @@ router.get("/", loginRedirect, async (ctx, next) => {
   await ctx.render("index", {
     isLogin: true,
     canReply: true,
+    unreadAtCount,
     userData: {
       userInfo,
       fansData: {
@@ -63,6 +68,9 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   // 已登录用户的信息
   const myUserInfo = ctx.session.userInfo;
   const myUserName = myUserInfo.userName;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
 
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
@@ -98,6 +106,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   await ctx.render("profile", {
     isLogin: true,
     canReply: true,
+    unreadAtCount,
     blogData: {
       isEmpty,
       blogList,
@@ -128,6 +137,9 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
   const myUserInfo = ctx.session.userInfo;
   const myUserName = myUserInfo.userName;
 
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
+
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
   const isMe = myUserName === curUserName;
@@ -153,6 +165,7 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
 
   await ctx.render("following", {
     isLogin: true,
+    unreadAtCount,
     userData: {
       userInfo: curUserInfo,
       isMe,
@@ -175,6 +188,9 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
   // 已登录用户的信息
   const myUserInfo = ctx.session.userInfo;
   const myUserName = myUserInfo.userName;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
 
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
@@ -201,6 +217,7 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
 
   await ctx.render("follower", {
     isLogin: true,
+    unreadAtCount,
     userData: {
       userInfo: curUserInfo,
       isMe,
@@ -223,6 +240,9 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   const { keyword } = ctx.query;
   const userId = ctx.session.userInfo?.id;
   
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userId);
+  
   // 获取微博数据，第一页
   const result = await getSquareBlogList(0, keyword, userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data || {};
@@ -230,6 +250,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   await ctx.render("square", {
     isLogin: true,
     canReply: true,
+    unreadAtCount,
     blogData: {
       isEmpty,
       blogList,
@@ -241,20 +262,33 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   });
 });
 
-// atMe 路由
-router.get("/at-me", loginRedirect, async (ctx, next) => {
-  // 渲染页面
-  await ctx.render("atMe", {
-    blogData: {
-      isEmpty: true,
-      blogList: [],
-      pageSize: 0,
+// 通知页面（有人提到你）
+router.get("/at", loginRedirect, async (ctx, next) => {
+  const userId = ctx.session.userInfo.id;
+  
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userId);
+  
+  // 获取 @提醒列表
+  const result = await getAtListByUserId(userId, 0, 10);
+  const { count, atList } = result;
+
+  await ctx.render("at", {
+    isLogin: true,
+    unreadAtCount,
+    atData: {
+      isEmpty: atList.length === 0,
+      atList,
+      pageSize: 10,
       pageIndex: 0,
-      count: 0,
+      count,
     },
   });
+});
 
-
+// atMe 路由（重定向到新的通知页面）
+router.get("/at-me", loginRedirect, async (ctx, next) => {
+  ctx.redirect("/at");
 });
 
 // 微博详情页
@@ -269,6 +303,9 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
     ctx.redirect("/");
     return;
   }
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
 
   // 获取微博详情
   const result = await getBlogDetail(blogIdNum, userInfo.id);
@@ -286,6 +323,7 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
 
   await ctx.render("detail", {
     isLogin: true,
+    unreadAtCount,
     userData: {
       userInfo,
       fansData: {

@@ -1,0 +1,471 @@
+<%- include('layout/header', { title: '微博 - 消息通知', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <!-- 左侧 -->
+        <div class="col-8">
+            <div class="d-flex justify-content-between align-items-center margin-bottom-20 padding-bottom-10 border-bottom">
+                <h4>有人提到你</h4>
+                <% if (atData.count > 0) { %>
+                <button class="btn btn-sm btn-outline-primary" id="btn-mark-all-read">
+                    <i class="fa fa-check"></i> 全部标记已读
+                </button>
+                <% } %>
+            </div>
+
+            <% if (atData.isEmpty) { %>
+                <div class="no-notification">
+                    <div class="text-center">
+                        <i class="fa fa-bell-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h5 class="text-muted">暂无新消息</h5>
+                        <p class="text-muted">当有人在微博或评论中提到你时，会在这里显示</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- 通知列表 -->
+                <div id="container-at-list" class="at-list">
+                    <% atData.atList.forEach(function(atItem) { %>
+                    <div class="at-item <%= atItem.isRead ? '' : 'unread' %>" data-at-id="<%= atItem.id %>">
+                        <div class="at-avatar">
+                            <img src="<%= atItem.fromUser.picture %>" alt="<%= atItem.fromUser.nickName %>">
+                        </div>
+                        <div class="at-content">
+                            <div class="at-header">
+                                <a href="/profile/<%= atItem.fromUser.userName %>" class="at-user"><%= atItem.fromUser.nickName %></a>
+                                <span class="at-type">
+                                    <% if (atItem.type === 'blog') { %>
+                                    在微博中提到了你
+                                    <% } else { %>
+                                    在评论中提到了你
+                                    <% } %>
+                                </span>
+                                <span class="at-time"><%= atItem.createdAtFormat %></span>
+                            </div>
+                            <div class="at-preview">
+                                <% if (atItem.blog) { %>
+                                <div class="at-blog-preview">
+                                    <% if (atItem.type === 'comment' && atItem.comment) { %>
+                                    <span class="at-comment-text"><%= atItem.comment.content %></span>
+                                    <div class="at-divider">— 评论于 —</div>
+                                    <% } %>
+                                    <a href="/detail/<%= atItem.blog.id %>" class="at-blog-link" data-at-id="<%= atItem.id %>">
+                                        <span class="at-blog-content"><%= atItem.blog.contentSummary %></span>
+                                    </a>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <% if (!atItem.isRead) { %>
+                        <div class="at-unread-dot" title="未读"></div>
+                        <% } %>
+                    </div>
+                    <% }) %>
+                </div> <!-- 通知列表 结束 -->
+                <!-- 加载更多 -->
+                <% if (atData.count > atData.atList.length) { %>
+                    <div class="text-center margin-top-20">
+                        <button class="btn btn-outline-primary" id="btn-load-more">加载更多</button>
+                    </div>
+                <% } %> <!-- 加载更多 结束 -->
+            <% } %>
+        </div> <!-- 左侧结束 -->
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<style>
+/* 通知列表样式 */
+.at-list {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.at-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.at-item:last-child {
+    border-bottom: none;
+}
+
+.at-item.unread {
+    background: rgba(0, 123, 255, 0.03);
+}
+
+.at-item:hover {
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.at-avatar {
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.at-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+.at-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.at-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.at-user {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.at-user:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.at-type {
+    font-size: 13px;
+    color: #6c757d;
+    margin-right: 8px;
+}
+
+.at-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.at-preview {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    border-left: 3px solid #007bff;
+}
+
+.at-blog-preview {
+    display: flex;
+    flex-direction: column;
+}
+
+.at-comment-text {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+}
+
+.at-divider {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.at-blog-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.at-blog-link:hover {
+    text-decoration: none;
+}
+
+.at-blog-link:hover .at-blog-content {
+    color: #007bff;
+}
+
+.at-blog-content {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+.at-unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #007bff;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-left: 10px;
+    align-self: flex-start;
+    margin-top: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+.no-notification {
+    padding: 60px 20px;
+}
+
+/* 加载更多按钮 */
+#btn-load-more {
+    min-width: 150px;
+    transition: all 0.3s ease;
+}
+
+#btn-load-more:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+#btn-load-more:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+</style>
+
+<script>
+$(function () {
+    var currentPage = 0
+    var pageSize = 10
+    var hasMore = <%= atData.count > atData.atList.length ? 'true' : 'false' %>
+
+    // 点击微博链接时标记为已读
+    $('.at-blog-link').click(function (e) {
+        var atId = $(this).data('at-id')
+        
+        // 标记为已读
+        $.ajax({
+            url: '/api/at/mark-read',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ atId: atId }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    // 更新 UI：移除未读状态
+                    var $atItem = $('.at-item[data-at-id="' + atId + '"]')
+                    $atItem.removeClass('unread')
+                    $atItem.find('.at-unread-dot').remove()
+                    
+                    // 更新导航栏未读数量
+                    updateUnreadCount()
+                }
+            }
+        })
+    })
+
+    // 全部标记已读
+    $('#btn-mark-all-read').click(function (e) {
+        e.preventDefault()
+        
+        if (!confirm('确定要将所有消息标记为已读吗？')) {
+            return
+        }
+        
+        var $btn = $(this)
+        $btn.prop('disabled', true).text('处理中...')
+        
+        $.ajax({
+            url: '/api/at/mark-all-read',
+            type: 'POST',
+            success: function (res) {
+                if (res.errno === 0) {
+                    // 更新 UI：移除所有未读状态
+                    $('.at-item.unread').removeClass('unread')
+                    $('.at-unread-dot').remove()
+                    
+                    // 隐藏按钮
+                    $btn.fadeOut(300)
+                    
+                    // 更新导航栏未读数量
+                    updateUnreadCount()
+                    
+                    alert('已将所有消息标记为已读')
+                } else {
+                    alert(res.message || '操作失败')
+                    $btn.prop('disabled', false).text('<i class="fa fa-check"></i> 全部标记已读')
+                }
+            },
+            error: function () {
+                alert('操作失败，请重试')
+                $btn.prop('disabled', false).text('<i class="fa fa-check"></i> 全部标记已读')
+            }
+        })
+    })
+
+    // 加载更多
+    $('#btn-load-more').click(function (e) {
+        e.preventDefault()
+        
+        if (!hasMore) {
+            return
+        }
+        
+        var $btn = $(this)
+        $btn.prop('disabled', true).text('加载中...')
+        currentPage++
+        
+        $.ajax({
+            url: '/api/at/list',
+            type: 'GET',
+            data: {
+                pageIndex: currentPage,
+                pageSize: pageSize
+            },
+            success: function (res) {
+                if (res.errno === 0) {
+                    var atList = res.data.atList
+                    
+                    if (atList.length === 0) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                        return
+                    }
+                    
+                    // 渲染数据
+                    var html = ''
+                    atList.forEach(function (atItem) {
+                        html += createAtItemHtml(atItem)
+                    })
+                    
+                    $('#container-at-list').append(html)
+                    
+                    // 检查是否还有更多
+                    if (atList.length < pageSize) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                    } else {
+                        $btn.prop('disabled', false).text('加载更多')
+                    }
+                    
+                    // 重新绑定事件
+                    bindAtItemEvents()
+                } else {
+                    alert(res.message || '加载失败')
+                    $btn.prop('disabled', false).text('加载更多')
+                    currentPage--
+                }
+            },
+            error: function () {
+                alert('加载失败，请重试')
+                $btn.prop('disabled', false).text('加载更多')
+                currentPage--
+            }
+        })
+    })
+
+    // 创建通知项 HTML
+    function createAtItemHtml(atItem) {
+        var readClass = atItem.isRead ? '' : 'unread'
+        var unreadDot = atItem.isRead ? '' : '<div class="at-unread-dot" title="未读"></div>'
+        var typeText = atItem.type === 'blog' ? '在微博中提到了你' : '在评论中提到了你'
+        
+        var previewHtml = ''
+        if (atItem.blog) {
+            var commentHtml = ''
+            if (atItem.type === 'comment' && atItem.comment) {
+                commentHtml = '<span class="at-comment-text">' + escapeHtml(atItem.comment.content) + '</span><div class="at-divider">— 评论于 —</div>'
+            }
+            
+            previewHtml = `
+                <div class="at-preview">
+                    <div class="at-blog-preview">
+                        ${commentHtml}
+                        <a href="/detail/${atItem.blog.id}" class="at-blog-link" data-at-id="${atItem.id}">
+                            <span class="at-blog-content">${escapeHtml(atItem.blog.contentSummary || atItem.blog.content)}</span>
+                        </a>
+                    </div>
+                </div>
+            `
+        }
+        
+        return `
+            <div class="at-item ${readClass}" data-at-id="${atItem.id}">
+                <div class="at-avatar">
+                    <img src="${atItem.fromUser.picture}" alt="${escapeHtml(atItem.fromUser.nickName)}">
+                </div>
+                <div class="at-content">
+                    <div class="at-header">
+                        <a href="/profile/${atItem.fromUser.userName}" class="at-user">${escapeHtml(atItem.fromUser.nickName)}</a>
+                        <span class="at-type">${typeText}</span>
+                        <span class="at-time">${atItem.createdAtFormat || ''}</span>
+                    </div>
+                    ${previewHtml}
+                </div>
+                ${unreadDot}
+            </div>
+        `
+    }
+
+    // 绑定通知项事件
+    function bindAtItemEvents() {
+        // 点击微博链接时标记为已读
+        $('.at-blog-link').off('click').on('click', function (e) {
+            var atId = $(this).data('at-id')
+            
+            // 标记为已读
+            $.ajax({
+                url: '/api/at/mark-read',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ atId: atId }),
+                success: function (res) {
+                    if (res.errno === 0) {
+                        // 更新 UI：移除未读状态
+                        var $atItem = $('.at-item[data-at-id="' + atId + '"]')
+                        $atItem.removeClass('unread')
+                        $atItem.find('.at-unread-dot').remove()
+                        
+                        // 更新导航栏未读数量
+                        updateUnreadCount()
+                    }
+                }
+            })
+        })
+    }
+
+    // 转义 HTML
+    function escapeHtml(text) {
+        if (!text) return ''
+        var div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+    }
+
+    // 更新导航栏未读数量
+    function updateUnreadCount() {
+        $.ajax({
+            url: '/api/at/unread-count',
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    var count = res.data.count
+                    var $badge = $('#unread-at-count')
+                    
+                    if (count > 0) {
+                        if ($badge.length === 0) {
+                            // 如果没有徽章，添加一个
+                            $('a.nav-link[href="/at"]').append(
+                                '<span class="badge badge-danger badge-unread" id="unread-at-count">' + count + '</span>'
+                            )
+                        } else {
+                            $badge.text(count)
+                        }
+                    } else {
+                        // 如果数量为 0，移除徽章
+                        $badge.remove()
+                    }
+                }
+            }
+        })
+    }
+})
+</script>

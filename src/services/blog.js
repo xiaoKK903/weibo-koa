@@ -22,15 +22,23 @@ async function createBlog({ userId, content, image }) {
 
 /**
  * 根据用户获取微博列表
- * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10, userId }
+ * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10, userId, keyword }
  */
 async function getBlogListByUser(
-    { userName, pageIndex = 0, pageSize = 10, userId }
+    { userName, pageIndex = 0, pageSize = 10, userId, keyword }
 ) {
     // 拼接查询条件
     const userWhereOpts = {}
     if (userName) {
         userWhereOpts.userName = userName
+    }
+
+    // 搜索条件
+    const blogWhereOpts = {}
+    if (keyword) {
+        blogWhereOpts.content = {
+            [Symbol.for('like')]: `%${keyword}%`
+        }
     }
 
     // 执行查询
@@ -40,6 +48,7 @@ async function getBlogListByUser(
         order: [
             ['id', 'desc']
         ],
+        where: blogWhereOpts,
         include: [
             {
                 model: User,

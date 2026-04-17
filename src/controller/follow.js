@@ -3,7 +3,7 @@
  * @author milk
  */
 
-const { followUser, unfollowUser, checkFollowStatus, getFollowingCount, getFollowerCount } = require('../services/follow')
+const { followUser, unfollowUser, checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require('../services/follow')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { followFailInfo, unfollowFailInfo } = require('../model/ErrorInfo')
 
@@ -87,9 +87,53 @@ async function getUserFollowStats(userId) {
     }
 }
 
+/**
+ * 获取用户的关注列表
+ * @param {number} userId 用户ID
+ */
+async function getUserFollowingList(userId) {
+    try {
+        const followingList = await getFollowingList(userId)
+        const followingCount = await getFollowingCount(userId)
+        return new SuccessModel({
+            list: followingList,
+            count: followingCount
+        })
+    } catch (ex) {
+        console.error(ex.message, ex.stack)
+        return new SuccessModel({
+            list: [],
+            count: 0
+        })
+    }
+}
+
+/**
+ * 获取用户的粉丝列表
+ * @param {number} userId 用户ID
+ */
+async function getUserFollowerList(userId) {
+    try {
+        const followerList = await getFollowerList(userId)
+        const followerCount = await getFollowerCount(userId)
+        return new SuccessModel({
+            list: followerList,
+            count: followerCount
+        })
+    } catch (ex) {
+        console.error(ex.message, ex.stack)
+        return new SuccessModel({
+            list: [],
+            count: 0
+        })
+    }
+}
+
 module.exports = {
     follow,
     unfollow,
     checkFollow,
-    getUserFollowStats
+    getUserFollowStats,
+    getUserFollowingList,
+    getUserFollowerList
 }

@@ -364,13 +364,19 @@ $(function () {
 
     // 渲染 @ 下拉列表
     function renderAtDropdown(filterText) {
-        if (!filterText && filterText !== '') {
+        // 如果 filterText 是 undefined 或 null，隐藏下拉列表
+        if (filterText === undefined || filterText === null) {
             $atDropdown.hide();
             return;
         }
 
         // 过滤匹配的用户
+        // 如果 filterText 是空字符串，显示所有关注用户
+        // 否则显示匹配的用户
         atState.filteredList = followingList.filter(function(user) {
+            if (filterText === '') {
+                return true; // 显示所有用户
+            }
             return user.nickName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0 ||
                    user.userName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0;
         });

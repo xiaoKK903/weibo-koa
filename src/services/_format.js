@@ -40,8 +40,22 @@ function formatUser(list) {
  * @param {Object} obj 数据
  */
 function _formatDBTime(obj) {
-    obj.createdAtFormat = timeFormat(obj.createdAt)
-    obj.updatedAtFormat = timeFormat(obj.updatedAt)
+    if (obj.createdAt) {
+        const date = new Date(obj.createdAt);
+        if (!isNaN(date.getTime())) {
+            obj.createdAtFormat = timeFormat(obj.createdAt);
+        } else {
+            obj.createdAtFormat = '';
+        }
+    }
+    if (obj.updatedAt) {
+        const date = new Date(obj.updatedAt);
+        if (!isNaN(date.getTime())) {
+            obj.updatedAtFormat = timeFormat(obj.updatedAt);
+        } else {
+            obj.updatedAtFormat = '';
+        }
+    }
     return obj
 }
 

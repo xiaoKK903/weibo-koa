@@ -241,25 +241,19 @@ $(function () {
     // 点击微博链接时标记为已读
     $('.at-blog-link').click(function (e) {
         var atId = $(this).data('at-id')
+        var $link = $(this)
+        var href = $link.attr('href')
         
-        // 标记为已读
+        // 先标记为已读（异步，但不阻塞跳转）
         $.ajax({
             url: '/api/at/mark-read',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ atId: atId }),
-            success: function (res) {
-                if (res.errno === 0) {
-                    // 更新 UI：移除未读状态
-                    var $atItem = $('.at-item[data-at-id="' + atId + '"]')
-                    $atItem.removeClass('unread')
-                    $atItem.find('.at-unread-dot').remove()
-                    
-                    // 更新导航栏未读数量
-                    updateUnreadCount()
-                }
-            }
+            data: JSON.stringify({ atId: atId })
         })
+        
+        // 不阻止默认行为，让浏览器正常跳转
+        // 这样用户点击后会直接跳转到详情页，不需要等待 AJAX 完成
     })
 
     // 全部标记已读
@@ -288,15 +282,15 @@ $(function () {
                     // 更新导航栏未读数量
                     updateUnreadCount()
                     
-                    alert('已将所有消息标记为已读')
+                    // 不再弹出 alert，只用 confirm 确认即可
                 } else {
                     alert(res.message || '操作失败')
-                    $btn.prop('disabled', false).text('<i class="fa fa-check"></i> 全部标记已读')
+                    $btn.prop('disabled', false).html('<i class="fa fa-check"></i> 全部标记已读')
                 }
             },
             error: function () {
                 alert('操作失败，请重试')
-                $btn.prop('disabled', false).text('<i class="fa fa-check"></i> 全部标记已读')
+                $btn.prop('disabled', false).html('<i class="fa fa-check"></i> 全部标记已读')
             }
         })
     })

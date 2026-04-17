@@ -37,7 +37,9 @@
                 <%- include('widgets/user-info', {
                     userInfo: userData.userInfo,
                     isMe: userData.isMe,
-                    amIFollowed: userData.amIFollowed
+                    amIFollowed: userData.amIFollowed,
+                    followersData: userData.followersData,
+                    fansData: userData.fansData
                 });%>
             </div>
 
@@ -58,3 +60,50 @@
 </div>
 
 <%- include('layout/footer')%>
+
+<script>
+    $(function() {
+        // 关注/取消关注
+        $('.follow-btn').click(function() {
+            var $btn = $(this)
+            var userId = $btn.data('user-id')
+            var isFollowed = $btn.data('followed')
+            
+            if (isFollowed) {
+                // 取消关注
+                ajax.post('/api/follow/cancel', {
+                    followingId: userId
+                }, function(err, data) {
+                    if (err) {
+                        alert(err)
+                        return
+                    }
+                    // 更新按钮状态
+                    $btn.text('关注')
+                    $btn.data('followed', false)
+                    // 更新关注数
+                    var $followingCount = $('.following-count')
+                    var count = parseInt($followingCount.text())
+                    $followingCount.text(count - 1)
+                })
+            } else {
+                // 关注
+                ajax.post('/api/follow/create', {
+                    followingId: userId
+                }, function(err, data) {
+                    if (err) {
+                        alert(err)
+                        return
+                    }
+                    // 更新按钮状态
+                    $btn.text('已关注')
+                    $btn.data('followed', true)
+                    // 更新关注数
+                    var $followingCount = $('.following-count')
+                    var count = parseInt($followingCount.text())
+                    $followingCount.text(count + 1)
+                })
+            }
+        })
+    })
+</script>

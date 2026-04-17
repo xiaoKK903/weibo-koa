@@ -33,10 +33,14 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const followingCount = await getFollowingCount(userId);
   const followerCount = await getFollowerCount(userId);
 
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(userId);
+
   await ctx.render("index", {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    followingList: JSON.stringify(followingList),
     userData: {
       userInfo,
       fansData: {
@@ -243,6 +247,9 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userId);
   
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(userId);
+  
   // 获取微博数据，第一页
   const result = await getSquareBlogList(0, keyword, userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data || {};
@@ -251,6 +258,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    followingList: JSON.stringify(followingList),
     blogData: {
       isEmpty,
       blogList,
@@ -307,6 +315,9 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
 
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(userInfo.id);
+
   // 获取微博详情
   const result = await getBlogDetail(blogIdNum, userInfo.id);
   if (result.errno !== 0) {
@@ -324,6 +335,7 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   await ctx.render("detail", {
     isLogin: true,
     unreadAtCount,
+    followingList: JSON.stringify(followingList),
     userData: {
       userInfo,
       fansData: {

@@ -17,11 +17,18 @@ const { createAtReminder } = require("../services/at");
  */
 async function create({ userId, content, image }) {
   // 分析并收集 content 中的 @ 用户
-  // content 格式如 '哈喽 @李四 - lisi 你好 @王五 - wangwu '
+  // 支持两种格式：
+  // 1. '@昵称 - userName' 格式，如 '哈喽 @李四 - lisi 你好'
+  // 2. '@userName' 格式，如 '哈喽 @lisi 你好'
   const atUserNameList = [];
-  content = content.replace(REG_FOR_AT_WHO, (matchStr, nickName, userName) => {
+  content = content.replace(REG_FOR_AT_WHO, (matchStr, nickName, userName1, userName2) => {
     // 目的不是 replace 而是获取 userName
-    atUserNameList.push(userName);
+    // 如果是第一种格式，userName1 有值
+    // 如果是第二种格式，userName2 有值
+    const userName = userName1 || userName2;
+    if (userName) {
+      atUserNameList.push(userName);
+    }
     return matchStr; // 替换不生效，预期
   });
 

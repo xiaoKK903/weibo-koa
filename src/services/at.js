@@ -18,15 +18,20 @@ function extractAtUsers(content) {
         return []
     }
     
-    // 匹配 @昵称 - userName 格式的正则表达式
-    // 例如：@张三 - zhangsan
-    const regex = /@(.+?)\s-\s(\w+?)\b/g
+    // 匹配两种格式的正则表达式：
+    // 1. @昵称 - userName 格式，例如：@张三 - zhangsan
+    // 2. @userName 格式，例如：@zhangsan
+    const regex = /@([^\s@]+?)\s-\s(\w+?)\b|@(\w+?)\b/g
     const userNames = []
     
     let match
     while ((match = regex.exec(content)) !== null) {
-        // match[2] 是 userName
-        userNames.push(match[2])
+        // match[2] 是第一种格式的 userName
+        // match[3] 是第二种格式的 userName
+        const userName = match[2] || match[3]
+        if (userName) {
+            userNames.push(userName)
+        }
     }
     
     // 去重

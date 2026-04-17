@@ -285,10 +285,90 @@
     padding: 15px;
     font-size: 13px;
 }
+
+/* @ 自动补全下拉列表 */
+.at-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.at-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.at-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.at-dropdown-item:hover,
+.at-dropdown-item.selected {
+    background: #f0f7ff;
+}
+
+.at-dropdown-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+.at-dropdown-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.at-dropdown-nickname {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.at-dropdown-username {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 评论输入框容器 */
+.comment-input-box {
+    position: relative;
+}
 </style>
 
 <script>
 $(function () {
+    // 获取关注列表
+    var followingList = [];
+    try {
+        followingList = JSON.parse('<%- followingList || "[]" %>');
+    } catch (ex) {
+        followingList = [];
+    }
+
+    // @ 自动补全相关变量
+    var atState = {
+        isActive: false,
+        currentText: '',
+        selectedIndex: 0,
+        filteredList: [],
+        currentInput: null
+    };
+
     // 设置焦点
     function setCursor(el, st, end) {
         if (el.setSelectionRange) {
@@ -302,6 +382,170 @@ $(function () {
             range.select()
         }
     }
+
+    // 渲染 @ 下拉列表
+    function renderAtDropdown($input, filterText) {
+        // 移除旧的下拉列表
+        $input.closest('.comment-input-box').find('.at-dropdown').remove();
+
+        if (!filterText) {
+            atState.isActive = false;
+            return;
+        }
+
+        // 过滤匹配的用户
+        atState.filteredList = followingList.filter(function(user) {
+            return user.nickName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0 ||
+                   user.userName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0;
+        });
+
+        if (atState.filteredList.length === 0) {
+            atState.isActive = false;
+            return;
+        }
+
+        // 创建下拉列表
+        var $dropdown = $('<div class="at-dropdown"></div>');
+        var html = '';
+        atState.filteredList.forEach(function(user, index) {
+            html += '<div class="at-dropdown-item" data-index="' + index + '">';
+            html += '<img src="' + user.picture + '" class="at-dropdown-avatar">';
+            html += '<div class="at-dropdown-info">';
+            html += '<div class="at-dropdown-nickname">' + user.nickName + '</div>';
+            html += '<div class="at-dropdown-username">@' + user.userName + '</div>';
+            html += '</div>';
+            html += '</div>';
+        });
+        $dropdown.html(html);
+        
+        // 添加到输入框容器
+        $input.closest('.comment-input-box').append($dropdown);
+        
+        atState.isActive = true;
+        atState.currentInput = $input;
+        atState.selectedIndex = 0;
+        updateAtDropdownSelection($dropdown);
+    }
+
+    // 更新选中状态
+    function updateAtDropdownSelection($dropdown) {
+        $dropdown.find('.at-dropdown-item').removeClass('selected');
+        $dropdown.find('.at-dropdown-item[data-index="' + atState.selectedIndex + '"]').addClass('selected');
+    }
+
+    // 插入 @ 用户
+    function insertAtUser($input, user) {
+        if (!user) return;
+
+        var val = $input.val();
+        var cursorPos = $input[0].selectionStart;
+        
+        // 找到最后一个 @ 符号的位置
+        var textBeforeCursor = val.substring(0, cursorPos);
+        var lastAtIndex = textBeforeCursor.lastIndexOf('@');
+        
+        if (lastAtIndex >= 0) {
+            var textToReplace = val.substring(lastAtIndex, cursorPos);
+            var replacement = '@' + user.nickName + ' - ' + user.userName + ' ';
+            var newVal = val.substring(0, lastAtIndex) + replacement + val.substring(cursorPos);
+            $input.val(newVal);
+            
+            // 设置光标位置
+            var newCursorPos = lastAtIndex + replacement.length;
+            $input[0].setSelectionRange(newCursorPos, newCursorPos);
+            $input.focus();
+        }
+
+        // 移除下拉列表
+        $input.closest('.comment-input-box').find('.at-dropdown').remove();
+        atState.isActive = false;
+        atState.currentInput = null;
+    }
+
+    // 监听评论输入框的输入事件
+    $(document).on('input', '.comment-input', function(e) {
+        var $input = $(this);
+        var val = $input.val();
+        var cursorPos = $input[0].selectionStart;
+        
+        // 查找最后一个 @ 符号
+        var textBeforeCursor = val.substring(0, cursorPos);
+        var lastAtIndex = textBeforeCursor.lastIndexOf('@');
+        
+        if (lastAtIndex >= 0) {
+            var textAfterLastAt = textBeforeCursor.substring(lastAtIndex + 1);
+            // 检查 @ 后面是否有效（没有空格或换行）
+            if (/^[^\s\n]*$/.test(textAfterLastAt)) {
+                atState.currentText = textAfterLastAt;
+                renderAtDropdown($input, textAfterLastAt);
+            } else {
+                $input.closest('.comment-input-box').find('.at-dropdown').remove();
+                atState.isActive = false;
+            }
+        } else {
+            $input.closest('.comment-input-box').find('.at-dropdown').remove();
+            atState.isActive = false;
+        }
+    });
+
+    // 监听键盘事件
+    $(document).on('keydown', '.comment-input', function(e) {
+        var $input = $(this);
+        var $dropdown = $input.closest('.comment-input-box').find('.at-dropdown');
+        
+        if (atState.isActive && $dropdown.length > 0) {
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (atState.selectedIndex > 0) {
+                        atState.selectedIndex--;
+                        updateAtDropdownSelection($dropdown);
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (atState.selectedIndex < atState.filteredList.length - 1) {
+                        atState.selectedIndex++;
+                        updateAtDropdownSelection($dropdown);
+                    }
+                    break;
+                case 'Enter':
+                case 'Tab':
+                    e.preventDefault();
+                    var selectedUser = atState.filteredList[atState.selectedIndex];
+                    if (selectedUser) {
+                        insertAtUser($input, selectedUser);
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    $dropdown.remove();
+                    atState.isActive = false;
+                    break;
+            }
+        }
+    });
+
+    // 点击下拉列表项
+    $(document).on('click', '.at-dropdown-item', function(e) {
+        var $item = $(this);
+        var index = parseInt($item.data('index'));
+        var selectedUser = atState.filteredList[index];
+        var $input = $item.closest('.comment-input-box').find('.comment-input');
+        
+        if (selectedUser && $input.length > 0) {
+            insertAtUser($input, selectedUser);
+        }
+    });
+
+    // 点击其他地方关闭下拉列表
+    $(document).on('click', function(e) {
+        if ($(e.target).closest('.at-dropdown').length === 0 && 
+            $(e.target).closest('.comment-input').length === 0) {
+            $('.at-dropdown').remove();
+            atState.isActive = false;
+        }
+    });
 
     // 回复按钮点击事件 - 展开/收起评论区域
     $('.blog-list-reply').click(function (e) {

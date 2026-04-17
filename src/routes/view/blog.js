@@ -107,10 +107,14 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const followingCount = await getFollowingCount(curUserInfo.id);
   const followerCount = await getFollowerCount(curUserInfo.id);
 
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(myUserInfo.id);
+
   await ctx.render("profile", {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    followingList: JSON.stringify(followingList),
     blogData: {
       isEmpty,
       blogList,

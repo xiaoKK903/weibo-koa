@@ -45,6 +45,11 @@
     }
     // 上传文件
     window.ajax.upload = function (url, file, callback) {
+        if (typeof callback !== 'function') {
+            console.error('ajax.upload callback is not a function');
+            return;
+        }
+        
         var formData = new FormData()
         formData.append('file', file)
         $.ajax({
@@ -58,16 +63,22 @@
             },
             success: function(res) {
                 if (res.errno !== 0) {
-                    // 错误
-                    callback(res.message)
+                    callback(res.message || '上传失败')
                     return
                 }
-                // 正确
                 callback(null, res.data)
             },
-            error: function(error) {
-                // 错误
-                callback(error.message)
+            error: function(xhr, status, error) {
+                var errorMsg = error || status || '上传失败';
+                if (xhr && xhr.responseText) {
+                    try {
+                        var errRes = JSON.parse(xhr.responseText);
+                        if (errRes.message) {
+                            errorMsg = errRes.message;
+                        }
+                    } catch (e) {}
+                }
+                callback(errorMsg)
             }
         })
     }

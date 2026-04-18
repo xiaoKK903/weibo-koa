@@ -602,6 +602,7 @@
 
 <script>
 $(function () {
+    var currentUserId = parseInt('<%= typeof currentUserId !== "undefined" ? currentUserId : 0 %>');
     var $mainContainer = $('#blog-list-main');
     
     window.refreshBlogList = function() {
@@ -690,7 +691,7 @@ $(function () {
         html += '<span>' + (blog.createdAtFormat || '') + '</span>';
         html += '&nbsp;';
         
-        if (locals && locals.canReply) {
+        if (currentUserId > 0) {
             html += '<a href="#" class="blog-list-reply"';
             html += ' data-content="' + (blog.content || '') + '"';
             html += ' data-userName="' + (user.userName || '') + '"';
@@ -702,7 +703,7 @@ $(function () {
             html += '&nbsp;';
         }
         
-        if (locals && locals.isLogin) {
+        if (currentUserId > 0) {
             var isCollected = blog.isCollected;
             var collectClass = isCollected ? 'collected' : '';
             var collectIcon = isCollected ? 'fa-star' : 'fa-star-o';
@@ -1040,7 +1041,7 @@ $(function () {
         }
         
         var deleteBtn = '';
-        if (locals && locals.isLogin && userData && userData.userInfo && userData.userInfo.id === user.id) {
+        if (currentUserId && currentUserId === user.id) {
             deleteBtn = '<button class="comment-action-btn btn-delete-comment" data-comment-id="' + comment.id + '" data-blog-id="' + blogId + '"><i class="fa fa-trash"></i> 删除</button>';
         }
         

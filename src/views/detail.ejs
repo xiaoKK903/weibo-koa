@@ -561,11 +561,11 @@ $(function () {
                     
                     ${hasChildren ? `
                         <div class="children-container">
-                            <button class="toggle-children-btn" data-comment-id="${comment.id}">
+                            <button class="toggle-children-btn expanded" data-comment-id="${comment.id}">
                                 <i class="fa fa-chevron-down"></i>
-                                <span class="toggle-text">展开 ${comment.children.length} 条回复</span>
+                                <span class="toggle-text">收起回复</span>
                             </button>
-                            <div class="children-list" style="display: none;" data-parent-id="${comment.id}">
+                            <div class="children-list" style="display: block;" data-parent-id="${comment.id}">
                                 ${comment.children.map(child => renderCommentItem(child, level + 1)).join('')}
                             </div>
                         </div>

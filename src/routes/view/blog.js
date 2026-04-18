@@ -41,6 +41,7 @@ router.get("/", loginRedirect, async (ctx, next) => {
     canReply: true,
     unreadAtCount,
     followingList: JSON.stringify(followingList),
+    currentUserId: userInfo.id,
     userData: {
       userInfo,
       fansData: {
@@ -115,6 +116,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
     canReply: true,
     unreadAtCount,
     followingList: JSON.stringify(followingList),
+    currentUserId: myUserInfo.id,
     blogData: {
       isEmpty,
       blogList,
@@ -263,6 +265,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
     canReply: true,
     unreadAtCount,
     followingList: JSON.stringify(followingList),
+    currentUserId: userId,
     blogData: {
       isEmpty,
       blogList,
@@ -340,6 +343,7 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
     isLogin: true,
     unreadAtCount,
     followingList: JSON.stringify(followingList),
+    currentUserId: userInfo.id,
     userData: {
       userInfo,
       fansData: {

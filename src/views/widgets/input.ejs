@@ -657,6 +657,10 @@ $(function () {
         }
     });
 
+    function generateUniqueId() {
+        return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
     function updateImageCount() {
         var count = uploadedImages.length;
         if (count === 0) {
@@ -669,9 +673,9 @@ $(function () {
     function renderImagePreview() {
         var html = '';
         uploadedImages.forEach(function(img, index) {
-            html += '<div class="image-preview-item" data-index="' + index + '" draggable="true">';
+            html += '<div class="image-preview-item" data-id="' + img.id + '" data-index="' + index + '" draggable="true">';
             html += '<img src="' + img.url + '" class="image-preview-img" alt="图片">';
-            html += '<button class="image-preview-delete" data-index="' + index + '" title="删除">';
+            html += '<button class="image-preview-delete" data-id="' + img.id + '" title="删除">';
             html += '<i class="fa fa-times"></i>';
             html += '</button>';
             html += '<span class="image-preview-order">' + (index + 1) + '</span>';
@@ -695,64 +699,52 @@ $(function () {
         updateImageCount();
     }
 
-    function uploadImage(file, index) {
-        var deferred = $.Deferred();
-        
+    function uploadSingleImage(file, imageId) {
         var reader = new FileReader();
         reader.onload = function(e) {
-            var tempImg = {
-                url: e.target.result,
-                uploading: true,
-                file: file
-            };
-            uploadedImages.splice(index, 0, tempImg);
-            renderImagePreview();
+            var imgIndex = uploadedImages.findIndex(function(img) {
+                return img.id === imageId;
+            });
+            if (imgIndex >= 0) {
+                uploadedImages[imgIndex].url = e.target.result;
+                renderImagePreview();
+            }
         };
         reader.readAsDataURL(file);
         
         ajax.upload('/api/utils/upload', file, function(err, data) {
+            var imgIndex = uploadedImages.findIndex(function(img) {
+                return img.id === imageId;
+            });
+            
             if (err) {
-                var currentIndex = uploadedImages.findIndex(function(img) {
-                    return img.file === file;
-                });
-                if (currentIndex >= 0) {
-                    uploadedImages.splice(currentIndex, 1);
+                if (imgIndex >= 0) {
+                    uploadedImages.splice(imgIndex, 1);
                 }
-                deferred.reject(err);
                 renderImagePreview();
+                alert('图片上传失败: ' + err);
                 return;
             }
             
-            var currentIndex = uploadedImages.findIndex(function(img) {
-                return img.file === file;
-            });
-            if (currentIndex >= 0) {
-                uploadedImages[currentIndex] = {
-                    url: data.url,
-                    uploading: false
-                };
+            if (imgIndex >= 0) {
+                uploadedImages[imgIndex].url = data.url;
+                uploadedImages[imgIndex].uploading = false;
             }
-            deferred.resolve(data);
             renderImagePreview();
             scheduleAutoSave();
         });
-        
-        return deferred.promise();
     }
 
-    $filePicture.change(function(e) {
-        var files = $filePicture[0].files;
+    function handleFileSelect(files) {
         if (!files || files.length === 0) return;
         
         var remainingSlots = MAX_IMAGES - uploadedImages.length;
         if (remainingSlots <= 0) {
             alert('最多只能上传 ' + MAX_IMAGES + ' 张图片');
-            $filePicture.val('');
             return;
         }
         
         var filesToUpload = Array.from(files).slice(0, remainingSlots);
-        var validFiles = [];
         
         filesToUpload.forEach(function(file) {
             if (file.type.indexOf('image/') !== 0) {
@@ -763,14 +755,24 @@ $(function () {
                 alert('图片大小不能超过 10MB');
                 return;
             }
-            validFiles.push(file);
+            
+            var imageId = generateUniqueId();
+            var newImg = {
+                id: imageId,
+                url: '',
+                uploading: true,
+                file: file
+            };
+            uploadedImages.push(newImg);
+            renderImagePreview();
+            
+            uploadSingleImage(file, imageId);
         });
-        
-        var insertIndex = uploadedImages.length;
-        validFiles.forEach(function(file) {
-            uploadImage(file, insertIndex++);
-        });
-        
+    }
+
+    $filePicture.change(function(e) {
+        var files = $filePicture[0].files;
+        handleFileSelect(files);
         $filePicture.val('');
     });
 
@@ -786,9 +788,12 @@ $(function () {
     $imagePreviewGrid.on('click', '.image-preview-delete', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var index = parseInt($(this).data('index'));
-        if (index >= 0 && index < uploadedImages.length) {
-            uploadedImages.splice(index, 1);
+        var imageId = $(this).data('id');
+        var imgIndex = uploadedImages.findIndex(function(img) {
+            return img.id === imageId;
+        });
+        if (imgIndex >= 0) {
+            uploadedImages.splice(imgIndex, 1);
             renderImagePreview();
             scheduleAutoSave();
         }
@@ -797,7 +802,7 @@ $(function () {
     $imagePreviewGrid.on('dragstart', '.image-preview-item', function(e) {
         $(this).addClass('dragging');
         e.originalEvent.dataTransfer.effectAllowed = 'move';
-        e.originalEvent.dataTransfer.setData('text/plain', $(this).data('index'));
+        e.originalEvent.dataTransfer.setData('text/plain', $(this).data('id'));
     });
 
     $imagePreviewGrid.on('dragend', '.image-preview-item', function(e) {
@@ -819,14 +824,23 @@ $(function () {
         e.preventDefault();
         $(this).removeClass('drag-over');
         
-        var fromIndex = parseInt(e.originalEvent.dataTransfer.getData('text/plain'));
-        var toIndex = parseInt($(this).data('index'));
+        var fromId = e.originalEvent.dataTransfer.getData('text/plain');
+        var toId = $(this).data('id');
         
-        if (!isNaN(fromIndex) && !isNaN(toIndex) && fromIndex !== toIndex) {
-            var temp = uploadedImages.splice(fromIndex, 1)[0];
-            uploadedImages.splice(toIndex, 0, temp);
-            renderImagePreview();
-            scheduleAutoSave();
+        if (fromId && toId && fromId !== toId) {
+            var fromIndex = uploadedImages.findIndex(function(img) {
+                return img.id === fromId;
+            });
+            var toIndex = uploadedImages.findIndex(function(img) {
+                return img.id === toId;
+            });
+            
+            if (fromIndex >= 0 && toIndex >= 0) {
+                var temp = uploadedImages.splice(fromIndex, 1)[0];
+                uploadedImages.splice(toIndex, 0, temp);
+                renderImagePreview();
+                scheduleAutoSave();
+            }
         }
     });
 
@@ -840,9 +854,15 @@ $(function () {
             return;
         }
         
+        var draftImages = uploadedImages
+            .filter(function(img) { return !img.uploading; })
+            .map(function(img) {
+                return { url: img.url };
+            });
+        
         var draft = {
             content: content,
-            images: uploadedImages.filter(function(img) { return !img.uploading; }),
+            images: draftImages,
             timestamp: Date.now()
         };
         
@@ -864,6 +884,7 @@ $(function () {
             if (draft.images && draft.images.length > 0) {
                 uploadedImages = draft.images.map(function(img) {
                     return {
+                        id: generateUniqueId(),
                         url: img.url,
                         uploading: false
                     };

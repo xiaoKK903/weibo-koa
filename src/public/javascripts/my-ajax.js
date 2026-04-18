@@ -57,17 +57,18 @@
                 withCredentials: true
             },
             success: function(res) {
-                if (res.errno !== 0) {
-                    // 错误
-                    callback(res.message)
-                    return
+                if (typeof callback === 'function') {
+                    if (res.errno !== 0) {
+                        callback(res.message)
+                        return
+                    }
+                    callback(null, res.data)
                 }
-                // 正确
-                callback(null, res.data)
             },
             error: function(error) {
-                // 错误
-                callback(error.message)
+                if (typeof callback === 'function') {
+                    callback(error.message)
+                }
             }
         })
     }
@@ -82,14 +83,18 @@
                 withCredentials: true
             },
             success: function(res) {
-                if (res.errno !== 0) {
-                    callback(res.message)
-                    return
+                if (typeof callback === 'function') {
+                    if (res.errno !== 0) {
+                        callback(res.message)
+                        return
+                    }
+                    callback(null, res.data)
                 }
-                callback(null, res.data)
             },
             error: function(error) {
-                callback(error.message)
+                if (typeof callback === 'function') {
+                    callback(error.message)
+                }
             }
         };
 

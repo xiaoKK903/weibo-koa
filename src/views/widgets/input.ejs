@@ -1,15 +1,26 @@
 <!-- 微博输入框 -->
-<div class="margin-bottom-20 padding-bottom-20 border-bottom">
+<div class="margin-bottom-20 padding-bottom-20 border-bottom blog-input-wrapper">
     <div id="editor-container" style="min-height: 160px;"></div>
-    <div class="margin-top-15">
-        <button class="btn btn-primary btn-modern" id="btn-submit">发表</button>
+    
+    <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+        <div class="image-preview-grid" id="imagePreviewGrid"></div>
+    </div>
+    
+    <div class="margin-top-15 action-bar">
+        <button class="btn btn-primary btn-modern" id="btn-submit">
+            <span class="btn-text">发表</span>
+            <span class="btn-loading" style="display: none;"><i class="fa fa-spinner fa-spin"></i> 发布中...</span>
+        </button>
         &nbsp;
         <a href="#" id="btn-add-img" class="btn btn-outline-secondary btn-upload">
             <i class="fa fa-picture-o"></i>
-            插入图片
+            <span class="image-count-text">插入图片</span>
         </a>
-        <input type="file" accept="image/*" id="file-picture" style="display: none;">
-        <span id="span-img-name" class="img-upload-status"></span>
+        <input type="file" accept="image/*" id="file-picture" multiple style="display: none;">
+        
+        <div class="draft-indicator" id="draftIndicator" style="display: none; margin-left: 15px; color: #ffc107; font-size: 12px;">
+            <i class="fa fa-file-text-o"></i> 有未发送的草稿
+        </div>
     </div>
 </div>
 
@@ -56,9 +67,10 @@
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
     color: white;
+    min-width: 90px;
 }
 
-.btn-modern:hover {
+.btn-modern:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
     color: white;
@@ -66,6 +78,13 @@
 
 .btn-modern:active {
     transform: translateY(0);
+}
+
+.btn-modern:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-upload {
@@ -86,16 +105,114 @@
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-/* 图片上传状态 */
-.img-upload-status {
-    font-size: 12px;
-    color: #666;
-    margin-left: 15px;
-    padding: 6px 12px;
+/* 图片预览容器 */
+.image-preview-container {
+    margin-top: 15px;
+    padding: 10px;
     background: #f8f9fa;
-    border-radius: 4px;
-    transition: all 0.3s ease;
+    border-radius: 8px;
     border: 1px solid #e0e0e0;
+}
+
+.image-preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    background: #fff;
+    cursor: grab;
+}
+
+.image-preview-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.image-preview-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.image-preview-item.drag-over {
+    border-color: #007bff;
+    border-style: dashed;
+}
+
+.image-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-delete {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 0, 0, 0.8);
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.image-preview-delete:hover {
+    background: rgba(255, 0, 0, 1);
+    transform: scale(1.1);
+}
+
+.image-preview-order {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.image-preview-uploading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.image-preview-progress {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* 自定义工具栏 */
@@ -199,68 +316,6 @@
     color: white !important;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-    .btn-modern {
-        padding: 8px 20px;
-        font-size: 13px;
-    }
-    
-    .btn-upload {
-        padding: 6px 16px;
-        font-size: 13px;
-    }
-    
-    .ql-editor {
-        min-height: 140px;
-        padding: 15px 18px;
-    }
-    
-    #editor-container {
-        min-height: 140px;
-    }
-    
-    .ql-toolbar.ql-snow {
-        padding: 8px 12px;
-    }
-    
-    .ql-toolbar.ql-snow .ql-formats {
-        margin-right: 10px !important;
-        padding-right: 10px !important;
-    }
-    
-    .ql-toolbar.ql-snow button {
-        width: 28px !important;
-        height: 28px !important;
-        margin: 0 2px !important;
-    }
-    
-    .ql-toolbar.ql-snow .ql-picker-label {
-        height: 28px !important;
-        padding: 3px 8px !important;
-        margin: 0 2px !important;
-    }
-}
-
-/* 滚动条样式 */
-.ql-toolbar.ql-snow::-webkit-scrollbar {
-    height: 4px;
-}
-
-.ql-toolbar.ql-snow::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
-}
-
-.ql-toolbar.ql-snow::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-}
-
-.ql-toolbar.ql-snow::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
 /* @ 自动补全下拉列表 */
 .at-dropdown {
     position: absolute;
@@ -314,14 +369,91 @@
     font-size: 12px;
     color: #999;
 }
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .btn-modern {
+        padding: 8px 20px;
+        font-size: 13px;
+    }
+    
+    .btn-upload {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+    
+    .ql-editor {
+        min-height: 140px;
+        padding: 15px 18px;
+    }
+    
+    #editor-container {
+        min-height: 140px;
+    }
+    
+    .ql-toolbar.ql-snow {
+        padding: 8px 12px;
+    }
+    
+    .ql-toolbar.ql-snow .ql-formats {
+        margin-right: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .ql-toolbar.ql-snow button {
+        width: 28px !important;
+        height: 28px !important;
+        margin: 0 2px !important;
+    }
+    
+    .ql-toolbar.ql-snow .ql-picker-label {
+        height: 28px !important;
+        padding: 3px 8px !important;
+        margin: 0 2px !important;
+    }
+    
+    .image-preview-item {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* 滚动条样式 */
+.ql-toolbar.ql-snow::-webkit-scrollbar {
+    height: 4px;
+}
+
+.ql-toolbar.ql-snow::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.ql-toolbar.ql-snow::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.ql-toolbar.ql-snow::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
 </style>
 
 <script>
 $(function () {
-    var $spanImgName = $('#span-img-name')
-    var $filePicture = $('#file-picture')
+    var $filePicture = $('#file-picture');
+    var $btnSubmit = $('#btn-submit');
+    var $btnAddImg = $('#btn-add-img');
+    var $imagePreviewContainer = $('#imagePreviewContainer');
+    var $imagePreviewGrid = $('#imagePreviewGrid');
+    var $draftIndicator = $('#draftIndicator');
+    var $imageCountText = $('.image-count-text');
     
-    // 初始化 Quill 编辑器
+    var uploadedImages = [];
+    var isSubmitting = false;
+    var autoSaveTimer = null;
+    var DRAFT_KEY = 'blog_draft';
+    var MAX_IMAGES = 9;
+    
     window.quill = new Quill('#editor-container', {
         theme: 'snow',
         placeholder: '分享你的想法...',
@@ -337,7 +469,6 @@ $(function () {
         }
     });
 
-    // @ 自动补全相关变量
     var atState = {
         isActive: false,
         startIndex: -1,
@@ -346,11 +477,9 @@ $(function () {
         filteredList: []
     };
 
-    // 创建 @ 下拉列表（添加到 body）
     var $atDropdown = $('<div class="at-dropdown" style="display: none;"></div>');
     $('body').append($atDropdown);
 
-    // 获取关注列表
     var followingList = [];
     try {
         var followingListJson = '<%- followingList %>';
@@ -361,13 +490,11 @@ $(function () {
         followingList = [];
     }
 
-    // 定位下拉列表到光标位置
     function positionAtDropdown() {
         var $editor = $('.ql-editor');
         var editorOffset = $editor.offset();
         var editorHeight = $editor.outerHeight();
         
-        // 简单定位：显示在编辑器下方
         $atDropdown.css({
             top: editorOffset.top + editorHeight + 5,
             left: editorOffset.left,
@@ -375,14 +502,12 @@ $(function () {
         });
     }
 
-    // 渲染 @ 下拉列表
     function renderAtDropdown(filterText) {
         if (filterText === undefined || filterText === null) {
             hideAtDropdown();
             return;
         }
 
-        // 过滤匹配的用户
         atState.filteredList = followingList.filter(function(user) {
             if (filterText === '') {
                 return true;
@@ -397,7 +522,6 @@ $(function () {
             return;
         }
 
-        // 渲染列表
         var html = '';
         atState.filteredList.forEach(function(user, index) {
             var avatar = user.picture || 'https://dwz.cn/rnTnftZs';
@@ -421,7 +545,6 @@ $(function () {
         updateAtDropdownSelection();
     }
 
-    // 隐藏下拉列表
     function hideAtDropdown() {
         atState.isActive = false;
         atState.startIndex = -1;
@@ -429,21 +552,17 @@ $(function () {
         $atDropdown.hide();
     }
 
-    // 更新选中状态
     function updateAtDropdownSelection() {
         $atDropdown.find('.at-dropdown-item').removeClass('selected');
         $atDropdown.find('.at-dropdown-item[data-index="' + atState.selectedIndex + '"]').addClass('selected');
     }
 
-    // 插入 @ 用户
     function insertAtUser(user) {
         if (!user || atState.startIndex < 0) return;
 
-        // 计算要替换的文本长度
         var replaceLength = 1 + atState.currentText.length;
         var replacement = '@' + (user.nickName || user.userName) + ' - ' + user.userName + ' ';
 
-        // 删除旧文本并插入新文本
         quill.deleteText(atState.startIndex, replaceLength);
         quill.insertText(atState.startIndex, replacement);
         quill.setSelection(atState.startIndex + replacement.length);
@@ -451,7 +570,6 @@ $(function () {
         hideAtDropdown();
     }
 
-    // 监听编辑器内容变化
     quill.on('text-change', function(delta, oldDelta, source) {
         if (source !== 'user') return;
 
@@ -461,31 +579,28 @@ $(function () {
             return;
         }
 
-        // 获取纯文本
         var fullText = quill.getText();
         var cursorIndex = selection.index;
         var textBeforeCursor = fullText.substring(0, cursorIndex);
         
-        // 查找最后一个 @ 符号
         var lastAtIndex = textBeforeCursor.lastIndexOf('@');
         
         if (lastAtIndex >= 0) {
             var textAfterLastAt = textBeforeCursor.substring(lastAtIndex + 1);
             
-            // 检查 @ 后面是否有效（没有空格、换行、标点等）
             if (/^[a-zA-Z0-9_\u4e00-\u9fa5]*$/.test(textAfterLastAt)) {
                 atState.startIndex = lastAtIndex;
                 atState.currentText = textAfterLastAt;
                 renderAtDropdown(textAfterLastAt);
+                scheduleAutoSave();
                 return;
             }
         }
         
-        // 如果没有找到有效 @，隐藏下拉列表
         hideAtDropdown();
+        scheduleAutoSave();
     });
 
-    // 监听键盘事件
     $(document).on('keydown', function(e) {
         if (!atState.isActive || atState.filteredList.length === 0) return;
 
@@ -519,7 +634,6 @@ $(function () {
         }
     });
 
-    // 点击下拉列表项
     $atDropdown.on('click', '.at-dropdown-item', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -530,7 +644,6 @@ $(function () {
         }
     });
 
-    // 点击其他地方关闭下拉列表
     $(document).on('click', function(e) {
         if ($(e.target).closest('.at-dropdown').length === 0 && 
             $(e.target).closest('.ql-editor').length === 0) {
@@ -538,80 +651,311 @@ $(function () {
         }
     });
 
-    // 窗口大小改变时重新定位
     $(window).on('resize', function() {
         if (atState.isActive) {
             positionAtDropdown();
         }
     });
 
-    // 上传图片
-    $filePicture.change(function (e) {
-        var file = $filePicture[0].files[0]
-        if (!file) return;
+    function updateImageCount() {
+        var count = uploadedImages.length;
+        if (count === 0) {
+            $imageCountText.text('插入图片');
+        } else {
+            $imageCountText.text('插入图片 (' + count + '/' + MAX_IMAGES + ')');
+        }
+    }
+
+    function renderImagePreview() {
+        var html = '';
+        uploadedImages.forEach(function(img, index) {
+            html += '<div class="image-preview-item" data-index="' + index + '" draggable="true">';
+            html += '<img src="' + img.url + '" class="image-preview-img" alt="图片">';
+            html += '<button class="image-preview-delete" data-index="' + index + '" title="删除">';
+            html += '<i class="fa fa-times"></i>';
+            html += '</button>';
+            html += '<span class="image-preview-order">' + (index + 1) + '</span>';
+            if (img.uploading) {
+                html += '<div class="image-preview-uploading">';
+                html += '<div class="image-preview-progress"></div>';
+                html += '<span style="font-size: 12px; margin-top: 8px; color: #666;">上传中...</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        });
         
-        $spanImgName.text('上传中...').css({ 'color': '#007bff', 'background': 'rgba(0, 123, 255, 0.1)', 'border-color': '#007bff' });
+        $imagePreviewGrid.html(html);
+        
+        if (uploadedImages.length > 0) {
+            $imagePreviewContainer.show();
+        } else {
+            $imagePreviewContainer.hide();
+        }
+        
+        updateImageCount();
+    }
+
+    function uploadImage(file, index) {
+        var deferred = $.Deferred();
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var tempImg = {
+                url: e.target.result,
+                uploading: true,
+                file: file
+            };
+            uploadedImages.splice(index, 0, tempImg);
+            renderImagePreview();
+        };
+        reader.readAsDataURL(file);
         
         ajax.upload('/api/utils/upload', file, function(err, data) {
             if (err) {
-                $spanImgName.text('上传失败').css({ 'color': '#dc3545', 'background': 'rgba(220, 53, 69, 0.1)', 'border-color': '#dc3545' });
-                return
+                var currentIndex = uploadedImages.findIndex(function(img) {
+                    return img.file === file;
+                });
+                if (currentIndex >= 0) {
+                    uploadedImages.splice(currentIndex, 1);
+                }
+                deferred.reject(err);
+                renderImagePreview();
+                return;
             }
             
-            // 成功 - 在编辑器中插入图片
-            var range = quill.getSelection();
-            if (range) {
-                quill.insertEmbed(range.index, 'image', data.url);
-                quill.setSelection(range.index + 1);
-            } else {
-                quill.insertEmbed(0, 'image', data.url);
+            var currentIndex = uploadedImages.findIndex(function(img) {
+                return img.file === file;
+            });
+            if (currentIndex >= 0) {
+                uploadedImages[currentIndex] = {
+                    url: data.url,
+                    uploading: false
+                };
             }
-            
-            $spanImgName.text('上传成功').css({ 'color': '#28a745', 'background': 'rgba(40, 167, 69, 0.1)', 'border-color': '#28a745' });
-            
-            // 3秒后清除提示
-            setTimeout(function() {
-                $spanImgName.text('');
-            }, 3000);
-        })
-    })
-
-    // 插入图片
-    $('#btn-add-img').click(function (e) {
-        e.preventDefault()
-        //  开始选择图片
-        $filePicture.click()
-    })
-
-    // 发布微博
-    $('#btn-submit').click(function () {
-        // 从编辑器获取 HTML 内容
-        var content = quill.root.innerHTML.trim()
+            deferred.resolve(data);
+            renderImagePreview();
+            scheduleAutoSave();
+        });
         
-        // 验证
-        if (content.length === 0) {
-            alert('请输入微博内容')
-            return
+        return deferred.promise();
+    }
+
+    $filePicture.change(function(e) {
+        var files = $filePicture[0].files;
+        if (!files || files.length === 0) return;
+        
+        var remainingSlots = MAX_IMAGES - uploadedImages.length;
+        if (remainingSlots <= 0) {
+            alert('最多只能上传 ' + MAX_IMAGES + ' 张图片');
+            $filePicture.val('');
+            return;
         }
-
-        // 发布
-        ajax.post('/api/blog/create', {
-            content: content,
-            image: ''
-        }, function (err) {
-            if (err) {
-                // 失败
-                alert(err)
-                return
+        
+        var filesToUpload = Array.from(files).slice(0, remainingSlots);
+        var validFiles = [];
+        
+        filesToUpload.forEach(function(file) {
+            if (file.type.indexOf('image/') !== 0) {
+                alert('只能上传图片文件');
+                return;
             }
-            // 成功
-            $filePicture.val('')
-            $spanImgName.text('')
-            quill.setText('')
+            if (file.size > 10 * 1024 * 1024) {
+                alert('图片大小不能超过 10MB');
+                return;
+            }
+            validFiles.push(file);
+        });
+        
+        var insertIndex = uploadedImages.length;
+        validFiles.forEach(function(file) {
+            uploadImage(file, insertIndex++);
+        });
+        
+        $filePicture.val('');
+    });
 
-            // 刷新页面
-            location.href = location.pathname
-        })
-    })
+    $btnAddImg.click(function(e) {
+        e.preventDefault();
+        if (uploadedImages.length >= MAX_IMAGES) {
+            alert('最多只能上传 ' + MAX_IMAGES + ' 张图片');
+            return;
+        }
+        $filePicture.click();
+    });
+
+    $imagePreviewGrid.on('click', '.image-preview-delete', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var index = parseInt($(this).data('index'));
+        if (index >= 0 && index < uploadedImages.length) {
+            uploadedImages.splice(index, 1);
+            renderImagePreview();
+            scheduleAutoSave();
+        }
+    });
+
+    $imagePreviewGrid.on('dragstart', '.image-preview-item', function(e) {
+        $(this).addClass('dragging');
+        e.originalEvent.dataTransfer.effectAllowed = 'move';
+        e.originalEvent.dataTransfer.setData('text/plain', $(this).data('index'));
+    });
+
+    $imagePreviewGrid.on('dragend', '.image-preview-item', function(e) {
+        $(this).removeClass('dragging');
+        $('.image-preview-item').removeClass('drag-over');
+    });
+
+    $imagePreviewGrid.on('dragover', '.image-preview-item', function(e) {
+        e.preventDefault();
+        e.originalEvent.dataTransfer.dropEffect = 'move';
+        $(this).addClass('drag-over');
+    });
+
+    $imagePreviewGrid.on('dragleave', '.image-preview-item', function(e) {
+        $(this).removeClass('drag-over');
+    });
+
+    $imagePreviewGrid.on('drop', '.image-preview-item', function(e) {
+        e.preventDefault();
+        $(this).removeClass('drag-over');
+        
+        var fromIndex = parseInt(e.originalEvent.dataTransfer.getData('text/plain'));
+        var toIndex = parseInt($(this).data('index'));
+        
+        if (!isNaN(fromIndex) && !isNaN(toIndex) && fromIndex !== toIndex) {
+            var temp = uploadedImages.splice(fromIndex, 1)[0];
+            uploadedImages.splice(toIndex, 0, temp);
+            renderImagePreview();
+            scheduleAutoSave();
+        }
+    });
+
+    function saveDraft() {
+        var content = quill.root.innerHTML;
+        var hasContent = content && content !== '<p><br></p>' && content !== '<p></p>';
+        
+        if (!hasContent && uploadedImages.length === 0) {
+            localStorage.removeItem(DRAFT_KEY);
+            $draftIndicator.hide();
+            return;
+        }
+        
+        var draft = {
+            content: content,
+            images: uploadedImages.filter(function(img) { return !img.uploading; }),
+            timestamp: Date.now()
+        };
+        
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        $draftIndicator.show();
+    }
+
+    function loadDraft() {
+        var draftStr = localStorage.getItem(DRAFT_KEY);
+        if (!draftStr) return false;
+        
+        try {
+            var draft = JSON.parse(draftStr);
+            
+            if (draft.content && draft.content !== '<p><br></p>' && draft.content !== '<p></p>') {
+                quill.root.innerHTML = draft.content;
+            }
+            
+            if (draft.images && draft.images.length > 0) {
+                uploadedImages = draft.images.map(function(img) {
+                    return {
+                        url: img.url,
+                        uploading: false
+                    };
+                });
+                renderImagePreview();
+            }
+            
+            $draftIndicator.show();
+            return true;
+        } catch (ex) {
+            localStorage.removeItem(DRAFT_KEY);
+            return false;
+        }
+    }
+
+    function clearDraft() {
+        localStorage.removeItem(DRAFT_KEY);
+        $draftIndicator.hide();
+    }
+
+    function scheduleAutoSave() {
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+        }
+        autoSaveTimer = setTimeout(saveDraft, 2000);
+    }
+
+    function clearEditor() {
+        quill.setText('');
+        quill.root.innerHTML = '';
+        uploadedImages = [];
+        renderImagePreview();
+        clearDraft();
+    }
+
+    function setSubmitting(submitting) {
+        isSubmitting = submitting;
+        $btnSubmit.prop('disabled', submitting);
+        
+        if (submitting) {
+            $btnSubmit.find('.btn-text').hide();
+            $btnSubmit.find('.btn-loading').show();
+        } else {
+            $btnSubmit.find('.btn-text').show();
+            $btnSubmit.find('.btn-loading').hide();
+        }
+    }
+
+    $btnSubmit.click(function() {
+        if (isSubmitting) return;
+        
+        var content = quill.root.innerHTML.trim();
+        var hasContent = content && content !== '<p><br></p>' && content !== '<p></p>';
+        var hasImages = uploadedImages.length > 0;
+        
+        if (!hasContent && !hasImages) {
+            alert('请输入微博内容或添加图片');
+            return;
+        }
+        
+        var uploadingImages = uploadedImages.filter(function(img) { return img.uploading; });
+        if (uploadingImages.length > 0) {
+            alert('图片正在上传中，请稍候...');
+            return;
+        }
+        
+        setSubmitting(true);
+        
+        var imageUrls = uploadedImages.map(function(img) { return img.url; });
+        var imageStr = imageUrls.join(',');
+        
+        ajax.post('/api/blog/create', {
+            content: content || '',
+            image: imageStr
+        }, function(err) {
+            setSubmitting(false);
+            
+            if (err) {
+                alert(err);
+                return;
+            }
+            
+            clearEditor();
+            
+            if (typeof refreshBlogList === 'function') {
+                refreshBlogList();
+            } else {
+                location.href = location.pathname;
+            }
+        });
+    });
+
+    loadDraft();
 });
 </script>

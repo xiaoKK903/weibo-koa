@@ -399,6 +399,175 @@
     word-break: break-word;
 }
 
+/* 嵌套评论样式 */
+.comment-item.root-comment {
+    padding-left: 0;
+}
+
+.comment-item.child-comment {
+    padding-left: 46px;
+    border-left: 2px solid #e9ecef;
+    margin-left: 8px;
+}
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-user {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.comment-user a {
+    color: #333;
+    text-decoration: none;
+}
+
+.comment-user a:hover {
+    color: #007bff;
+}
+
+.comment-reply-to {
+    color: #999;
+    font-weight: normal;
+}
+
+.comment-reply-to a {
+    color: #666;
+    font-weight: 500;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 12px;
+    color: #999;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.comment-action-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #999;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+}
+
+.comment-action-btn:hover {
+    color: #007bff;
+}
+
+.comment-action-btn.liked {
+    color: #ff4d4f;
+}
+
+.comment-action-btn .count {
+    font-weight: 500;
+}
+
+/* 回复框样式 */
+.reply-form {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.reply-form textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+}
+
+.reply-form textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.reply-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.reply-form-actions button {
+    padding: 6px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reply-form-actions .btn-cancel {
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #666;
+}
+
+.reply-form-actions .btn-cancel:hover {
+    background: #f5f5f5;
+}
+
+.reply-form-actions .btn-submit {
+    background: #007bff;
+    border: none;
+    color: white;
+}
+
+.reply-form-actions .btn-submit:hover {
+    background: #0056b3;
+}
+
+/* 子评论展开/收起 */
+.children-container {
+    margin-top: 8px;
+}
+
+.toggle-children-btn {
+    background: none;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toggle-children-btn:hover {
+    text-decoration: underline;
+}
+
+.toggle-children-btn i {
+    transition: transform 0.2s;
+}
+
+.toggle-children-btn.expanded i {
+    transform: rotate(180deg);
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .blog-images-container.single-image {
@@ -684,8 +853,263 @@ $(function () {
                 }
             });
         });
+        
+        $(document).off('click', '.btn-reply').on('click', '.btn-reply', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $commentItem = $(this).closest('.comment-item');
+            var $replyForm = $commentItem.find('.reply-form').first();
+            
+            $('.reply-form').not($replyForm).hide();
+            
+            $replyForm.toggle();
+            if ($replyForm.is(':visible')) {
+                $replyForm.find('textarea').focus();
+            }
+        });
+        
+        $(document).off('click', '.reply-form .btn-cancel').on('click', '.reply-form .btn-cancel', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $replyForm = $(this).closest('.reply-form');
+            $replyForm.find('textarea').val('');
+            $replyForm.hide();
+        });
+        
+        $(document).off('click', '.btn-submit-reply').on('click', '.btn-submit-reply', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $btn = $(this);
+            var $replyForm = $btn.closest('.reply-form');
+            var content = $replyForm.find('textarea').val().trim();
+            var parentId = $btn.data('parent-id');
+            var replyUserId = $btn.data('reply-user-id');
+            var blogId = $btn.data('blog-id');
+            
+            if (!content) {
+                alert('请输入回复内容');
+                return;
+            }
+            
+            $btn.prop('disabled', true);
+            
+            $.ajax({
+                url: '/api/blog/comment/create',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    blogId: Number(blogId),
+                    content: content,
+                    parentId: Number(parentId),
+                    replyUserId: Number(replyUserId)
+                }),
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(res) {
+                    if (res.errno === 0) {
+                        $replyForm.find('textarea').val('');
+                        $replyForm.hide();
+                        loadComments(blogId);
+                    } else {
+                        alert(res.message || '回复失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Reply comment error:', error);
+                    alert('回复失败，请重试');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
+        
+        $(document).off('click', '.toggle-children-btn').on('click', '.toggle-children-btn', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $btn = $(this);
+            var commentId = $btn.data('comment-id');
+            var $childrenList = $('.children-list[data-parent-id="' + commentId + '"]');
+            var isExpanded = $btn.hasClass('expanded');
+            
+            if (isExpanded) {
+                $childrenList.slideUp(200);
+                $btn.removeClass('expanded');
+                var childCount = $childrenList.find('.comment-item').length;
+                $btn.find('.toggle-text').text('展开 ' + childCount + ' 条回复');
+            } else {
+                $childrenList.slideDown(200);
+                $btn.addClass('expanded');
+                $btn.find('.toggle-text').text('收起回复');
+            }
+        });
+        
+        $(document).off('click', '.btn-like-comment').on('click', '.btn-like-comment', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $btn = $(this);
+            var commentId = $btn.data('comment-id');
+            var blogId = $btn.data('blog-id');
+            var isLiked = $btn.hasClass('liked');
+            
+            var url = isLiked ? '/api/blog/comment/unlike' : '/api/blog/comment/like';
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    commentId: Number(commentId)
+                }),
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(res) {
+                    if (res.errno === 0) {
+                        var $countSpan = $btn.find('.count');
+                        var count = parseInt($countSpan.text()) || 0;
+                        
+                        if (isLiked) {
+                            $btn.removeClass('liked');
+                            $btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                            $countSpan.text(Math.max(0, count - 1));
+                        } else {
+                            $btn.addClass('liked');
+                            $btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                            $countSpan.text(count + 1);
+                        }
+                    } else {
+                        alert(res.message || '操作失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Like comment error:', error);
+                    alert('操作失败，请重试');
+                }
+            });
+        });
+        
+        $(document).off('click', '.btn-delete-comment').on('click', '.btn-delete-comment', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var commentId = $(this).data('comment-id');
+            var blogId = $(this).data('blog-id');
+            
+            if (!confirm('确定要删除这条评论吗？')) {
+                return;
+            }
+            
+            $.ajax({
+                url: '/api/blog/comment/delete',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    commentId: Number(commentId)
+                }),
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(res) {
+                    if (res.errno === 0) {
+                        loadComments(blogId);
+                    } else {
+                        alert(res.message || '删除失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Delete comment error:', error);
+                    alert('删除失败，请重试');
+                }
+            });
+        });
     }
     
+    function renderCommentItem(comment, level, blogId) {
+        var isRoot = level === 0;
+        var hasChildren = comment.children && comment.children.length > 0;
+        var isLikedByCurrentUser = comment.isLiked;
+        var likeIcon = isLikedByCurrentUser ? 'fa-heart' : 'fa-heart-o';
+        var likeClass = isLikedByCurrentUser ? 'liked' : '';
+        var user = comment.user || {};
+        var replyUser = comment.replyUser || null;
+        
+        var replyToHtml = '';
+        if (replyUser) {
+            replyToHtml = '<span class="comment-reply-to"> 回复 <a href="/profile/' + replyUser.userName + '">' + replyUser.nickName + '</a></span>';
+        }
+        
+        var deleteBtn = '';
+        if (locals && locals.isLogin && userData && userData.userInfo && userData.userInfo.id === user.id) {
+            deleteBtn = '<button class="comment-action-btn btn-delete-comment" data-comment-id="' + comment.id + '" data-blog-id="' + blogId + '"><i class="fa fa-trash"></i> 删除</button>';
+        }
+        
+        var html = '';
+        html += '<div class="comment-item ' + (isRoot ? 'root-comment' : 'child-comment') + '" data-comment-id="' + comment.id + '" data-root-id="' + (comment.rootId || comment.id) + '">';
+        html += '<img src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '" alt="' + (user.nickName || '用户') + '" class="comment-avatar">';
+        html += '<div class="comment-content">';
+        html += '<div class="comment-user">';
+        html += '<a href="/profile/' + (user.userName || '') + '">' + (user.nickName || user.userName || '用户') + '</a>';
+        html += replyToHtml;
+        html += '</div>';
+        html += '<div class="comment-text">' + (comment.content || '') + '</div>';
+        html += '<div class="comment-meta">';
+        html += '<span class="comment-time">' + (comment.createdAtFormat || '') + '</span>';
+        html += '<div class="comment-actions">';
+        html += '<button class="comment-action-btn btn-reply" data-comment-id="' + comment.id + '" data-reply-user-id="' + user.id + '" data-reply-user-name="' + (user.nickName || '用户') + '" data-blog-id="' + blogId + '">';
+        html += '<i class="fa fa-reply"></i> 回复';
+        html += '</button>';
+        html += '<button class="comment-action-btn btn-like-comment ' + likeClass + '" data-comment-id="' + comment.id + '" data-blog-id="' + blogId + '">';
+        html += '<i class="fa ' + likeIcon + '"></i> <span class="count">' + (comment.likeCount || 0) + '</span>';
+        html += '</button>';
+        html += deleteBtn;
+        html += '</div>';
+        html += '</div>';
+        
+        html += '<div class="reply-form" style="display: none;">';
+        html += '<textarea class="reply-textarea" placeholder="回复 @' + (user.nickName || '用户') + '..."></textarea>';
+        html += '<div class="reply-form-actions">';
+        html += '<button class="btn-cancel">取消</button>';
+        html += '<button class="btn-submit btn-submit-reply" data-parent-id="' + comment.id + '" data-reply-user-id="' + user.id + '" data-blog-id="' + blogId + '">回复</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        if (hasChildren) {
+            html += '<div class="children-container">';
+            html += '<button class="toggle-children-btn" data-comment-id="' + comment.id + '">';
+            html += '<i class="fa fa-chevron-down"></i>';
+            html += '<span class="toggle-text">展开 ' + comment.children.length + ' 条回复</span>';
+            html += '</button>';
+            html += '<div class="children-list" style="display: none;" data-parent-id="' + comment.id + '">';
+            comment.children.forEach(function(child) {
+                html += renderCommentItem(child, level + 1, blogId);
+            });
+            html += '</div>';
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        html += '</div>';
+        
+        return html;
+    }
+
+    function renderComments(comments, blogId) {
+        var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
+        
+        if (!comments || comments.length === 0) {
+            $listArea.html('<div class="no-comments">暂无评论</div>');
+            return;
+        }
+        
+        var html = '';
+        comments.forEach(function(comment) {
+            html += renderCommentItem(comment, 0, blogId);
+        });
+        
+        $listArea.html(html);
+    }
+
     function loadComments(blogId) {
         ajax.get('/api/blog/comment/' + blogId, {}, function(err, data) {
             if (err) {
@@ -693,29 +1117,8 @@ $(function () {
                 return;
             }
             
-            var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
-            
-            if (!data || !data.commentList || data.commentList.length === 0) {
-                $listArea.html('<div class="no-comments">暂无评论</div>');
-                return;
-            }
-            
-            var html = '';
-            data.commentList.forEach(function(comment) {
-                var user = comment.user || {};
-                html += '<div class="comment-item">';
-                html += '<img class="comment-avatar" src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '"/>';
-                html += '<div class="comment-content-wrapper">';
-                html += '<div class="comment-header">';
-                html += '<span class="comment-author">' + (user.nickName || user.userName || '用户') + '</span>';
-                html += '<span class="comment-time">' + (comment.createdAtFormat || '') + '</span>';
-                html += '</div>';
-                html += '<div class="comment-text">' + (comment.content || '') + '</div>';
-                html += '</div>';
-                html += '</div>';
-            });
-            
-            $listArea.html(html);
+            var comments = (data && data.commentList) || [];
+            renderComments(comments, blogId);
         });
     }
     

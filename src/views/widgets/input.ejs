@@ -964,19 +964,31 @@ $(function () {
             
             if (err) {
                 var errorMsg = err.message || err;
-                alert(errorMsg);
+                if (typeof window.showToast === 'function') {
+                    if (err.errno === 16002) {
+                        window.showToast('warning', '内容违规', errorMsg);
+                    } else if (err.errno === 16001) {
+                        window.showToast('warning', '频繁操作', errorMsg);
+                    } else {
+                        window.showToast('error', '发布失败', errorMsg);
+                    }
+                } else {
+                    alert(errorMsg);
+                }
                 return;
             }
             
             clearEditor();
             
-            alert('发布成功！');
-            
-            if (typeof window.refreshBlogList === 'function') {
-                window.refreshBlogList();
+            if (typeof window.showToast === 'function') {
+                window.showToast('success', '发布成功', '您的微博已成功发布');
             } else {
-                location.href = location.pathname;
+                alert('发布成功！');
             }
+            
+            setTimeout(function() {
+                location.href = location.pathname;
+            }, 800);
         });
     });
 

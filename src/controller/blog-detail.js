@@ -18,7 +18,7 @@ const { REG_FOR_AT_WHO } = require('../conf/constant')
 const { getUserInfo } = require('../services/user')
 const { createAtReminder } = require('../services/at')
 const xss = require('xss')
-const { contentSecurityCheck } = require('../middlewares/contentSecurity')
+const { contentSecurityCheck, setDuplicateCache } = require('../middlewares/contentSecurity')
 
 /**
  * 获取微博详情
@@ -93,6 +93,14 @@ async function createComment({ blogId, userId, content, parentId = null, replyUs
         }
 
         const fullComment = await getCommentById(comment.id)
+
+        await setDuplicateCache(
+            userId, 
+            securityCheck.normalizedContent, 
+            contentType, 
+            blogId, 
+            parentId
+        );
 
         return new SuccessModel(fullComment)
     } catch (ex) {

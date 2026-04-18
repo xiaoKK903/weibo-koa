@@ -139,5 +139,12 @@ module.exports = {
     sensitiveContentInfo: {
         errno: 16002,
         message: '您发布的内容包含违规词汇，请检查后重新发布'
+    },
+
+    // 用户资料编辑相关错误
+    // 昵称已存在
+    nickNameExistInfo: {
+        errno: 17001,
+        message: '该昵称已被使用，请换一个试试'
     }
 }

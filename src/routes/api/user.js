@@ -6,6 +6,8 @@
 const router = require("koa-router")();
 const {
   isExist,
+  checkNickName,
+  getCurrentUserInfo,
   register,
   login,
   deleteCurUser,
@@ -37,6 +39,17 @@ router.post("/isExist", async (ctx, next) => {
   ctx.body = await isExist(userName);
 });
 
+// 检查昵称是否已存在（排除自己）
+router.post("/checkNickName", loginCheck, async (ctx, next) => {
+  const { nickName } = ctx.request.body;
+  ctx.body = await checkNickName(ctx, { nickName });
+});
+
+// 获取当前用户完整信息
+router.get("/getCurrentInfo", loginCheck, async (ctx, next) => {
+  ctx.body = await getCurrentUserInfo(ctx);
+});
+
 // 登录
 router.post("/login", async (ctx, next) => {
   const { userName, password } = ctx.request.body;
@@ -46,7 +59,6 @@ router.post("/login", async (ctx, next) => {
 // 删除
 router.post("/delete", loginCheck, async (ctx, next) => {
   if (isTest) {
-    // 测试环境下，测试账号登录之后，删除自己
     const { userName } = ctx.session.userInfo;
     ctx.body = await deleteCurUser(userName);
   }
@@ -56,10 +68,9 @@ router.post("/delete", loginCheck, async (ctx, next) => {
 router.patch(
   "/changeInfo",
   loginCheck,
-  genValidator(userValidate),
   async (ctx, next) => {
-    const { nickName, city, picture } = ctx.request.body;
-    ctx.body = await changeInfo(ctx, { nickName, city, picture });
+    const { nickName, city, picture, signature, bio, coverImage } = ctx.request.body;
+    ctx.body = await changeInfo(ctx, { nickName, city, picture, signature, bio, coverImage });
   },
 );
 
@@ -79,7 +90,6 @@ router.patch(
 router.post("/logout", loginCheck, async (ctx, next) => {
   ctx.body = await logout(ctx);
 });
-
 
 
 module.exports = router;

@@ -1,6 +1,65 @@
 <%- include('layout/header', { title: '微博 - 设置', isNav: true })%>
 
 <style>
+.cover-image-section {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.cover-image-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.cover-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cover-image-wrapper:hover .cover-image-overlay {
+    opacity: 1;
+}
+
+.cover-image-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cover-image-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 .password-section {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     border-radius: 12px;
@@ -280,6 +339,7 @@
     font-size: 1rem;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    color: white;
 }
 
 .btn-primary-modern:hover {
@@ -356,6 +416,7 @@
     font-size: 1rem;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    color: white;
 }
 
 .btn-danger-modern:hover {
@@ -373,6 +434,11 @@
     background: rgba(107, 203, 119, 0.1) !important;
 }
 
+.field-warning {
+    border-color: #ffa502 !important;
+    background: rgba(255, 165, 2, 0.1) !important;
+}
+
 .error-message {
     color: #ff6b6b;
     font-size: 0.85rem;
@@ -384,34 +450,187 @@
 .error-message i {
     margin-right: 5px;
 }
+
+.success-message {
+    color: #6bcb77;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay .fa-camera {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.avatar-info {
+    flex: 1;
+}
+
+.avatar-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.form-control.textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-control.signature {
+    min-height: 60px;
+}
+
+.nick-loading {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #667eea;
+}
+
+.nick-status {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+}
+
+.nick-status.success {
+    color: #6bcb77;
+}
+
+.nick-status.error {
+    color: #ff6b6b;
+}
+
+.input-wrapper-relative {
+    position: relative;
+}
 </style>
 
 <div class="container margin-top-20">
     <div class="row">
         <div class="col-8">
+            <div class="cover-image-section">
+                <div class="cover-image-wrapper">
+                    <% if (coverImage) { %>
+                        <img src="<%= coverImage%>" id="cover-image" alt="封面图">
+                    <% } else { %>
+                        <img src="" id="cover-image" alt="封面图" style="display: none;">
+                    <% } %>
+                    <div class="cover-image-overlay">
+                        <button type="button" class="cover-image-btn" id="btn-change-cover">
+                            <i class="fa fa-camera"></i>
+                            <span>更换封面</span>
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="file-cover" accept="image/*" style="display: none;">
+            </div>
+
             <div class="basic-info-section">
                 <h5 class="margin-bottom-10">基本信息</h5>
                 <form id="info-form">
                     <div class="form-group row">
-                        <label for="input-nick" class="col-sm-2 col-form-label">昵称</label>
+                        <label class="col-sm-2 col-form-label">头像</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="input-nick" placeholder="请输入昵称" value="<%= nickName%>">
+                            <div class="avatar-section">
+                                <div class="avatar-wrapper" id="avatar-wrapper">
+                                    <img src="<%= picture%>" id="img-picture" alt="头像">
+                                    <div class="avatar-overlay">
+                                        <i class="fa fa-camera"></i>
+                                    </div>
+                                </div>
+                                <div class="avatar-info">
+                                    <p>点击头像可以更换</p>
+                                    <p>支持 JPG、PNG 格式</p>
+                                </div>
+                            </div>
+                            <input type="file" id="file-picture" accept="image/*" style="display: none;">
                         </div>
                     </div>
+
+                    <div class="form-group row">
+                        <label for="input-nick" class="col-sm-2 col-form-label">昵称</label>
+                        <div class="col-sm-10">
+                            <div class="input-wrapper-relative">
+                                <input type="text" class="form-control" id="input-nick" placeholder="请输入昵称" value="<%= nickName%>">
+                                <span class="nick-loading" id="nick-loading" style="display: none;">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </span>
+                                <span class="nick-status" id="nick-status" style="display: none;"></span>
+                            </div>
+                            <div id="nick-message" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="input-signature" class="col-sm-2 col-form-label">个性签名</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control signature" id="input-signature" placeholder="写一句个性签名..." value="<%= signature || ''%>">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="input-bio" class="col-sm-2 col-form-label">个人简介</label>
+                        <div class="col-sm-10">
+                            <textarea class="form-control textarea" id="input-bio" placeholder="介绍一下自己..."><%= bio || ''%></textarea>
+                        </div>
+                    </div>
+
                     <div class="form-group row">
                         <label for="input-city" class="col-sm-2 col-form-label">城市</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="input-city" placeholder="请输入城市" value="<%= city%>">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="file-picture" class="col-sm-2 col-form-label">头像</label>
-                        <div class="col-sm-10">
-                            <img src="<%= picture%>" style="width: 100px; border-radius: 50%;" class="margin-bottom-10" id="img-picture"/>
-                            <input type="file" class="form-control-file" accept="image/*" id="file-picture">
-                        </div>
-                    </div>
-                    <center><button type="button" class="btn btn-primary-modern" id="btn-submit-info">保存</button></center>
+
+                    <center><button type="button" class="btn btn-primary-modern" id="btn-submit-info">保存修改</button></center>
                 </form>
             </div>
 
@@ -623,7 +842,7 @@ $(function() {
         var $error = $('#repeat-password-error');
         
         if (repeatPassword && newPassword !== repeatPassword) {
-            $error.html('<span>⚠️</span> 两次密码输入不一致').show();
+            $error.html('<i class="fa fa-exclamation-circle"></i> 两次密码输入不一致').show();
             $('#input-new-password-repeat').addClass('field-error');
             return false;
         } else {
@@ -638,62 +857,175 @@ $(function() {
 
     $('#input-new-password-repeat').on('input', validateRepeatPassword);
 
-    var $imgPicture = $('#img-picture')
-    var $filePicture = $('#file-picture')
-    $filePicture.change(function (e) {
-        var file = $filePicture[0].files[0]
-        ajax.upload('/api/utils/upload', file, function(err, data) {
-            if (err) {
-                showToast('error', '上传失败', err);
-                return
-            }
-            $imgPicture.attr('src', data.url)
-            showToast('success', '上传成功', '头像已更新');
-        })
-    })
+    var $imgPicture = $('#img-picture');
+    var $filePicture = $('#file-picture');
+    
+    $('#avatar-wrapper').click(function() {
+        $filePicture.click();
+    });
+    
+    $filePicture.change(function(e) {
+        var file = $filePicture[0].files[0];
+        if (!file) return;
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            showToast('success', '上传中', '正在上传头像...');
+            
+            ajax.upload('/api/utils/upload', file, function(err, data) {
+                if (err) {
+                    showToast('error', '上传失败', err.message || err);
+                    return;
+                }
+                $imgPicture.attr('src', data.url);
+                showToast('success', '上传成功', '头像已更新，点击保存按钮生效');
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    var $imgCover = $('#cover-image');
+    var $fileCover = $('#file-cover');
+    
+    $('#btn-change-cover').click(function() {
+        $fileCover.click();
+    });
+    
+    $fileCover.change(function(e) {
+        var file = $fileCover[0].files[0];
+        if (!file) return;
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            showToast('success', '上传中', '正在上传封面...');
+            
+            ajax.upload('/api/utils/upload', file, function(err, data) {
+                if (err) {
+                    showToast('error', '上传失败', err.message || err);
+                    return;
+                }
+                $imgCover.attr('src', data.url).show();
+                showToast('success', '上传成功', '封面已更新，点击保存按钮生效');
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    var $inputNick = $('#input-nick');
+    var $nickLoading = $('#nick-loading');
+    var $nickStatus = $('#nick-status');
+    var $nickMessage = $('#nick-message');
+    var nickCheckTimer = null;
+    var isNickAvailable = null;
+
+    $inputNick.on('input', function() {
+        var value = $(this).val().trim();
+        
+        $inputNick.removeClass('field-error field-success field-warning');
+        $nickStatus.hide();
+        $nickMessage.hide();
+        isNickAvailable = null;
+        
+        if (!value) {
+            return;
+        }
+        
+        if (nickCheckTimer) {
+            clearTimeout(nickCheckTimer);
+        }
+        
+        $nickLoading.show();
+        
+        nickCheckTimer = setTimeout(function() {
+            ajax.post('/api/user/checkNickName', { nickName: value }, function(err, data) {
+                $nickLoading.hide();
+                
+                if (err) {
+                    isNickAvailable = false;
+                    $inputNick.addClass('field-error');
+                    $nickStatus.show().removeClass('success').addClass('error').html('<i class="fa fa-times-circle"></i>');
+                    $nickMessage.show().addClass('error-message').html('<i class="fa fa-exclamation-circle"></i> ' + (err.message || err));
+                } else {
+                    isNickAvailable = true;
+                    $inputNick.addClass('field-success');
+                    $nickStatus.show().removeClass('error').addClass('success').html('<i class="fa fa-check-circle"></i>');
+                    $nickMessage.show().addClass('success-message').html('<i class="fa fa-check-circle"></i> 该昵称可用');
+                }
+            });
+        }, 500);
+    });
 
     $('#info-form').on('submit', function(e) {
         e.preventDefault();
     });
 
-    var $inputNick = $('#input-nick')
-    var $inputCity = $('#input-city')
+    var $inputSignature = $('#input-signature');
+    var $inputBio = $('#input-bio');
+    var $inputCity = $('#input-city');
+    
     $('#btn-submit-info').on('click', function() {
         try {
-            var nickName = $inputNick.val()
-            var city = $inputCity.val()
-            var picture = $imgPicture.attr('src')
+            var nickName = $inputNick.val().trim();
+            var signature = $inputSignature.val().trim();
+            var bio = $inputBio.val().trim();
+            var city = $inputCity.val().trim();
+            var picture = $imgPicture.attr('src');
+            var coverImage = $imgCover.attr('src') || '';
+
+            if (!nickName) {
+                showToast('warning', '提示', '请输入昵称');
+                $inputNick.addClass('field-error');
+                return;
+            }
+
+            var $btn = $(this);
+            var originalText = $btn.text();
+            $btn.prop('disabled', true).text('保存中...');
 
             ajax.patch('/api/user/changeInfo', {
-                nickName,
-                city,
-                picture
+                nickName: nickName,
+                signature: signature,
+                bio: bio,
+                city: city,
+                picture: picture,
+                coverImage: coverImage
             }, function(err, data) {
+                $btn.prop('disabled', false).text(originalText);
+                
                 if (err) {
-                    showToast('error', '修改失败', err);
-                    return
+                    var errorMsg = err.message || err;
+                    if (err.errno === 17001) {
+                        $inputNick.addClass('field-error');
+                    }
+                    showToast('error', '修改失败', errorMsg);
+                    return;
                 }
-                showToast('success', '修改成功', '基本信息已更新');
-            })
+                
+                showToast('success', '修改成功', '个人信息已更新');
+                
+                setTimeout(function() {
+                    location.reload();
+                }, 800);
+            });
         } catch (ex) {
             console.error(ex);
             showToast('error', '出错了', ex.message);
         }
-    })
+    });
 
     $('#password-form').on('submit', function(e) {
         e.preventDefault();
     });
 
-    var $inputCurPassword = $('#input-cur-password')
-    var $inputNewPassword = $('#input-new-password')
-    var $inputNewPasswordRepeat = $('#input-new-password-repeat')
+    var $inputCurPassword = $('#input-cur-password');
+    var $inputNewPassword = $('#input-new-password');
+    var $inputNewPasswordRepeat = $('#input-new-password-repeat');
     
     $('#btn-submit-password').on('click', function() {
         try {
-            var curPassword = $inputCurPassword.val()
-            var newPassword = $inputNewPassword.val()
-            var newPasswordRepeat = $inputNewPasswordRepeat.val()
+            var curPassword = $inputCurPassword.val();
+            var newPassword = $inputNewPassword.val();
+            var newPasswordRepeat = $inputNewPasswordRepeat.val();
 
             $inputCurPassword.removeClass('field-error');
             $inputNewPassword.removeClass('field-error');
@@ -704,7 +1036,7 @@ $(function() {
             var hasError = false;
 
             if (!curPassword) {
-                $('#cur-password-error').html('<span>⚠️</span> 请输入当前密码').show();
+                $('#cur-password-error').html('<i class="fa fa-exclamation-circle"></i> 请输入当前密码').show();
                 $inputCurPassword.addClass('field-error');
                 hasError = true;
             }
@@ -736,52 +1068,59 @@ $(function() {
                 return;
             }
             
+            var $btn = $(this);
+            var originalText = $btn.text();
+            $btn.prop('disabled', true).text('修改中...');
+            
             ajax.patch('/api/user/changePassword', {
                 password: curPassword,
                 newPassword: newPassword
             }, function(err, data) {
+                $btn.prop('disabled', false).text(originalText);
+                
                 if (err) {
-                    if (err.includes('原密码')) {
-                        $('#cur-password-error').html('<span>⚠️</span> ' + err).show();
+                    if (err.message && err.message.includes('原密码')) {
+                        $('#cur-password-error').html('<i class="fa fa-exclamation-circle"></i> ' + err.message).show();
                         $inputCurPassword.addClass('field-error');
                     } else {
-                        showToast('error', '修改失败', err);
+                        showToast('error', '修改失败', err.message || err);
                     }
-                    return
+                    return;
                 }
+                
                 showToast('success', '修改成功', '密码已更新，请妥善保管');
-                $inputCurPassword.val('')
-                $inputNewPassword.val('')
-                $inputNewPasswordRepeat.val('')
+                $inputCurPassword.val('');
+                $inputNewPassword.val('');
+                $inputNewPasswordRepeat.val('');
                 updatePasswordStrength('');
                 $inputCurPassword.removeClass('field-error field-success');
                 $inputNewPassword.removeClass('field-error field-success');
                 $inputNewPasswordRepeat.removeClass('field-error field-success');
-            })
+            });
         } catch (ex) {
             console.error(ex);
             showToast('error', '出错了', ex.message);
         }
-    })
+    });
 
     $('#btn-logout').click(function() {
         if (confirm('是否确定退出登录？') === false) {
-            return
+            return;
         }
         ajax.post('/api/user/logout', function(err, data) {
             if (err) {
-                console.error(err)
-                return
+                console.error(err);
+                return;
             }
             showToast('success', '已退出', '您已成功退出登录');
             setTimeout(function() {
-                location.href = '/login'
+                location.href = '/login';
             }, 1000);
-        })
-    })
+        });
+    });
 
     updatePasswordStrength('');
-})
+});
 </script>
 
 <%- include('layout/footer')%>

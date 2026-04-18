@@ -13,7 +13,6 @@ const { formatUser } = require('./_format')
  * @param {string} password 密码
  */
 async function getUserInfo(userName, password) {
-    // 查询条件
     const whereOpt = {
         userName
     }
@@ -21,20 +20,46 @@ async function getUserInfo(userName, password) {
         Object.assign(whereOpt, { password })
     }
 
-    // 查询
     const result = await User.findOne({
-        attributes: ['id', 'userName', 'nickName', 'picture', 'city'],
+        attributes: ['id', 'userName', 'nickName', 'picture', 'city', 'signature', 'bio', 'coverImage'],
         where: whereOpt
     })
     if (result == null) {
-        // 未找到
         return result
     }
 
-    // 格式化
     const formatRes = formatUser(result.dataValues)
 
     return formatRes
+}
+
+/**
+ * 检查昵称是否已被其他用户使用
+ * @param {string} nickName 昵称
+ * @param {number} excludeUserId 排除的用户ID（自己）
+ * @returns {Promise<boolean>} 是否存在
+ */
+async function checkNickNameExist(nickName, excludeUserId = null) {
+    if (!nickName) {
+        return false
+    }
+
+    const whereOpt = {
+        nickName
+    }
+
+    if (excludeUserId) {
+        whereOpt.id = {
+            [require('sequelize').Op.ne]: excludeUserId
+        }
+    }
+
+    const result = await User.findOne({
+        attributes: ['id'],
+        where: whereOpt
+    })
+
+    return result !== null
 }
 
 /**
@@ -66,20 +91,26 @@ async function deleteUser(userName) {
             userName
         }
     })
-    // result 删除的行数
     return result > 0
 }
 
 /**
  * 更新用户信息
- * @param {Object} param0 要修改的内容 { newPassword, newNickName, newPicture, newCity }
- * @param {Object} param1 查询条件 { userName, password }
+ * @param {Object} param0 要修改的内容 
+ * @param {Object} param1 查询条件
  */
 async function updateUser(
-    { newPassword, newNickName, newPicture, newCity },
+    { 
+        newPassword, 
+        newNickName, 
+        newPicture, 
+        newCity, 
+        newSignature, 
+        newBio, 
+        newCoverImage 
+    },
     { userName, password }
 ) {
-    // 拼接修改内容
     const updateData = {}
     if (newPassword) {
         updateData.password = newPassword
@@ -90,11 +121,19 @@ async function updateUser(
     if (newPicture) {
         updateData.picture = newPicture
     }
-    if (newCity) {
+    if (newCity !== undefined) {
         updateData.city = newCity
     }
+    if (newSignature !== undefined) {
+        updateData.signature = newSignature
+    }
+    if (newBio !== undefined) {
+        updateData.bio = newBio
+    }
+    if (newCoverImage !== undefined) {
+        updateData.coverImage = newCoverImage
+    }
 
-    // 拼接查询条件
     const whereData = {
         userName
     }
@@ -102,15 +141,15 @@ async function updateUser(
         whereData.password = password
     }
 
-    // 执行修改
     const result = await User.update(updateData, {
         where: whereData
     })
-    return result[0] > 0 // 修改的行数
+    return result[0] > 0
 }
 
 module.exports = {
     getUserInfo,
+    checkNickNameExist,
     createUser,
     deleteUser,
     updateUser

@@ -4,7 +4,7 @@
  */
 
 const seq = require("../seq");
-const { STRING, DECIMAL } = require("../types");
+const { STRING, DECIMAL, TEXT } = require("../types");
 
 // users
 const User = seq.define("user", {
@@ -37,6 +37,18 @@ const User = seq.define("user", {
   city: {
     type: STRING,
     comment: "城市",
+  },
+  signature: {
+    type: STRING(200),
+    comment: "个性签名",
+  },
+  bio: {
+    type: TEXT,
+    comment: "个人简介",
+  },
+  coverImage: {
+    type: STRING,
+    comment: "个人背景封面图，图片地址",
   },
 });
 

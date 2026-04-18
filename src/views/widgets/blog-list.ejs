@@ -791,7 +791,7 @@ $(function () {
                 }
                 
                 $input.val('');
-                loadComments(blogId);
+                loadComments(blogId, true);
             });
         });
         
@@ -911,7 +911,7 @@ $(function () {
                     if (res.errno === 0) {
                         $replyForm.find('textarea').val('');
                         $replyForm.hide();
-                        loadComments(blogId);
+                        loadComments(blogId, true);
                     } else {
                         alert(res.message || '回复失败');
                     }
@@ -931,7 +931,8 @@ $(function () {
             e.preventDefault();
             var $btn = $(this);
             var commentId = $btn.data('comment-id');
-            var $childrenList = $('.children-list[data-parent-id="' + commentId + '"]');
+            var $commentItem = $btn.closest('.comment-item');
+            var $childrenList = $commentItem.find('.children-list[data-parent-id="' + commentId + '"]');
             var isExpanded = $btn.hasClass('expanded');
             
             if (isExpanded) {
@@ -1111,7 +1112,7 @@ $(function () {
         $listArea.html(html);
     }
 
-    function loadComments(blogId) {
+    function loadComments(blogId, autoExpand) {
         ajax.get('/api/blog/comment/' + blogId, {}, function(err, data) {
             if (err) {
                 console.error(err);
@@ -1120,6 +1121,20 @@ $(function () {
             
             var comments = (data && data.commentList) || [];
             renderComments(comments, blogId);
+            
+            if (autoExpand) {
+                var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
+                $listArea.find('.toggle-children-btn').each(function() {
+                    var $btn = $(this);
+                    var commentId = $btn.data('comment-id');
+                    var $commentItem = $btn.closest('.comment-item');
+                    var $childrenList = $commentItem.find('.children-list[data-parent-id="' + commentId + '"]');
+                    
+                    $childrenList.show();
+                    $btn.addClass('expanded');
+                    $btn.find('.toggle-text').text('收起回复');
+                });
+            }
         });
     }
     

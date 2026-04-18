@@ -16,6 +16,7 @@ const {
   registerUserNameExistInfo,
   registerFailInfo,
   loginFailInfo,
+  loginCheckFailInfo,
   deleteUserFailInfo,
   changeInfoFailInfo,
   changePasswordFailInfo,

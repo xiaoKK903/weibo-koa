@@ -16,30 +16,6 @@
                     </div>
                     <div class="blog-content">
                         <div class="content"><%- blogData.blog.contentFormat %></div>
-                        <% if (blogData.blog.image && blogData.blog.image.length > 0) { %>
-                            <% var imgStr = blogData.blog.image; %>
-                            <% var imgArr = imgStr.split(','); %>
-                            <% var validImgs = []; %>
-                            <% for (var i = 0; i < imgArr.length; i++) { %>
-                                <% var trimmed = imgArr[i].trim(); %>
-                                <% if (trimmed.length > 0) { %>
-                                    <% validImgs.push(trimmed); %>
-                                <% } %>
-                            <% } %>
-                            <% var imgCount = validImgs.length; %>
-                            <% if (imgCount > 0) { %>
-                                <div class="blog-images-container <%= imgCount > 1 ? 'multi-image' : 'single-image' %>">
-                                    <% for (var imgIdx = 0; imgIdx < validImgs.length && imgIdx < 9; imgIdx++) { %>
-                                        <a href="<%= validImgs[imgIdx] %>" target="_blank" class="blog-image-link">
-                                            <img class="blog-img" src="<%= validImgs[imgIdx] %>" />
-                                            <% if (imgCount > 3 && imgIdx === 2) { %>
-                                                <span class="more-images-overlay">+<%= imgCount - 3 %></span>
-                                            <% } %>
-                                        </a>
-                                    <% } %>
-                                </div>
-                            <% } %>
-                        <% } %>
                         <div class="blog-time"><%= blogData.blog.createdAtFormat %></div>
                         <% if (locals.isLogin) { %>
                         <div class="blog-actions">
@@ -163,89 +139,6 @@
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #f1f1f1;
-}
-
-/* 多图显示样式 */
-.blog-images-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    overflow: hidden;
-}
-
-.blog-images-container.single-image {
-    max-width: 100%;
-}
-
-.blog-images-container.multi-image {
-    display: grid;
-    gap: 8px;
-}
-
-/* 单图 */
-.blog-images-container.single-image .blog-image-link {
-    display: block;
-}
-
-.blog-images-container.single-image .blog-img {
-    max-width: 100%;
-    max-height: 400px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-/* 2张图 */
-.blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 500px;
-}
-
-.blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) .blog-img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-/* 3张或更多图 */
-.blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 400px;
-}
-
-.blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) .blog-img {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-.blog-image-link {
-    position: relative;
-    display: block;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.blog-image-link:hover {
-    transform: scale(1.02);
-}
-
-.more-images-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 600;
-    border-radius: 6px;
 }
 
 /* 收藏按钮样式 */

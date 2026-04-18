@@ -74,6 +74,11 @@
 
     // 统一的处理
     function ajaxFn(method, url, params, callback) {
+        if (typeof callback !== 'function') {
+            console.error('ajax callback is not a function, method:', method, 'url:', url);
+            return;
+        }
+
         var isGet = method.toUpperCase() === 'GET';
         var ajaxOptions = {
             type: method.toUpperCase(),
@@ -83,13 +88,22 @@
             },
             success: function(res) {
                 if (res.errno !== 0) {
-                    callback(res.message)
+                    callback(res.message || '请求失败')
                     return
                 }
                 callback(null, res.data)
             },
-            error: function(error) {
-                callback(error.message)
+            error: function(xhr, status, error) {
+                var errorMsg = error || status || '网络错误';
+                if (xhr && xhr.responseText) {
+                    try {
+                        var errRes = JSON.parse(xhr.responseText);
+                        if (errRes.message) {
+                            errorMsg = errRes.message;
+                        }
+                    } catch (e) {}
+                }
+                callback(errorMsg)
             }
         };
 

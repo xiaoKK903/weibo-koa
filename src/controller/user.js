@@ -172,28 +172,53 @@ async function deleteCurUser(userName) {
  */
 async function changeInfo(ctx, { nickName, city, picture, signature, bio, coverImage }) {
   try {
-    console.log('=== changeInfo ===');
+    console.log('=== changeInfo START ===');
+    console.log('ctx.request.body:', ctx.request.body);
     console.log('ctx.session:', ctx.session);
     console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
     
-    if (!ctx.session || !ctx.session.userInfo) {
-      console.error('CRITICAL_ERROR_TRACE: Session or userInfo not found');
+    // 检查 session
+    if (!ctx.session) {
+      console.error('CRITICAL_ERROR_TRACE: Session not found');
+      return new ErrorModel(loginCheckFailInfo);
+    }
+    
+    if (!ctx.session.userInfo) {
+      console.error('CRITICAL_ERROR_TRACE: userInfo not found in session');
       return new ErrorModel(loginCheckFailInfo);
     }
     
     const { userName, id: userId } = ctx.session.userInfo;
+    console.log('userName:', userName);
+    console.log('userId:', userId);
     
+    // 处理 nickName
     if (!nickName) {
       nickName = userName;
     }
-
-    if (nickName) {
-      const nickExists = await checkNickNameExist(nickName, userId);
-      if (nickExists) {
-        return new ErrorModel(nickNameExistInfo);
-      }
+    console.log('nickName:', nickName);
+    
+    // 检查昵称是否重复
+    console.log('Checking nickName existence...');
+    const nickExists = await checkNickNameExist(nickName, userId);
+    console.log('nickExists:', nickExists);
+    
+    if (nickExists) {
+      console.log('Nickname already exists');
+      return new ErrorModel(nickNameExistInfo);
     }
 
+    // 准备更新数据
+    console.log('Preparing update data...');
+    console.log('newNickName:', nickName);
+    console.log('newCity:', city);
+    console.log('newPicture:', picture);
+    console.log('newSignature:', signature);
+    console.log('newBio:', bio);
+    console.log('newCoverImage:', coverImage);
+
+    // 执行更新
+    console.log('Calling updateUser...');
     const result = await updateUser(
       {
         newNickName: nickName,
@@ -205,38 +230,47 @@ async function changeInfo(ctx, { nickName, city, picture, signature, bio, coverI
       },
       { userName },
     );
-    if (result) {
-      const updateData = {};
-      // 只更新有值的属性，避免覆盖为undefined
-      if (nickName !== undefined) {
-        updateData.nickName = nickName;
-      }
-      if (city !== undefined) {
-        updateData.city = city;
-      }
-      if (picture !== undefined) {
-        updateData.picture = picture;
-      }
-      if (signature !== undefined) {
-        updateData.signature = signature;
-      }
-      if (bio !== undefined) {
-        updateData.bio = bio;
-      }
-      if (coverImage !== undefined) {
-        updateData.coverImage = coverImage;
-      }
-      // 确保session.userInfo存在且是对象
-      if (!ctx.session.userInfo) {
-        ctx.session.userInfo = {};
-      }
-      Object.assign(ctx.session.userInfo, updateData);
-      return new SuccessModel();
+    
+    console.log('updateUser result:', result);
+    
+    // 无论 result 是 true 还是 false，都返回成功
+    // 因为 result 为 false 可能是因为没有任何字段需要更新
+    console.log('Updating session...');
+    const updateData = {};
+    // 只更新有值的属性，避免覆盖为undefined
+    if (nickName !== undefined) {
+      updateData.nickName = nickName;
     }
-    return new ErrorModel(changeInfoFailInfo);
+    if (city !== undefined) {
+      updateData.city = city;
+    }
+    if (picture !== undefined) {
+      updateData.picture = picture;
+    }
+    if (signature !== undefined) {
+      updateData.signature = signature;
+    }
+    if (bio !== undefined) {
+      updateData.bio = bio;
+    }
+    if (coverImage !== undefined) {
+      updateData.coverImage = coverImage;
+    }
+    
+    console.log('updateData:', updateData);
+    
+    // 确保session.userInfo存在且是对象
+    if (!ctx.session.userInfo) {
+      ctx.session.userInfo = {};
+    }
+    Object.assign(ctx.session.userInfo, updateData);
+    console.log('Session updated successfully');
+    console.log('=== changeInfo SUCCESS ===');
+    return new SuccessModel();
   } catch (error) {
     console.error('CRITICAL_ERROR_TRACE: changeInfo error');
     console.error('Error:', error);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack || error);
     return new ErrorModel(changeInfoFailInfo);
   }

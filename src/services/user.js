@@ -5,6 +5,8 @@
 
 const { User } = require('../db/model/index')
 const { formatUser } = require('./_format')
+const Sequelize = require('sequelize')
+const Op = Sequelize.Op
 
 
 /**
@@ -50,7 +52,7 @@ async function checkNickNameExist(nickName, excludeUserId = null) {
 
     if (excludeUserId) {
         whereOpt.id = {
-            [require('sequelize').Op.ne]: excludeUserId
+            [Op.ne]: excludeUserId
         }
     }
 

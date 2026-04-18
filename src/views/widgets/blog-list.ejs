@@ -1062,7 +1062,11 @@ $(function () {
     }
 
     function renderComments(comments, blogId) {
-        var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
+        var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]').first();
+        
+        if (!$listArea.length) {
+            return;
+        }
         
         if (!comments || comments.length === 0) {
             $listArea.html('<div class="no-comments">暂无评论</div>');
@@ -1085,19 +1089,25 @@ $(function () {
             }
             
             var comments = (data && data.commentList) || [];
+            
+            var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]').first();
+            if (!$listArea.length) {
+                return;
+            }
+            
             renderComments(comments, blogId);
             
             if (autoExpand) {
-                var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
                 $listArea.find('.toggle-children-btn').each(function() {
                     var $btn = $(this);
                     var commentId = $btn.data('comment-id');
-                    var $commentItem = $btn.closest('.comment-item');
-                    var $childrenList = $commentItem.find('.children-list[data-parent-id="' + commentId + '"]');
+                    var $childrenList = $btn.siblings('.children-list[data-parent-id="' + commentId + '"]');
                     
-                    $childrenList.show();
-                    $btn.addClass('expanded');
-                    $btn.find('.toggle-text').text('收起回复');
+                    if ($childrenList.length) {
+                        $childrenList.show();
+                        $btn.addClass('expanded');
+                        $btn.find('.toggle-text').text('收起回复');
+                    }
                 });
             }
         });

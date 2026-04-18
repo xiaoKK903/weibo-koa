@@ -15,12 +15,21 @@ function getLoginInfo(ctx) {
     isLogin: false, // 默认未登录
   };
 
-  const userInfo = ctx.session.userInfo;
-  if (userInfo) {
-    data = {
-      isLogin: true,
-      userName: userInfo.userName,
-    };
+  try {
+    console.log('=== getLoginInfo ===');
+    console.log('ctx.session:', ctx.session);
+    console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
+    
+    if (ctx.session && ctx.session.userInfo) {
+      data = {
+        isLogin: true,
+        userName: ctx.session.userInfo.userName,
+      };
+    }
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: getLoginInfo error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
   }
 
   return data;
@@ -35,9 +44,26 @@ router.get("/register", async (ctx, next) => {
 });
 
 router.get("/setting", loginRedirect, async (ctx, next) => {
-  // 创建一个新对象，避免EJS修改session中的userInfo
-  const userInfo = Object.assign({}, ctx.session.userInfo);
-  await ctx.render("setting", userInfo);
+  try {
+    console.log('=== setting page ===');
+    console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
+    
+    // 创建一个新对象，避免EJS修改session中的userInfo
+    const userInfo = ctx.session && ctx.session.userInfo ? Object.assign({}, ctx.session.userInfo) : {};
+    await ctx.render("setting", userInfo);
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: setting page error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    
+    // 渲染错误页面或返回错误信息
+    ctx.status = 500;
+    ctx.body = {
+      code: -1,
+      msg: "服务器内部错误",
+      error: process.env.NODE_ENV === "development" ? error.message : ""
+    };
+  }
 });
 
 module.exports = router;

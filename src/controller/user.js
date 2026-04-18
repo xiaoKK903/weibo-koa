@@ -44,12 +44,28 @@ async function isExist(userName) {
  * @param {string} nickName 昵称
  */
 async function checkNickName(ctx, { nickName }) {
-  const { id: userId } = ctx.session.userInfo;
-  const exists = await checkNickNameExist(nickName, userId);
-  if (exists) {
-    return new ErrorModel(nickNameExistInfo);
+  try {
+    console.log('=== checkNickName ===');
+    console.log('ctx.session:', ctx.session);
+    console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
+    
+    if (!ctx.session || !ctx.session.userInfo) {
+      console.error('CRITICAL_ERROR_TRACE: Session or userInfo not found');
+      return new ErrorModel(loginCheckFailInfo);
+    }
+    
+    const { id: userId } = ctx.session.userInfo;
+    const exists = await checkNickNameExist(nickName, userId);
+    if (exists) {
+      return new ErrorModel(nickNameExistInfo);
+    }
+    return new SuccessModel({ exists: false });
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: checkNickName error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    return new ErrorModel(changeInfoFailInfo);
   }
-  return new SuccessModel({ exists: false });
 }
 
 /**
@@ -57,12 +73,28 @@ async function checkNickName(ctx, { nickName }) {
  * @param {Object} ctx koa ctx
  */
 async function getCurrentUserInfo(ctx) {
-  const { userName } = ctx.session.userInfo;
-  const userInfo = await getUserInfo(userName);
-  if (userInfo) {
-    return new SuccessModel(userInfo);
+  try {
+    console.log('=== getCurrentUserInfo ===');
+    console.log('ctx.session:', ctx.session);
+    console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
+    
+    if (!ctx.session || !ctx.session.userInfo) {
+      console.error('CRITICAL_ERROR_TRACE: Session or userInfo not found');
+      return new ErrorModel(loginCheckFailInfo);
+    }
+    
+    const { userName } = ctx.session.userInfo;
+    const userInfo = await getUserInfo(userName);
+    if (userInfo) {
+      return new SuccessModel(userInfo);
+    }
+    return new ErrorModel(changeInfoFailInfo);
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: getCurrentUserInfo error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    return new ErrorModel(changeInfoFailInfo);
   }
-  return new ErrorModel(changeInfoFailInfo);
 }
 
 /**
@@ -72,12 +104,14 @@ async function getCurrentUserInfo(ctx) {
  * @param {number} gender 性别（1 男，2 女，3 保密）
  */
 async function register({ userName, password, gender }) {
-  const userInfo = await getUserInfo(userName);
-  if (userInfo) {
-    return new ErrorModel(registerUserNameExistInfo);
-  }
-
   try {
+    console.log('=== register ===');
+    
+    const userInfo = await getUserInfo(userName);
+    if (userInfo) {
+      return new ErrorModel(registerUserNameExistInfo);
+    }
+
     await createUser({
       userName,
       password: doCrypto(password),
@@ -85,7 +119,9 @@ async function register({ userName, password, gender }) {
     });
     return new SuccessModel();
   } catch (ex) {
-    console.error(ex.message, ex.stack);
+    console.error('CRITICAL_ERROR_TRACE: register error');
+    console.error('Error:', ex);
+    console.error('Error stack:', ex.stack || ex);
     return new ErrorModel(registerFailInfo);
   }
 }
@@ -97,15 +133,24 @@ async function register({ userName, password, gender }) {
  * @param {string} password 密码
  */
 async function login(ctx, userName, password) {
-  const userInfo = await getUserInfo(userName, doCrypto(password));
-  if (!userInfo) {
+  try {
+    console.log('=== login ===');
+    
+    const userInfo = await getUserInfo(userName, doCrypto(password));
+    if (!userInfo) {
+      return new ErrorModel(loginFailInfo);
+    }
+
+    if (ctx.session.userInfo == null) {
+      ctx.session.userInfo = userInfo;
+    }
+    return new SuccessModel();
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: login error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
     return new ErrorModel(loginFailInfo);
   }
-
-  if (ctx.session.userInfo == null) {
-    ctx.session.userInfo = userInfo;
-  }
-  return new SuccessModel();
 }
 
 /**
@@ -125,49 +170,65 @@ async function deleteCurUser(userName) {
  * @param {Object} ctx ctx
  */
 async function changeInfo(ctx, { nickName, city, picture, signature, bio, coverImage }) {
-  const { userName, id: userId } = ctx.session.userInfo;
-  
-  if (!nickName) {
-    nickName = userName;
-  }
+  try {
+    console.log('=== changeInfo ===');
+    console.log('ctx.session:', ctx.session);
+    console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
+    
+    if (!ctx.session || !ctx.session.userInfo) {
+      console.error('CRITICAL_ERROR_TRACE: Session or userInfo not found');
+      return new ErrorModel(loginCheckFailInfo);
+    }
+    
+    const { userName, id: userId } = ctx.session.userInfo;
+    
+    if (!nickName) {
+      nickName = userName;
+    }
 
-  if (nickName) {
-    const nickExists = await checkNickNameExist(nickName, userId);
-    if (nickExists) {
-      return new ErrorModel(nickNameExistInfo);
+    if (nickName) {
+      const nickExists = await checkNickNameExist(nickName, userId);
+      if (nickExists) {
+        return new ErrorModel(nickNameExistInfo);
+      }
     }
-  }
 
-  const result = await updateUser(
-    {
-      newNickName: nickName,
-      newCity: city,
-      newPicture: picture,
-      newSignature: signature,
-      newBio: bio,
-      newCoverImage: coverImage,
-    },
-    { userName },
-  );
-  if (result) {
-    const updateData = {
-      nickName,
-      city,
-      picture,
-    };
-    if (signature !== undefined) {
-      updateData.signature = signature;
+    const result = await updateUser(
+      {
+        newNickName: nickName,
+        newCity: city,
+        newPicture: picture,
+        newSignature: signature,
+        newBio: bio,
+        newCoverImage: coverImage,
+      },
+      { userName },
+    );
+    if (result) {
+      const updateData = {
+        nickName,
+        city,
+        picture,
+      };
+      if (signature !== undefined) {
+        updateData.signature = signature;
+      }
+      if (bio !== undefined) {
+        updateData.bio = bio;
+      }
+      if (coverImage !== undefined) {
+        updateData.coverImage = coverImage;
+      }
+      Object.assign(ctx.session.userInfo, updateData);
+      return new SuccessModel();
     }
-    if (bio !== undefined) {
-      updateData.bio = bio;
-    }
-    if (coverImage !== undefined) {
-      updateData.coverImage = coverImage;
-    }
-    Object.assign(ctx.session.userInfo, updateData);
-    return new SuccessModel();
+    return new ErrorModel(changeInfoFailInfo);
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: changeInfo error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    return new ErrorModel(changeInfoFailInfo);
   }
-  return new ErrorModel(changeInfoFailInfo);
 }
 
 function validatePasswordStrength(password) {
@@ -184,27 +245,36 @@ function validatePasswordStrength(password) {
  * @param {string} newPassword 新密码
  */
 async function changePassword(userName, password, newPassword) {
-  const userInfo = await getUserInfo(userName, doCrypto(password));
-  if (!userInfo) {
-    return new ErrorModel(oldPasswordErrorInfo);
-  }
+  try {
+    console.log('=== changePassword ===');
+    
+    const userInfo = await getUserInfo(userName, doCrypto(password));
+    if (!userInfo) {
+      return new ErrorModel(oldPasswordErrorInfo);
+    }
 
-  if (!validatePasswordStrength(newPassword)) {
-    return new ErrorModel(passwordWeakInfo);
-  }
+    if (!validatePasswordStrength(newPassword)) {
+      return new ErrorModel(passwordWeakInfo);
+    }
 
-  const result = await updateUser(
-    {
-      newPassword: doCrypto(newPassword),
-    },
-    {
-      userName,
-    },
-  );
-  if (result) {
-    return new SuccessModel();
+    const result = await updateUser(
+      {
+        newPassword: doCrypto(newPassword),
+      },
+      {
+        userName,
+      },
+    );
+    if (result) {
+      return new SuccessModel();
+    }
+    return new ErrorModel(changePasswordFailInfo);
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: changePassword error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    return new ErrorModel(changePasswordFailInfo);
   }
-  return new ErrorModel(changePasswordFailInfo);
 }
 
 /**
@@ -212,8 +282,18 @@ async function changePassword(userName, password, newPassword) {
  * @param {Object} ctx ctx
  */
 async function logout(ctx) {
-  delete ctx.session.userInfo;
-  return new SuccessModel();
+  try {
+    console.log('=== logout ===');
+    console.log('ctx.session:', ctx.session);
+    
+    delete ctx.session.userInfo;
+    return new SuccessModel();
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: logout error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    return new SuccessModel(); // 即使出错也要返回成功，确保用户可以退出
+  }
 }
 
 module.exports = {

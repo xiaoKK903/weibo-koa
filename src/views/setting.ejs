@@ -1,5 +1,9 @@
 <%- include('layout/header', { title: '微博 - 设置', isNav: true })%>
 
+<!-- 引入 cropper.js 库 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <style>
 .cover-image-section {
     position: relative;
@@ -719,6 +723,41 @@
 
 <div class="toast-container" id="toast-container"></div>
 
+<!-- 头像裁剪模态框 -->
+<div class="modal fade" id="avatar-crop-modal" tabindex="-1" role="dialog" aria-labelledby="avatar-crop-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="avatar-crop-modal-label">裁剪头像</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <img id="crop-image" src="" alt="裁剪图片">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-crop-confirm">确认裁剪</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.img-container {
+  width: 100%;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.img-container img {
+  max-width: 100%;
+}
+</style>
+
 <script>
 $(function() {
     function showToast(type, title, message) {
@@ -859,6 +898,7 @@ $(function() {
 
     var $imgPicture = $('#img-picture');
     var $filePicture = $('#file-picture');
+    var cropper = null;
     
     $('#avatar-wrapper').click(function() {
         $filePicture.click();
@@ -870,18 +910,76 @@ $(function() {
         
         var reader = new FileReader();
         reader.onload = function(e) {
-            showToast('success', '上传中', '正在上传头像...');
+            var $cropImage = $('#crop-image');
+            $cropImage.attr('src', e.target.result);
             
-            ajax.upload('/api/utils/upload', file, function(err, data) {
-                if (err) {
-                    showToast('error', '上传失败', err.message || err);
-                    return;
-                }
-                $imgPicture.attr('src', data.url);
-                showToast('success', '上传成功', '头像已更新，点击保存按钮生效');
+            // 初始化 cropper
+            if (cropper) {
+                cropper.destroy();
+            }
+            
+            cropper = new Cropper($cropImage[0], {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                minCropBoxWidth: 100,
+                minCropBoxHeight: 100
             });
+            
+            // 显示模态框
+            $('#avatar-crop-modal').modal('show');
         };
         reader.readAsDataURL(file);
+    });
+    
+    // 确认裁剪
+    $('#btn-crop-confirm').click(function() {
+        if (!cropper) return;
+        
+        showToast('success', '上传中', '正在上传头像...');
+        
+        // 获取裁剪后的图片
+        cropper.getCroppedCanvas().toBlob(function(blob) {
+            var formData = new FormData();
+            formData.append('file', blob, 'avatar.jpg');
+            
+            $.ajax({
+                url: '/api/utils/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.code === 0) {
+                        $imgPicture.attr('src', data.data.url);
+                        showToast('success', '上传成功', '头像已更新，点击保存按钮生效');
+                    } else {
+                        showToast('error', '上传失败', data.msg || '上传失败');
+                    }
+                },
+                error: function(err) {
+                    showToast('error', '上传失败', err.responseText || '网络错误');
+                }
+            });
+            
+            // 隐藏模态框并销毁 cropper
+            $('#avatar-crop-modal').modal('hide');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }, 'image/jpeg', 0.8);
+    });
+    
+    // 模态框隐藏时销毁 cropper
+    $('#avatar-crop-modal').on('hidden.bs.modal', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
     });
 
     var $imgCover = $('#cover-image');
@@ -978,9 +1076,25 @@ $(function() {
                 return;
             }
 
+            // 检查昵称是否已通过校验
+            if (isNickAvailable === false) {
+                showToast('warning', '提示', '昵称已被使用，请换一个试试');
+                $inputNick.addClass('field-error');
+                return;
+            }
+
             var $btn = $(this);
             var originalText = $btn.text();
             $btn.prop('disabled', true).text('保存中...');
+
+            console.log('提交的参数:', {
+                nickName: nickName,
+                signature: signature,
+                bio: bio,
+                city: city,
+                picture: picture,
+                coverImage: coverImage
+            });
 
             ajax.patch('/api/user/changeInfo', {
                 nickName: nickName,
@@ -990,6 +1104,7 @@ $(function() {
                 picture: picture,
                 coverImage: coverImage
             }, function(err, data) {
+                console.log('接口响应:', err, data);
                 $btn.prop('disabled', false).text(originalText);
                 
                 if (err) {
@@ -1004,7 +1119,7 @@ $(function() {
                 showToast('success', '修改成功', '个人信息已更新');
                 
                 setTimeout(function() {
-                    location.reload();
+                    location.href = location.pathname;
                 }, 800);
             });
         } catch (ex) {

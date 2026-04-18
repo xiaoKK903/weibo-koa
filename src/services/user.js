@@ -114,13 +114,13 @@ async function updateUser(
     { userName, password }
 ) {
     const updateData = {}
-    if (newPassword) {
+    if (newPassword !== undefined) {
         updateData.password = newPassword
     }
-    if (newNickName) {
+    if (newNickName !== undefined) {
         updateData.nickName = newNickName
     }
-    if (newPicture) {
+    if (newPicture !== undefined) {
         updateData.picture = newPicture
     }
     if (newCity !== undefined) {

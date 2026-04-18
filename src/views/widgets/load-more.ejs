@@ -22,42 +22,108 @@
     var PAGE_SIZE = <%= pageSize%>
     var PAGE_INDEX =  <%= pageIndex%>
     var COUNT =  <%= count%>
-    var $btnLoadMore = $('#btn-load-more')
+    var $btnLoadMore = $('.load-more-btn')
     var $containerWeiboList = $('<%= containerSelector%>')
     var api = '<%= api%>'
     var keyword = '<%= typeof keyword !== 'undefined' ? keyword : '' %>'
 
-    // 加载更多
-    $btnLoadMore.click(function () {
-        var nextPageIndex = PAGE_INDEX + 1
-        var url = api + '/' + nextPageIndex
-        if (keyword) {
-            url += '?keyword=' + encodeURIComponent(keyword)
+    function showToast(type, title, message) {
+        var toastContainer = $('#toast-container');
+        if (toastContainer.length === 0) {
+            $('body').append('<div class="toast-container" id="toast-container"></div>');
+            toastContainer = $('#toast-container');
+            
+            var toastStyles = '<style>' +
+                '.toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }' +
+                '.toast { background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px; overflow: hidden; display: flex; align-items: center; min-width: 280px; animation: slideIn 0.3s ease; }' +
+                '@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }' +
+                '@keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }' +
+                '.toast-icon { padding: 12px 16px; font-size: 20px; }' +
+                '.toast.success { border-left: 4px solid #52c41a; }' +
+                '.toast.success .toast-icon { color: #52c41a; }' +
+                '.toast.error { border-left: 4px solid #ff4d4f; }' +
+                '.toast.error .toast-icon { color: #ff4d4f; }' +
+                '.toast.warning { border-left: 4px solid #faad14; }' +
+                '.toast.warning .toast-icon { color: #faad14; }' +
+                '.toast-content { padding: 12px 0; flex: 1; }' +
+                '.toast-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }' +
+                '.toast-message { font-size: 13px; color: #666; }' +
+                '.toast-close { padding: 12px 16px; background: none; border: none; cursor: pointer; color: #999; font-size: 16px; }' +
+                '.toast-close:hover { color: #666; }' +
+                '</style>';
+            $('head').append(toastStyles);
         }
+
+        var icons = {
+            success: '<i class="fa fa-check-circle"></i>',
+            error: '<i class="fa fa-times-circle"></i>',
+            warning: '<i class="fa fa-exclamation-circle"></i>'
+        };
+
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + message + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>');
+
+        toastContainer.append(toast);
+
+        toast.find('.toast-close').click(function() {
+            toast.css('animation', 'slideOut 0.3s ease');
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
+        });
+
+        setTimeout(function() {
+            toast.css('animation', 'slideOut 0.3s ease');
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    window.showToast = showToast;
+
+    $btnLoadMore.click(function () {
+        var $this = $(this);
+        var nextPageIndex = PAGE_INDEX + 1;
+        var url = api + '/' + nextPageIndex;
+        if (keyword) {
+            url += '?keyword=' + encodeURIComponent(keyword);
+        }
+        
+        $this.prop('disabled', true);
+        $this.text('加载中...');
+        
         ajax.get(url, function(err, data) {
             if (err) {
-                // 失败
-                alert(err)
-                return
+                $this.prop('disabled', false);
+                $this.text('点击加载更多');
+                showToast('error', '加载失败', err.message || err);
+                return;
             }
-            // 更新 pageIndex
-            PAGE_INDEX = data.pageIndex
-
-            // 是否要隐藏“加载更多”
+            
+            PAGE_INDEX = data.pageIndex;
+            
             if ((PAGE_INDEX + 1) * PAGE_SIZE >= COUNT) {
-                $btnLoadMore.hide()
+                $this.hide();
+            } else {
+                $this.prop('disabled', false);
+                $this.text('点击加载更多');
             }
-
-            // 渲染页面
-            var $tempContainer = $(data.blogListTpl)
+            
+            var $tempContainer = $(data.blogListTpl);
             $tempContainer.each(function (index, item) {
                 if (item.nodeType !== 1) {
-                    // 不是 DOM 元素，是其他（如 #TEXT 类型）
-                    return
+                    return;
                 }
-                $containerWeiboList.append($(item))
-            })
-        })
-    })
+                $containerWeiboList.append($(item));
+            });
+        });
+    });
 })();
 </script>

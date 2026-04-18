@@ -117,4 +117,45 @@ router.post('/comment/unlike', loginCheck, async (ctx, next) => {
     ctx.body = result
 })
 
+// ========== 兼容路由（用于 blog-list.ejs 中的现有调用）==========
+
+// 创建评论（兼容旧版路由 /api/blog/comment）
+router.post('/comment', loginCheck, async (ctx, next) => {
+    const { blogId, content } = ctx.request.body
+    const { id: userId } = ctx.session.userInfo
+    
+    const blogIdNum = parseInt(blogId)
+    if (isNaN(blogIdNum)) {
+        ctx.body = new ErrorModel({ errno: 400, message: '无效的微博 ID' })
+        return
+    }
+    
+    if (!content || content.trim() === '') {
+        ctx.body = new ErrorModel({ errno: 400, message: '评论内容不能为空' })
+        return
+    }
+    
+    const result = await createComment({ 
+        blogId: blogIdNum, 
+        userId, 
+        content,
+        parentId: null,
+        replyUserId: null
+    })
+    ctx.body = result
+})
+
+// 获取评论列表（兼容旧版路由 /api/blog/comment/:blogId）
+router.get('/comment/:blogId', loginCheck, async (ctx, next) => {
+    const { blogId } = ctx.params
+    const blogIdNum = parseInt(blogId)
+    if (isNaN(blogIdNum)) {
+        ctx.body = new ErrorModel({ errno: 400, message: '无效的微博 ID' })
+        return
+    }
+    const { id: userId } = ctx.session.userInfo || {}
+    const result = await getComments(blogIdNum, userId)
+    ctx.body = result
+})
+
 module.exports = router

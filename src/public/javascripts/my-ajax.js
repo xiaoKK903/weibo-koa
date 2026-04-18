@@ -12,8 +12,12 @@
     window.ajax = {}
 
     // get 请求
-    window.ajax.get = function (url, callback) {
-        ajaxFn('get', url, null, callback)
+    window.ajax.get = function (url, params, callback) {
+        if (typeof params === 'function') {
+            callback = params
+            params = {}
+        }
+        ajaxFn('get', url, params, callback)
     }
     // post 请求
     window.ajax.post = function (url, params, callback) {
@@ -70,27 +74,34 @@
 
     // 统一的处理
     function ajaxFn(method, url, params, callback) {
-        $.ajax({
+        var isGet = method.toUpperCase() === 'GET';
+        var ajaxOptions = {
             type: method.toUpperCase(),
-            url,
-            contentType: 'application/json;charset=UTF-8',
-            data: params ? JSON.stringify(params) : '',
+            url: url,
             xhrFields: {
                 withCredentials: true
             },
             success: function(res) {
                 if (res.errno !== 0) {
-                    // 错误
                     callback(res.message)
                     return
                 }
-                // 正确
                 callback(null, res.data)
             },
             error: function(error) {
-                // 错误
                 callback(error.message)
             }
-        })
+        };
+
+        if (isGet) {
+            if (params && Object.keys(params).length > 0) {
+                ajaxOptions.data = params;
+            }
+        } else {
+            ajaxOptions.contentType = 'application/json;charset=UTF-8';
+            ajaxOptions.data = params ? JSON.stringify(params) : '';
+        }
+
+        $.ajax(ajaxOptions);
     }
 })(window, jQuery)

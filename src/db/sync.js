@@ -18,9 +18,8 @@ seq
   });
 
 // 执行同步
-// force: false 只会创建不存在的表，不会删除现有数据
-// 如果你想重新创建所有表（会清空数据），可以改成 force: true
-seq.sync({ force: false }).then(() => {
+// force: true 重新创建所有表（会清空数据），确保字段和索引正确创建
+seq.sync({ force: true }).then(() => {
   console.log("sync ok");
   process.exit();
 });

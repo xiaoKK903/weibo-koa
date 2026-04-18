@@ -725,7 +725,7 @@
 
 <!-- 头像裁剪模态框 -->
 <div class="modal fade" id="avatar-crop-modal" tabindex="-1" role="dialog" aria-labelledby="avatar-crop-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="avatar-crop-modal-label">裁剪头像</h5>
@@ -749,12 +749,35 @@
 <style>
 .img-container {
   width: 100%;
-  max-height: 400px;
+  max-height: 600px;
   overflow: hidden;
 }
 
 .img-container img {
   max-width: 100%;
+  max-height: 600px;
+}
+
+/* 自定义 cropper 样式 */
+.cropper-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cropper-view-box {
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.cropper-dashed {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.cropper-handle {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #fff;
+  background-color: #333;
 }
 </style>
 
@@ -920,13 +943,19 @@ $(function() {
             
             cropper = new Cropper($cropImage[0], {
                 aspectRatio: 1,
-                viewMode: 1,
+                viewMode: 2,
                 dragMode: 'move',
-                autoCropArea: 0.8,
+                autoCropArea: 0.6,
                 cropBoxMovable: true,
                 cropBoxResizable: true,
+                movable: true,
+                scalable: true,
+                zoomable: true,
+                rotatable: false,
                 minCropBoxWidth: 100,
-                minCropBoxHeight: 100
+                minCropBoxHeight: 100,
+                maxCropBoxWidth: 600,
+                maxCropBoxHeight: 600
             });
             
             // 显示模态框
@@ -943,26 +972,14 @@ $(function() {
         
         // 获取裁剪后的图片
         cropper.getCroppedCanvas().toBlob(function(blob) {
-            var formData = new FormData();
-            formData.append('file', blob, 'avatar.jpg');
-            
-            $.ajax({
-                url: '/api/utils/upload',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    if (data.code === 0) {
-                        $imgPicture.attr('src', data.data.url);
-                        showToast('success', '上传成功', '头像已更新，点击保存按钮生效');
-                    } else {
-                        showToast('error', '上传失败', data.msg || '上传失败');
-                    }
-                },
-                error: function(err) {
-                    showToast('error', '上传失败', err.responseText || '网络错误');
+            // 使用 ajax.upload 函数上传图片
+            ajax.upload('/api/utils/upload', blob, function(err, data) {
+                if (err) {
+                    showToast('error', '上传失败', err.message || err);
+                    return;
                 }
+                $imgPicture.attr('src', data.url);
+                showToast('success', '上传成功', '头像已更新，点击保存按钮生效');
             });
             
             // 隐藏模态框并销毁 cropper

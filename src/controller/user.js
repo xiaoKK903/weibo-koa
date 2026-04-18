@@ -205,11 +205,17 @@ async function changeInfo(ctx, { nickName, city, picture, signature, bio, coverI
       { userName },
     );
     if (result) {
-      const updateData = {
-        nickName,
-        city,
-        picture,
-      };
+      const updateData = {};
+      // 只更新有值的属性，避免覆盖为undefined
+      if (nickName !== undefined) {
+        updateData.nickName = nickName;
+      }
+      if (city !== undefined) {
+        updateData.city = city;
+      }
+      if (picture !== undefined) {
+        updateData.picture = picture;
+      }
       if (signature !== undefined) {
         updateData.signature = signature;
       }
@@ -218,6 +224,10 @@ async function changeInfo(ctx, { nickName, city, picture, signature, bio, coverI
       }
       if (coverImage !== undefined) {
         updateData.coverImage = coverImage;
+      }
+      // 确保session.userInfo存在且是对象
+      if (!ctx.session.userInfo) {
+        ctx.session.userInfo = {};
       }
       Object.assign(ctx.session.userInfo, updateData);
       return new SuccessModel();

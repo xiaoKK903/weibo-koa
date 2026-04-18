@@ -13,6 +13,13 @@ const { loginRedirect } = require("../../middlewares/loginChecks");
 function getLoginInfo(ctx) {
   let data = {
     isLogin: false, // 默认未登录
+    userName: '',
+    nickName: '',
+    picture: '',
+    city: '',
+    signature: '',
+    bio: '',
+    coverImage: ''
   };
 
   try {
@@ -23,7 +30,13 @@ function getLoginInfo(ctx) {
     if (ctx.session && ctx.session.userInfo) {
       data = {
         isLogin: true,
-        userName: ctx.session.userInfo.userName,
+        userName: ctx.session.userInfo.userName || '',
+        nickName: ctx.session.userInfo.nickName || '',
+        picture: ctx.session.userInfo.picture || '',
+        city: ctx.session.userInfo.city || '',
+        signature: ctx.session.userInfo.signature || '',
+        bio: ctx.session.userInfo.bio || '',
+        coverImage: ctx.session.userInfo.coverImage || ''
       };
     }
   } catch (error) {
@@ -48,8 +61,26 @@ router.get("/setting", loginRedirect, async (ctx, next) => {
     console.log('=== setting page ===');
     console.log('ctx.session.userInfo:', ctx.session ? ctx.session.userInfo : 'session not exist');
     
-    // 创建一个新对象，避免EJS修改session中的userInfo
-    const userInfo = ctx.session && ctx.session.userInfo ? Object.assign({}, ctx.session.userInfo) : {};
+    // 创建一个新对象，避免EJS修改session中的userInfo，并确保所有属性都有默认值
+    const userInfo = ctx.session && ctx.session.userInfo ? {
+      id: ctx.session.userInfo.id || '',
+      userName: ctx.session.userInfo.userName || '',
+      nickName: ctx.session.userInfo.nickName || '',
+      picture: ctx.session.userInfo.picture || '',
+      city: ctx.session.userInfo.city || '',
+      signature: ctx.session.userInfo.signature || '',
+      bio: ctx.session.userInfo.bio || '',
+      coverImage: ctx.session.userInfo.coverImage || ''
+    } : {
+      id: '',
+      userName: '',
+      nickName: '',
+      picture: '',
+      city: '',
+      signature: '',
+      bio: '',
+      coverImage: ''
+    };
     await ctx.render("setting", userInfo);
   } catch (error) {
     console.error('CRITICAL_ERROR_TRACE: setting page error');

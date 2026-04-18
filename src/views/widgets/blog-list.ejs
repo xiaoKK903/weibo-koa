@@ -786,7 +786,8 @@ $(function () {
                 $btn.prop('disabled', false);
                 
                 if (err) {
-                    alert(err);
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
                     return;
                 }
                 
@@ -804,7 +805,8 @@ $(function () {
             
             ajax.post(url, { blogId: blogId }, function(err) {
                 if (err) {
-                    alert(err);
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
                     return;
                 }
                 
@@ -834,7 +836,8 @@ $(function () {
             
             ajax.post(url, { blogId: blogId }, function(err) {
                 if (err) {
-                    alert(err);
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
                     return;
                 }
                 
@@ -894,35 +897,23 @@ $(function () {
             
             $btn.prop('disabled', true);
             
-            $.ajax({
-                url: '/api/blog/comment/create',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    blogId: Number(blogId),
-                    content: content,
-                    parentId: Number(parentId),
-                    replyUserId: Number(replyUserId)
-                }),
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(res) {
-                    if (res.errno === 0) {
-                        $replyForm.find('textarea').val('');
-                        $replyForm.hide();
-                        loadComments(blogId, true);
-                    } else {
-                        alert(res.message || '回复失败');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Reply comment error:', error);
-                    alert('回复失败，请重试');
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
+            ajax.post('/api/blog/comment/create', {
+                blogId: Number(blogId),
+                content: content,
+                parentId: Number(parentId),
+                replyUserId: Number(replyUserId)
+            }, function(err, data) {
+                $btn.prop('disabled', false);
+                
+                if (err) {
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
+                    return;
                 }
+                
+                $replyForm.find('textarea').val('');
+                $replyForm.hide();
+                loadComments(blogId, true);
             });
         });
         
@@ -957,37 +948,24 @@ $(function () {
             
             var url = isLiked ? '/api/blog/comment/unlike' : '/api/blog/comment/like';
             
-            $.ajax({
-                url: url,
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    commentId: Number(commentId)
-                }),
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(res) {
-                    if (res.errno === 0) {
-                        var $countSpan = $btn.find('.count');
-                        var count = parseInt($countSpan.text()) || 0;
-                        
-                        if (isLiked) {
-                            $btn.removeClass('liked');
-                            $btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
-                            $countSpan.text(Math.max(0, count - 1));
-                        } else {
-                            $btn.addClass('liked');
-                            $btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
-                            $countSpan.text(count + 1);
-                        }
-                    } else {
-                        alert(res.message || '操作失败');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Like comment error:', error);
-                    alert('操作失败，请重试');
+            ajax.post(url, { commentId: Number(commentId) }, function(err) {
+                if (err) {
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
+                    return;
+                }
+                
+                var $countSpan = $btn.find('.count');
+                var count = parseInt($countSpan.text()) || 0;
+                
+                if (isLiked) {
+                    $btn.removeClass('liked');
+                    $btn.find('i').removeClass('fa-heart').addClass('fa-heart-o');
+                    $countSpan.text(Math.max(0, count - 1));
+                } else {
+                    $btn.addClass('liked');
+                    $btn.find('i').removeClass('fa-heart-o').addClass('fa-heart');
+                    $countSpan.text(count + 1);
                 }
             });
         });
@@ -1002,27 +980,14 @@ $(function () {
                 return;
             }
             
-            $.ajax({
-                url: '/api/blog/comment/delete',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    commentId: Number(commentId)
-                }),
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(res) {
-                    if (res.errno === 0) {
-                        loadComments(blogId);
-                    } else {
-                        alert(res.message || '删除失败');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Delete comment error:', error);
-                    alert('删除失败，请重试');
+            ajax.post('/api/blog/comment/delete', { commentId: Number(commentId) }, function(err) {
+                if (err) {
+                    var errorMsg = err.message || err;
+                    alert(errorMsg);
+                    return;
                 }
+                
+                loadComments(blogId);
             });
         });
     }

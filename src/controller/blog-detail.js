@@ -38,7 +38,18 @@ async function getBlogDetail(blogId, userId = null) {
  * @param {Object} param0 创建评论的数据 { blogId, userId, content, parentId, replyUserId }
  */
 async function createComment({ blogId, userId, content, parentId = null, replyUserId = null }) {
-    const securityCheck = await contentSecurityCheck(userId, content, 'comment', parentId);
+    // 区分内容类型：
+    // - parentId为null：一级评论（直接对微博评论），使用 'comment' 类型
+    // - parentId有值：楼中楼回复（对评论的回复），使用 'reply' 类型
+    const contentType = parentId ? 'reply' : 'comment';
+    
+    const securityCheck = await contentSecurityCheck(
+        userId, 
+        content, 
+        contentType, 
+        blogId, 
+        parentId
+    );
     
     if (!securityCheck.pass) {
         if (securityCheck.errorType === 'sensitive') {

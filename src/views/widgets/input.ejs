@@ -970,8 +970,10 @@ $(function () {
             
             clearEditor();
             
-            if (typeof refreshBlogList === 'function') {
-                refreshBlogList();
+            alert('发布成功！');
+            
+            if (typeof window.refreshBlogList === 'function') {
+                window.refreshBlogList();
             } else {
                 location.href = location.pathname;
             }

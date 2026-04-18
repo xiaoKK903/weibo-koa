@@ -13,8 +13,7 @@ const SCHEMA = {
             type: 'string'
         },
         image: {
-            type: 'string',
-            maxLength: 255
+            type: 'string'
         }
     }
 }

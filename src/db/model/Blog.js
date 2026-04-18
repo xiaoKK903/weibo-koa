@@ -18,8 +18,8 @@ const Blog = seq.define('blog', {
         comment: '微博内容'
     },
     image: {
-        type: STRING,
-        comment: '图片地址'
+        type: TEXT,
+        comment: '图片地址，多张图片用逗号分隔'
     }
 })
 

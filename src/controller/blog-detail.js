@@ -3,7 +3,15 @@
  * @author milk
  */
 
-const { getBlogById, createComment: createCommentService, getCommentsByBlogId } = require('../services/blog')
+const { 
+    getBlogById, 
+    createComment: createCommentService, 
+    getCommentsByBlogId,
+    getCommentById,
+    deleteComment: deleteCommentService,
+    likeComment: likeCommentService,
+    unlikeComment: unlikeCommentService
+} = require('../services/blog')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { blogNotExistInfo, createCommentFailInfo } = require('../model/ErrorInfo')
 const { REG_FOR_AT_WHO } = require('../conf/constant')
@@ -25,48 +33,45 @@ async function getBlogDetail(blogId, userId = null) {
 }
 
 /**
- * 创建评论
- * @param {Object} param0 创建评论的数据 { blogId, userId, content }
+ * 创建评论（支持楼中楼回复）
+ * @param {Object} param0 创建评论的数据 { blogId, userId, content, parentId, replyUserId }
  */
-async function createComment({ blogId, userId, content }) {
+async function createComment({ blogId, userId, content, parentId = null, replyUserId = null }) {
     try {
-        // 分析并收集 content 中的 @ 用户
-        // 支持两种格式：
-        // 1. '@昵称 - userName' 格式，如 '哈喽 @李四 - lisi 你好'
-        // 2. '@userName' 格式，如 '哈喽 @lisi 你好'
         const atUserNameList = [];
         content = content.replace(REG_FOR_AT_WHO, (matchStr, nickName, userName1, userName2) => {
-            // 目的不是 replace 而是获取 userName
-            // 如果是第一种格式，userName1 有值
-            // 如果是第二种格式，userName2 有值
             const userName = userName1 || userName2;
             if (userName) {
                 atUserNameList.push(userName);
             }
-            return matchStr; // 替换不生效，预期
+            return matchStr;
         });
 
-        // 根据 @ 用户名查询用户信息
         const atUserList = await Promise.all(
             atUserNameList.map((userName) => getUserInfo(userName)),
         );
 
-        // 根据用户信息，获取用户 id
         const atUserIdList = atUserList.filter(user => user).map((user) => user.id);
 
-        // 创建评论
         const comment = await createCommentService({
             blogId,
             userId,
-            content: content
+            content: content,
+            parentId,
+            replyUserId
         })
 
-        // 创建 @提醒
         if (atUserIdList.length > 0) {
             await createAtReminder(userId, atUserIdList, blogId, comment.id, 'comment');
         }
 
-        return new SuccessModel(comment)
+        if (replyUserId && replyUserId !== userId && !atUserIdList.includes(replyUserId)) {
+            await createAtReminder(userId, [replyUserId], blogId, comment.id, 'comment');
+        }
+
+        const fullComment = await getCommentById(comment.id)
+
+        return new SuccessModel(fullComment)
     } catch (ex) {
         console.error(ex.message, ex.stack)
         return new ErrorModel(createCommentFailInfo)
@@ -76,14 +81,60 @@ async function createComment({ blogId, userId, content }) {
 /**
  * 获取评论列表
  * @param {number} blogId 微博ID
+ * @param {number} userId 当前用户ID
  */
-async function getComments(blogId) {
-    const result = await getCommentsByBlogId(blogId)
+async function getComments(blogId, userId = null) {
+    const result = await getCommentsByBlogId(blogId, userId)
     return new SuccessModel(result)
+}
+
+/**
+ * 删除评论
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID
+ */
+async function deleteComment(commentId, userId) {
+    const result = await deleteCommentService(commentId, userId)
+    if (result.success) {
+        return new SuccessModel({ message: '删除成功' })
+    } else {
+        return new ErrorModel({ errno: 400, message: result.message || '删除失败' })
+    }
+}
+
+/**
+ * 点赞评论
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID
+ */
+async function likeComment(commentId, userId) {
+    const result = await likeCommentService(commentId, userId)
+    if (result.success) {
+        return new SuccessModel({ message: '点赞成功' })
+    } else {
+        return new ErrorModel({ errno: 400, message: result.message || '点赞失败' })
+    }
+}
+
+/**
+ * 取消点赞评论
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID
+ */
+async function unlikeComment(commentId, userId) {
+    const result = await unlikeCommentService(commentId, userId)
+    if (result.success) {
+        return new SuccessModel({ message: '取消点赞成功' })
+    } else {
+        return new ErrorModel({ errno: 400, message: '取消点赞失败' })
+    }
 }
 
 module.exports = {
     getBlogDetail,
     createComment,
-    getComments
+    getComments,
+    deleteComment,
+    likeComment,
+    unlikeComment
 }

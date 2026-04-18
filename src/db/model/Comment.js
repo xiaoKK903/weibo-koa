@@ -4,7 +4,7 @@
  */
 
 const seq = require("../seq");
-const { STRING, INTEGER } = require("../types");
+const { STRING, INTEGER, BOOLEAN } = require("../types");
 
 // comments
 const Comment = seq.define("comment", {
@@ -23,17 +23,27 @@ const Comment = seq.define("comment", {
     allowNull: false,
     comment: "评论内容",
   },
-});
-
-// 关联关系
-Comment.belongsTo(require("./User"), {
-  foreignKey: "userId",
-  as: "user",
-});
-
-Comment.belongsTo(require("./Blog"), {
-  foreignKey: "blogId",
-  as: "blog",
+  parentId: {
+    type: INTEGER,
+    allowNull: true,
+    comment: "父评论ID，null表示一级评论",
+  },
+  replyUserId: {
+    type: INTEGER,
+    allowNull: true,
+    comment: "被回复的用户ID",
+  },
+  rootId: {
+    type: INTEGER,
+    allowNull: true,
+    comment: "根评论ID，用于快速定位整个回复链",
+  },
+  isDeleted: {
+    type: BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: "是否已删除",
+  },
 });
 
 module.exports = Comment;

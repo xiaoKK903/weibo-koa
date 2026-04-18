@@ -6,6 +6,7 @@
 const { Blog, User, UserRelation, Comment, Collect, Like } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
+const { Op } = require('sequelize')
 
 /**
  * 创建微博
@@ -286,49 +287,246 @@ async function getBlogById(blogId, userId = null) {
 
 /**
  * 创建评论
- * @param {Object} param0 创建评论的数据 { blogId, userId, content }
+ * @param {Object} param0 创建评论的数据 { blogId, userId, content, parentId, replyUserId }
  */
-async function createComment({ blogId, userId, content }) {
+async function createComment({ blogId, userId, content, parentId = null, replyUserId = null }) {
+    let rootId = null
+    
+    if (parentId) {
+        const parentComment = await Comment.findOne({
+            where: {
+                id: parentId,
+                isDeleted: false
+            }
+        })
+        
+        if (parentComment) {
+            rootId = parentComment.rootId || parentComment.id
+        }
+    }
+    
     const result = await Comment.create({
         blogId,
         userId,
-        content
+        content,
+        parentId,
+        replyUserId,
+        rootId
     })
     return result.dataValues
 }
 
 /**
- * 根据微博ID获取评论列表
+ * 根据微博ID获取评论列表（嵌套结构）
  * @param {number} blogId 微博ID
+ * @param {number} userId 当前用户ID（用于判断点赞状态）
  */
-async function getCommentsByBlogId(blogId) {
+async function getCommentsByBlogId(blogId, userId = null) {
     const result = await Comment.findAndCountAll({
         where: {
-            blogId
+            blogId,
+            isDeleted: false
         },
         order: [
-            ['id', 'desc']
+            ['id', 'asc']
         ],
         include: [
             {
                 model: User,
                 attributes: ['userName', 'nickName', 'picture']
+            },
+            {
+                model: User,
+                as: 'replyUser',
+                attributes: ['userName', 'nickName', 'picture']
             }
         ]
     })
 
-    // 格式化数据
     let commentList = result.rows.map(row => row.dataValues)
-    commentList = commentList.map(commentItem => {
+    
+    commentList = await Promise.all(commentList.map(async commentItem => {
         commentItem.user = formatUser(commentItem.user.dataValues)
+        
+        if (commentItem.replyUser) {
+            commentItem.replyUser = formatUser(commentItem.replyUser.dataValues)
+        }
+        
         commentItem.createdAtFormat = timeFormat(commentItem.createdAt)
+        
+        const likeCount = await Like.count({
+            where: {
+                commentId: commentItem.id
+            }
+        })
+        
+        let isLiked = false
+        if (userId) {
+            const like = await Like.findOne({
+                where: {
+                    userId,
+                    commentId: commentItem.id
+                }
+            })
+            isLiked = !!like
+        }
+        
+        commentItem.likeCount = likeCount
+        commentItem.isLiked = isLiked
+        
         return commentItem
-    })
+    }))
+    
+    const nestedComments = buildNestedComments(commentList)
 
     return {
         count: result.count,
-        commentList
+        commentList: nestedComments
     }
+}
+
+/**
+ * 构建嵌套评论结构
+ * @param {Array} comments 扁平评论列表
+ */
+function buildNestedComments(comments) {
+    const commentMap = new Map()
+    const rootComments = []
+    
+    comments.forEach(comment => {
+        comment.children = []
+        commentMap.set(comment.id, comment)
+    })
+    
+    comments.forEach(comment => {
+        if (comment.parentId) {
+            const parent = commentMap.get(comment.parentId)
+            if (parent) {
+                parent.children.push(comment)
+            }
+        } else {
+            rootComments.push(comment)
+        }
+    })
+    
+    return rootComments
+}
+
+/**
+ * 根据ID获取单个评论
+ * @param {number} commentId 评论ID
+ */
+async function getCommentById(commentId) {
+    const result = await Comment.findOne({
+        where: {
+            id: commentId,
+            isDeleted: false
+        },
+        include: [
+            {
+                model: User,
+                attributes: ['userName', 'nickName', 'picture']
+            },
+            {
+                model: User,
+                as: 'replyUser',
+                attributes: ['userName', 'nickName', 'picture']
+            }
+        ]
+    })
+    
+    if (!result) {
+        return null
+    }
+    
+    const comment = result.dataValues
+    comment.user = formatUser(comment.user.dataValues)
+    
+    if (comment.replyUser) {
+        comment.replyUser = formatUser(comment.replyUser.dataValues)
+    }
+    
+    comment.createdAtFormat = timeFormat(comment.createdAt)
+    
+    return comment
+}
+
+/**
+ * 删除评论（软删除）
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID（用于权限校验）
+ */
+async function deleteComment(commentId, userId) {
+    const comment = await Comment.findOne({
+        where: {
+            id: commentId,
+            isDeleted: false
+        }
+    })
+    
+    if (!comment) {
+        return { success: false, message: '评论不存在' }
+    }
+    
+    if (comment.userId !== userId) {
+        return { success: false, message: '无权限删除该评论' }
+    }
+    
+    await comment.update({ isDeleted: true })
+    
+    return { success: true }
+}
+
+/**
+ * 点赞评论
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID
+ */
+async function likeComment(commentId, userId) {
+    const comment = await Comment.findOne({
+        where: {
+            id: commentId,
+            isDeleted: false
+        }
+    })
+    
+    if (!comment) {
+        return { success: false, message: '评论不存在' }
+    }
+    
+    const existingLike = await Like.findOne({
+        where: {
+            userId,
+            commentId
+        }
+    })
+    
+    if (existingLike) {
+        return { success: false, message: '已经点赞过了' }
+    }
+    
+    await Like.create({
+        userId,
+        commentId
+    })
+    
+    return { success: true }
+}
+
+/**
+ * 取消点赞评论
+ * @param {number} commentId 评论ID
+ * @param {number} userId 用户ID
+ */
+async function unlikeComment(commentId, userId) {
+    const result = await Like.destroy({
+        where: {
+            userId,
+            commentId
+        }
+    })
+    
+    return { success: result > 0 }
 }
 
 module.exports = {
@@ -337,5 +535,9 @@ module.exports = {
     getFollowersBlogList,
     getBlogById,
     createComment,
-    getCommentsByBlogId
+    getCommentsByBlogId,
+    getCommentById,
+    deleteComment,
+    likeComment,
+    unlikeComment
 }

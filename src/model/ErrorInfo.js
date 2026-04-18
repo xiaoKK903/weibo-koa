@@ -127,5 +127,17 @@ module.exports = {
     getLikesFailInfo: {
         errno: 15003,
         message: '获取点赞列表失败，请重试'
+    },
+
+    // 内容安全相关错误
+    // 重复内容
+    duplicateContentInfo: {
+        errno: 16001,
+        message: '请勿频繁发布相同内容，请稍候再试'
+    },
+    // 包含敏感词
+    sensitiveContentInfo: {
+        errno: 16002,
+        message: '您发布的内容包含违规词汇，请检查后重新发布'
     }
 }

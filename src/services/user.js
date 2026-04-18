@@ -42,7 +42,13 @@ async function getUserInfo(userName, password) {
  * @returns {Promise<boolean>} 是否存在
  */
 async function checkNickNameExist(nickName, excludeUserId = null) {
+    console.log('=== checkNickNameExist START ===');
+    console.log('nickName:', nickName);
+    console.log('excludeUserId:', excludeUserId);
+    console.log('typeof excludeUserId:', typeof excludeUserId);
+    
     if (!nickName) {
+        console.log('nickName is empty, returning false');
         return false
     }
 
@@ -50,16 +56,25 @@ async function checkNickNameExist(nickName, excludeUserId = null) {
         nickName
     }
 
-    if (excludeUserId) {
+    // 如果 excludeUserId 不是 undefined 或 null，则添加 id 的过滤条件
+    // 使用 != null 来检查是否为 undefined 或 null
+    if (excludeUserId != null) {
         whereOpt.id = {
             [Op.ne]: excludeUserId
         }
     }
+    
+    console.log('whereOpt:', whereOpt);
 
+    console.log('Executing User.findOne...');
     const result = await User.findOne({
         attributes: ['id'],
         where: whereOpt
     })
+    
+    console.log('User.findOne result:', result);
+    console.log('Returning:', result !== null);
+    console.log('=== checkNickNameExist END ===');
 
     return result !== null
 }
@@ -113,6 +128,16 @@ async function updateUser(
     },
     { userName, password }
 ) {
+    console.log('=== updateUser START ===');
+    console.log('userName:', userName);
+    console.log('newPassword:', newPassword);
+    console.log('newNickName:', newNickName);
+    console.log('newPicture:', newPicture);
+    console.log('newCity:', newCity);
+    console.log('newSignature:', newSignature);
+    console.log('newBio:', newBio);
+    console.log('newCoverImage:', newCoverImage);
+    
     const updateData = {}
     if (newPassword !== undefined) {
         updateData.password = newPassword
@@ -136,16 +161,27 @@ async function updateUser(
         updateData.coverImage = newCoverImage
     }
 
+    console.log('updateData:', updateData);
+    
     const whereData = {
         userName
     }
     if (password) {
         whereData.password = password
     }
+    
+    console.log('whereData:', whereData);
 
+    console.log('Executing User.update...');
     const result = await User.update(updateData, {
         where: whereData
     })
+    
+    console.log('User.update result:', result);
+    console.log('result[0]:', result[0]);
+    console.log('Returning:', result[0] > 0);
+    console.log('=== updateUser END ===');
+    
     return result[0] > 0
 }
 

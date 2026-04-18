@@ -13,11 +13,12 @@ const {
     unlikeComment: unlikeCommentService
 } = require('../services/blog')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
-const { blogNotExistInfo, createCommentFailInfo } = require('../model/ErrorInfo')
+const { blogNotExistInfo, createCommentFailInfo, duplicateContentInfo, sensitiveContentInfo } = require('../model/ErrorInfo')
 const { REG_FOR_AT_WHO } = require('../conf/constant')
 const { getUserInfo } = require('../services/user')
 const { createAtReminder } = require('../services/at')
 const xss = require('xss')
+const { contentSecurityCheck } = require('../middlewares/contentSecurity')
 
 /**
  * 获取微博详情
@@ -37,6 +38,17 @@ async function getBlogDetail(blogId, userId = null) {
  * @param {Object} param0 创建评论的数据 { blogId, userId, content, parentId, replyUserId }
  */
 async function createComment({ blogId, userId, content, parentId = null, replyUserId = null }) {
+    const securityCheck = await contentSecurityCheck(userId, content, 'comment', parentId);
+    
+    if (!securityCheck.pass) {
+        if (securityCheck.errorType === 'sensitive') {
+            return new ErrorModel(sensitiveContentInfo);
+        }
+        if (securityCheck.errorType === 'duplicate') {
+            return new ErrorModel(duplicateContentInfo);
+        }
+    }
+
     try {
         const atUserNameList = [];
         content = content.replace(REG_FOR_AT_WHO, (matchStr, nickName, userName1, userName2) => {

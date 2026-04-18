@@ -1,10 +1,24 @@
-<% blogList.forEach(blog => { %>    <div class="item-wrapper" data-blog-id="<%= blog.id %>">
+<% blogList.forEach(blog => { %>    
+    <div class="item-wrapper" data-blog-id="<%= blog.id %>">
         <img class="user-picture" src="<%= blog.user.picture%>"/>
         <div class="content clear-fix blog-content-wrapper">
             <% if (blog.image) { %>
-            <a href="<%= blog.image%>" target="_blank">
-                <img class="blog-img" src="<%= blog.image%>"/>
-            </a>
+            <% 
+                var images = blog.image.split(',').filter(function(img) { return img && img.trim(); });
+                var imageCount = images.length;
+            %>
+            <div class="blog-images-container <%= imageCount > 1 ? 'multi-image' : 'single-image' %>">
+                <% images.forEach(function(img, idx) { %>
+                    <% if (idx < 9) { %>
+                    <a href="<%= img.trim() %>" target="_blank" class="blog-image-link">
+                        <img class="blog-img" src="<%= img.trim() %>" />
+                        <% if (imageCount > 3 && idx === 2) { %>
+                        <span class="more-images-overlay">+<%= imageCount - 3 %></span>
+                        <% } %>
+                    </a>
+                    <% } %>
+                <% }); %>
+            </div>
             <% } %>
             <a href="/profile/<%= blog.user.userName%>">
                 <%= blog.user.nickName%>
@@ -100,6 +114,93 @@
 .blog-detail-link:hover {
     opacity: 1;
     text-decoration: underline;
+}
+
+/* 多图容器 */
+.blog-images-container {
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.blog-images-container.single-image {
+    max-width: 400px;
+}
+
+.blog-images-container.multi-image {
+    display: grid;
+    gap: 5px;
+}
+
+/* 1张图片 */
+.blog-images-container.single-image .blog-image-link {
+    display: block;
+}
+
+.blog-images-container.single-image .blog-img {
+    max-width: 100%;
+    max-height: 300px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* 2张图片 */
+.blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 400px;
+}
+
+.blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) .blog-img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+/* 3张或更多图片 */
+.blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 300px;
+}
+
+.blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) .blog-img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.blog-image-link {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.blog-image-link:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.blog-img {
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+/* 更多图片遮罩 */
+.more-images-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    border-radius: 6px;
 }
 
 /* 收藏按钮样式 */
@@ -207,71 +308,83 @@
 
 .btn-comment-submit {
     align-self: flex-end;
-    padding: 10px 24px;
+    padding: 8px 20px;
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
     border: none;
     border-radius: 8px;
-    color: white;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .btn-comment-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
 }
 
 .btn-comment-submit:disabled {
     background: #ccc;
     cursor: not-allowed;
-    transform: none;
     box-shadow: none;
+    transform: none;
 }
 
 /* 评论列表 */
 .comment-list-area {
-    background: #f8f9fa;
+    background: #fafafa;
     border-radius: 8px;
+    padding: 10px;
+}
+
+.no-comments {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
     padding: 10px;
 }
 
 .comment-item {
     display: flex;
-    padding: 10px 0;
-    border-bottom: 1px solid #e9ecef;
+    gap: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
 }
 
 .comment-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .comment-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    margin-right: 10px;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .comment-content-wrapper {
     flex: 1;
+    min-width: 0;
 }
 
-.comment-user {
-    font-size: 14px;
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.comment-author {
     font-weight: 600;
     color: #333;
-    margin-bottom: 4px;
-}
-
-.comment-text {
     font-size: 14px;
-    color: #333;
-    line-height: 1.5;
-    margin-bottom: 4px;
 }
 
 .comment-time {
@@ -279,496 +392,333 @@
     color: #999;
 }
 
-.no-comments {
-    text-align: center;
-    color: #999;
-    padding: 15px;
-    font-size: 13px;
-}
-
-/* @ 自动补全下拉列表 */
-.at-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    max-height: 200px;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    margin-top: 5px;
-}
-
-.at-dropdown-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    border-bottom: 1px solid #f5f5f5;
-}
-
-.at-dropdown-item:last-child {
-    border-bottom: none;
-}
-
-.at-dropdown-item:hover,
-.at-dropdown-item.selected {
-    background: #f0f7ff;
-}
-
-.at-dropdown-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 12px;
-}
-
-.at-dropdown-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.at-dropdown-nickname {
+.comment-text {
+    color: #666;
     font-size: 14px;
-    font-weight: 600;
-    color: #333;
+    line-height: 1.5;
+    word-break: break-word;
 }
 
-.at-dropdown-username {
-    font-size: 12px;
-    color: #999;
-}
-
-/* 评论输入框容器 */
-.comment-input-box {
-    position: relative;
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .blog-images-container.single-image {
+        max-width: 100%;
+    }
+    
+    .blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) {
+        max-width: 100%;
+    }
+    
+    .blog-images-container.multi-image:has(.blog-image-link:nth-child(2)):not(:has(.blog-image-link:nth-child(3))) .blog-img {
+        height: 120px;
+    }
+    
+    .blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) {
+        max-width: 100%;
+    }
+    
+    .blog-images-container.multi-image:has(.blog-image-link:nth-child(3)) .blog-img {
+        height: 80px;
+    }
+    
+    .comment-input-box {
+        flex-direction: column;
+    }
+    
+    .btn-comment-submit {
+        align-self: stretch;
+    }
 }
 </style>
 
 <script>
 $(function () {
-    // 获取关注列表
-    var followingList = [];
-    try {
-        followingList = JSON.parse('<%- followingList || "[]" %>');
-    } catch (ex) {
-        followingList = [];
-    }
-
-    // @ 自动补全相关变量
-    var atState = {
-        isActive: false,
-        currentText: '',
-        selectedIndex: 0,
-        filteredList: [],
-        currentInput: null
+    var $mainContainer = $('#blog-list-main');
+    
+    window.refreshBlogList = function() {
+        var pageIndex = 0;
+        loadBlogList(pageIndex, true);
     };
-
-    // 设置焦点
-    function setCursor(el, st, end) {
-        if (el.setSelectionRange) {
-            el.focus()
-            el.setSelectionRange(st, end)
-        } else if (el.createTextRange) {
-            var range = el.createTextRange()
-            range.collapse(true)
-            range.moveEnd('character',end)
-            range.moveStart('character',st)
-            range.select()
-        }
-    }
-
-    // 渲染 @ 下拉列表
-    function renderAtDropdown($input, filterText) {
-        // 移除旧的下拉列表
-        $input.closest('.comment-input-box').find('.at-dropdown').remove();
-
-        if (!filterText) {
-            atState.isActive = false;
-            return;
-        }
-
-        // 过滤匹配的用户
-        atState.filteredList = followingList.filter(function(user) {
-            return user.nickName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0 ||
-                   user.userName.toLowerCase().indexOf(filterText.toLowerCase()) >= 0;
-        });
-
-        if (atState.filteredList.length === 0) {
-            atState.isActive = false;
-            return;
-        }
-
-        // 创建下拉列表
-        var $dropdown = $('<div class="at-dropdown"></div>');
-        var html = '';
-        atState.filteredList.forEach(function(user, index) {
-            html += '<div class="at-dropdown-item" data-index="' + index + '">';
-            html += '<img src="' + user.picture + '" class="at-dropdown-avatar">';
-            html += '<div class="at-dropdown-info">';
-            html += '<div class="at-dropdown-nickname">' + user.nickName + '</div>';
-            html += '<div class="at-dropdown-username">@' + user.userName + '</div>';
-            html += '</div>';
-            html += '</div>';
-        });
-        $dropdown.html(html);
+    
+    function loadBlogList(pageIndex, clear) {
+        var url = location.pathname;
+        var isSquare = url.indexOf('/square') >= 0;
         
-        // 添加到输入框容器
-        $input.closest('.comment-input-box').append($dropdown);
-        
-        atState.isActive = true;
-        atState.currentInput = $input;
-        atState.selectedIndex = 0;
-        updateAtDropdownSelection($dropdown);
-    }
-
-    // 更新选中状态
-    function updateAtDropdownSelection($dropdown) {
-        $dropdown.find('.at-dropdown-item').removeClass('selected');
-        $dropdown.find('.at-dropdown-item[data-index="' + atState.selectedIndex + '"]').addClass('selected');
-    }
-
-    // 插入 @ 用户
-    function insertAtUser($input, user) {
-        if (!user) return;
-
-        var val = $input.val();
-        var cursorPos = $input[0].selectionStart;
-        
-        // 找到最后一个 @ 符号的位置
-        var textBeforeCursor = val.substring(0, cursorPos);
-        var lastAtIndex = textBeforeCursor.lastIndexOf('@');
-        
-        if (lastAtIndex >= 0) {
-            var textToReplace = val.substring(lastAtIndex, cursorPos);
-            var replacement = '@' + user.nickName + ' - ' + user.userName + ' ';
-            var newVal = val.substring(0, lastAtIndex) + replacement + val.substring(cursorPos);
-            $input.val(newVal);
-            
-            // 设置光标位置
-            var newCursorPos = lastAtIndex + replacement.length;
-            $input[0].setSelectionRange(newCursorPos, newCursorPos);
-            $input.focus();
-        }
-
-        // 移除下拉列表
-        $input.closest('.comment-input-box').find('.at-dropdown').remove();
-        atState.isActive = false;
-        atState.currentInput = null;
-    }
-
-    // 监听评论输入框的输入事件
-    $(document).on('input', '.comment-input', function(e) {
-        var $input = $(this);
-        var val = $input.val();
-        var cursorPos = $input[0].selectionStart;
-        
-        // 查找最后一个 @ 符号
-        var textBeforeCursor = val.substring(0, cursorPos);
-        var lastAtIndex = textBeforeCursor.lastIndexOf('@');
-        
-        if (lastAtIndex >= 0) {
-            var textAfterLastAt = textBeforeCursor.substring(lastAtIndex + 1);
-            // 检查 @ 后面是否有效（没有空格或换行）
-            if (/^[^\s\n]*$/.test(textAfterLastAt)) {
-                atState.currentText = textAfterLastAt;
-                renderAtDropdown($input, textAfterLastAt);
-            } else {
-                $input.closest('.comment-input-box').find('.at-dropdown').remove();
-                atState.isActive = false;
-            }
+        var apiUrl;
+        if (isSquare) {
+            apiUrl = '/api/blog/square';
         } else {
-            $input.closest('.comment-input-box').find('.at-dropdown').remove();
-            atState.isActive = false;
+            apiUrl = '/api/blog/loadMore/' + pageIndex;
         }
-    });
-
-    // 监听键盘事件
-    $(document).on('keydown', '.comment-input', function(e) {
-        var $input = $(this);
-        var $dropdown = $input.closest('.comment-input-box').find('.at-dropdown');
-        
-        if (atState.isActive && $dropdown.length > 0) {
-            switch (e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    if (atState.selectedIndex > 0) {
-                        atState.selectedIndex--;
-                        updateAtDropdownSelection($dropdown);
-                    }
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    if (atState.selectedIndex < atState.filteredList.length - 1) {
-                        atState.selectedIndex++;
-                        updateAtDropdownSelection($dropdown);
-                    }
-                    break;
-                case 'Enter':
-                case 'Tab':
-                    e.preventDefault();
-                    var selectedUser = atState.filteredList[atState.selectedIndex];
-                    if (selectedUser) {
-                        insertAtUser($input, selectedUser);
-                    }
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    $dropdown.remove();
-                    atState.isActive = false;
-                    break;
-            }
-        }
-    });
-
-    // 点击下拉列表项
-    $(document).on('click', '.at-dropdown-item', function(e) {
-        var $item = $(this);
-        var index = parseInt($item.data('index'));
-        var selectedUser = atState.filteredList[index];
-        var $input = $item.closest('.comment-input-box').find('.comment-input');
-        
-        if (selectedUser && $input.length > 0) {
-            insertAtUser($input, selectedUser);
-        }
-    });
-
-    // 点击其他地方关闭下拉列表
-    $(document).on('click', function(e) {
-        if ($(e.target).closest('.at-dropdown').length === 0 && 
-            $(e.target).closest('.comment-input').length === 0) {
-            $('.at-dropdown').remove();
-            atState.isActive = false;
-        }
-    });
-
-    // 回复按钮点击事件 - 展开/收起评论区域
-    $('.blog-list-reply').click(function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        var $target = $(e.target)
-        var blogId = $target.closest('.blog-list-reply').data('blog-id')
-        
-        // 获取内容和用户
-        var content = $target.closest('.blog-list-reply').attr('data-content')
-        var userName = $target.closest('.blog-list-reply').attr('data-userName')
-        var nickName = $target.closest('.blog-list-reply').attr('data-nickName')
-        
-        // 找到对应的评论区域
-        var $commentSection = $('.comment-section[data-blog-id="' + blogId + '"]')
-        var isVisible = $commentSection.is(':visible')
-        
-        if (isVisible) {
-            // 如果已经显示，则隐藏
-            $commentSection.slideUp(300)
-        } else {
-            // 如果没有显示，则显示并加载评论
-            $commentSection.slideDown(300, function () {
-                // 设置输入框内容
-                var $input = $commentSection.find('.comment-input')
-                $input.val('回复 @' + nickName + '：')
-                $input.focus()
-                
-                // 加载评论
-                loadComments(blogId)
-            })
-        }
-    })
-
-    // 加载评论
-    function loadComments(blogId) {
-        var $commentList = $('.comment-list-area[data-blog-id="' + blogId + '"]')
         
         $.ajax({
-            url: '/api/blog/comment/list/' + blogId,
+            url: apiUrl,
             type: 'GET',
-            success: function (res) {
-                if (res.errno === 0) {
-                    var comments = res.data.commentList
-                    if (comments.length === 0) {
-                        $commentList.html('<div class="no-comments">暂无评论</div>')
-                        return
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.code === 0 && res.data && res.data.blogList) {
+                    var blogList = res.data.blogList;
+                    
+                    if (clear) {
+                        $mainContainer.empty();
                     }
                     
-                    var html = ''
-                    comments.forEach(comment => {
-                        html += `
-                            <div class="comment-item">
-                                <img src="${comment.user.picture}" alt="${comment.user.nickName}" class="comment-avatar">
-                                <div class="comment-content-wrapper">
-                                    <div class="comment-user">${comment.user.nickName}</div>
-                                    <div class="comment-text">${comment.content}</div>
-                                    <div class="comment-time">${comment.createdAtFormat}</div>
-                                </div>
-                            </div>
-                        `
-                    })
-                    $commentList.html(html)
+                    blogList.forEach(function(blog) {
+                        var html = renderBlogItem(blog);
+                        $mainContainer.append(html);
+                    });
+                    
+                    bindBlogEvents();
                 }
             },
-            error: function () {
-                $commentList.html('<div class="no-comments">加载评论失败</div>')
+            error: function() {
+                console.error('加载微博列表失败');
             }
-        })
+        });
     }
-
-    // 发表评论
-    $('.btn-comment-submit').click(function (e) {
-        e.preventDefault()
-        e.stopPropagation()
+    
+    function renderBlogItem(blog) {
+        var user = blog.user || {};
+        var imagesHtml = '';
         
-        var $btn = $(this)
-        var blogId = $btn.data('blog-id')
-        var $input = $btn.closest('.comment-input-box').find('.comment-input')
-        var content = $input.val().trim()
-        
-        if (!content) {
-            alert('请输入评论内容')
-            return
+        if (blog.image) {
+            var images = blog.image.split(',').filter(function(img) { return img && img.trim(); });
+            var imageCount = images.length;
+            var containerClass = imageCount > 1 ? 'multi-image' : 'single-image';
+            
+            imagesHtml = '<div class="blog-images-container ' + containerClass + '">';
+            
+            images.forEach(function(img, idx) {
+                if (idx < 9) {
+                    var moreOverlay = '';
+                    if (imageCount > 3 && idx === 2) {
+                        moreOverlay = '<span class="more-images-overlay">+' + (imageCount - 3) + '</span>';
+                    }
+                    
+                    imagesHtml += '<a href="' + img.trim() + '" target="_blank" class="blog-image-link">';
+                    imagesHtml += '<img class="blog-img" src="' + img.trim() + '" />';
+                    imagesHtml += moreOverlay;
+                    imagesHtml += '</a>';
+                }
+            });
+            
+            imagesHtml += '</div>';
         }
         
-        // 禁用按钮，防止重复提交
-        $btn.prop('disabled', true).text('发表中...')
+        var html = '';
+        html += '<div class="item-wrapper" data-blog-id="' + blog.id + '">';
+        html += '<img class="user-picture" src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '"/>';
+        html += '<div class="content clear-fix blog-content-wrapper">';
+        html += imagesHtml;
+        html += '<a href="/profile/' + (user.userName || '') + '">';
+        html += (user.nickName || user.userName || '用户');
+        html += '</a>:';
+        html += '<span class="blog-content-summary">' + (blog.contentSummary || '') + '</span>';
+        html += '<a href="/detail/' + blog.id + '" class="blog-detail-link">查看全文</a>';
+        html += '</div>';
         
-        $.ajax({
-            url: '/api/blog/comment/create',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                blogId: Number(blogId),
-                content: content
-            }),
-            success: function (res) {
-                if (res.errno === 0) {
-                    // 发表成功，清空输入框并刷新评论列表
-                    $input.val('')
-                    loadComments(blogId)
-                } else {
-                    alert(res.message || '发表评论失败')
-                }
-            },
-            error: function () {
-                alert('发表评论失败，请重试')
-            },
-            complete: function () {
-                // 恢复按钮状态
-                $btn.prop('disabled', false).text('发表评论')
+        html += '<div class="info">';
+        html += '<span>' + (blog.createdAtFormat || '') + '</span>';
+        html += '&nbsp;';
+        
+        if (locals && locals.canReply) {
+            html += '<a href="#" class="blog-list-reply"';
+            html += ' data-content="' + (blog.content || '') + '"';
+            html += ' data-userName="' + (user.userName || '') + '"';
+            html += ' data-nickName="' + (user.nickName || '') + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa fa-comment"></i> 回复';
+            html += '</a>';
+            html += '&nbsp;';
+        }
+        
+        if (locals && locals.isLogin) {
+            var isCollected = blog.isCollected;
+            var collectClass = isCollected ? 'collected' : '';
+            var collectIcon = isCollected ? 'fa-star' : 'fa-star-o';
+            var collectText = isCollected ? '已收藏' : '收藏';
+            
+            html += '<a href="#" class="blog-collect-btn ' + collectClass + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa ' + collectIcon + ' collect-icon"></i> <span class="collect-text">' + collectText + '</span>';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="collect-count" data-blog-id="' + blog.id + '">' + (blog.collectCount || 0) + '</span>';
+            html += '&nbsp;';
+            
+            var isLiked = blog.isLiked;
+            var likeClass = isLiked ? 'liked' : '';
+            var likeIcon = isLiked ? 'fa-thumbs-up' : 'fa-thumbs-o-up';
+            var likeText = isLiked ? '已赞' : '赞';
+            
+            html += '<a href="#" class="blog-like-btn ' + likeClass + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa ' + likeIcon + ' like-icon"></i> <span class="like-text">' + likeText + '</span>';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="like-count" data-blog-id="' + blog.id + '">' + (blog.likeCount || 0) + '</span>';
+        }
+        
+        html += '</div>';
+        
+        html += '<div class="comment-section" data-blog-id="' + blog.id + '" style="display: none;">';
+        html += '<div class="comment-input-box">';
+        html += '<textarea class="comment-input" placeholder="写下你的评论..."></textarea>';
+        html += '<button class="btn-comment-submit" data-blog-id="' + blog.id + '">发表评论</button>';
+        html += '</div>';
+        html += '<div class="comment-list-area" data-blog-id="' + blog.id + '">';
+        html += '<div class="no-comments">暂无评论</div>';
+        html += '</div>';
+        html += '</div>';
+        
+        html += '</div>';
+        
+        return html;
+    }
+    
+    function bindBlogEvents() {
+        $('.blog-list-reply').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var blogId = $(this).data('blog-id');
+            var $commentSection = $('.comment-section[data-blog-id="' + blogId + '"]');
+            
+            if ($commentSection.is(':visible')) {
+                $commentSection.hide();
+            } else {
+                $commentSection.show();
+                $commentSection.find('.comment-input').focus();
+                loadComments(blogId);
             }
-        })
-    })
-
-    // 点击微博跳转到详情页
-    $('.item-wrapper').click(function (e) {
-        // 如果点击的是回复按钮、收藏按钮、点赞按钮、评论输入框或图片链接，不跳转
-        if ($(e.target).closest('.blog-list-reply, .blog-collect-btn, .blog-like-btn, .blog-img, a, .comment-section, .comment-input, .btn-comment-submit').length > 0) {
-            return
-        }
-        var blogId = $(this).data('blog-id')
-        window.location.href = '/detail/' + blogId
-    })
-
-    // 收藏/取消收藏
-    $('.blog-collect-btn').click(function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        var $btn = $(this)
-        var blogId = $btn.data('blog-id')
-        var isCollected = $btn.hasClass('collected')
-
-        if (isCollected) {
-            // 取消收藏
-            ajax.post('/api/collect/cancel', {
-                blogId: blogId
-            }, function (err, data) {
+        });
+        
+        $('.btn-comment-submit').off('click').on('click', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var $input = $btn.closest('.comment-input-box').find('.comment-input');
+            var content = $input.val().trim();
+            
+            if (!content) {
+                alert('请输入评论内容');
+                return;
+            }
+            
+            $btn.prop('disabled', true);
+            
+            ajax.post('/api/blog/comment', {
+                blogId: blogId,
+                content: content
+            }, function(err) {
+                $btn.prop('disabled', false);
+                
                 if (err) {
-                    alert(err)
-                    return
+                    alert(err);
+                    return;
                 }
-                // 更新按钮状态
-                $btn.removeClass('collected')
-                $btn.find('.collect-icon').removeClass('fa-star').addClass('fa-star-o')
-                $btn.find('.collect-text').text('收藏')
-                // 更新收藏数
-                var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
-                var count = parseInt($count.text()) || 0
-                if (count > 0) {
-                    $count.text(count - 1)
-                }
-            })
-        } else {
-            // 收藏
-            ajax.post('/api/collect/create', {
-                blogId: blogId
-            }, function (err, data) {
+                
+                $input.val('');
+                loadComments(blogId);
+            });
+        });
+        
+        $('.blog-collect-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var isCollected = $btn.hasClass('collected');
+            var url = isCollected ? '/api/blog/uncollect' : '/api/blog/collect';
+            
+            ajax.post(url, { blogId: blogId }, function(err) {
                 if (err) {
-                    alert(err)
-                    return
+                    alert(err);
+                    return;
                 }
-                // 更新按钮状态
-                $btn.addClass('collected')
-                $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star')
-                $btn.find('.collect-text').text('已收藏')
-                // 更新收藏数
-                var $count = $('.collect-count[data-blog-id="' + blogId + '"]')
-                var count = parseInt($count.text()) || 0
-                $count.text(count + 1)
-            })
-        }
-    })
-
-    // 点赞/取消点赞
-    $('.blog-like-btn').click(function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        var $btn = $(this)
-        var blogId = $btn.data('blog-id')
-        var isLiked = $btn.hasClass('liked')
-
-        if (isLiked) {
-            // 取消点赞
-            ajax.post('/api/like/cancel', {
-                blogId: blogId
-            }, function (err, data) {
+                
+                var $countSpan = $('.collect-count[data-blog-id="' + blogId + '"]');
+                var currentCount = parseInt($countSpan.text()) || 0;
+                
+                if (isCollected) {
+                    $btn.removeClass('collected');
+                    $btn.find('.collect-icon').removeClass('fa-star').addClass('fa-star-o');
+                    $btn.find('.collect-text').text('收藏');
+                    $countSpan.text(currentCount - 1);
+                } else {
+                    $btn.addClass('collected');
+                    $btn.find('.collect-icon').removeClass('fa-star-o').addClass('fa-star');
+                    $btn.find('.collect-text').text('已收藏');
+                    $countSpan.text(currentCount + 1);
+                }
+            });
+        });
+        
+        $('.blog-like-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var isLiked = $btn.hasClass('liked');
+            var url = isLiked ? '/api/blog/unlike' : '/api/blog/like';
+            
+            ajax.post(url, { blogId: blogId }, function(err) {
                 if (err) {
-                    alert(err)
-                    return
+                    alert(err);
+                    return;
                 }
-                // 更新按钮状态
-                $btn.removeClass('liked')
-                $btn.find('.like-icon').removeClass('fa-thumbs-up').addClass('fa-thumbs-o-up')
-                $btn.find('.like-text').text('赞')
-                // 更新点赞数
-                var $count = $('.like-count[data-blog-id="' + blogId + '"]')
-                var count = parseInt($count.text()) || 0
-                if (count > 0) {
-                    $count.text(count - 1)
+                
+                var $countSpan = $('.like-count[data-blog-id="' + blogId + '"]');
+                var currentCount = parseInt($countSpan.text()) || 0;
+                
+                if (isLiked) {
+                    $btn.removeClass('liked');
+                    $btn.find('.like-icon').removeClass('fa-thumbs-up').addClass('fa-thumbs-o-up');
+                    $btn.find('.like-text').text('赞');
+                    $countSpan.text(currentCount - 1);
+                } else {
+                    $btn.addClass('liked');
+                    $btn.find('.like-icon').removeClass('fa-thumbs-o-up').addClass('fa-thumbs-up');
+                    $btn.find('.like-text').text('已赞');
+                    $countSpan.text(currentCount + 1);
                 }
-            })
-        } else {
-            // 点赞
-            ajax.post('/api/like/create', {
-                blogId: blogId
-            }, function (err, data) {
-                if (err) {
-                    alert(err)
-                    return
-                }
-                // 更新按钮状态
-                $btn.addClass('liked')
-                $btn.find('.like-icon').removeClass('fa-thumbs-o-up').addClass('fa-thumbs-up')
-                $btn.find('.like-text').text('已赞')
-                // 更新点赞数
-                var $count = $('.like-count[data-blog-id="' + blogId + '"]')
-                var count = parseInt($count.text()) || 0
-                $count.text(count + 1)
-            })
-        }
-    })
-
-})
+            });
+        });
+    }
+    
+    function loadComments(blogId) {
+        ajax.get('/api/blog/comment/' + blogId, {}, function(err, data) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            
+            var $listArea = $('.comment-list-area[data-blog-id="' + blogId + '"]');
+            
+            if (!data || !data.commentList || data.commentList.length === 0) {
+                $listArea.html('<div class="no-comments">暂无评论</div>');
+                return;
+            }
+            
+            var html = '';
+            data.commentList.forEach(function(comment) {
+                var user = comment.user || {};
+                html += '<div class="comment-item">';
+                html += '<img class="comment-avatar" src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '"/>';
+                html += '<div class="comment-content-wrapper">';
+                html += '<div class="comment-header">';
+                html += '<span class="comment-author">' + (user.nickName || user.userName || '用户') + '</span>';
+                html += '<span class="comment-time">' + (comment.createdAtFormat || '') + '</span>';
+                html += '</div>';
+                html += '<div class="comment-text">' + (comment.content || '') + '</div>';
+                html += '</div>';
+                html += '</div>';
+            });
+            
+            $listArea.html(html);
+        });
+    }
+    
+    bindBlogEvents();
+});
 </script>

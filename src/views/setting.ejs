@@ -725,17 +725,17 @@
 
 <!-- 头像裁剪模态框 -->
 <div class="modal fade" id="avatar-crop-modal" tabindex="-1" role="dialog" aria-labelledby="avatar-crop-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-xl" role="document">
-    <div class="modal-content">
+  <div class="modal-dialog modal-xl" role="document" style="max-width: 90vw; max-height: 90vh;">
+    <div class="modal-content" style="height: 90vh;">
       <div class="modal-header">
         <h5 class="modal-title" id="avatar-crop-modal-label">裁剪头像</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body">
-        <div class="img-container">
-          <img id="crop-image" src="" alt="裁剪图片">
+      <div class="modal-body" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+        <div class="img-container" style="width: 100%; height: 100%; max-height: none;">
+          <img id="crop-image" src="" alt="裁剪图片" style="max-width: 100%; max-height: 100%;">
         </div>
       </div>
       <div class="modal-footer">
@@ -749,35 +749,62 @@
 <style>
 .img-container {
   width: 100%;
-  max-height: 600px;
+  height: 100%;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .img-container img {
   max-width: 100%;
-  max-height: 600px;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* 自定义 cropper 样式 */
 .cropper-container {
   width: 100% !important;
   height: 100% !important;
+  position: relative !important;
+}
+
+.cropper-bg {
+  background-image: none !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .cropper-view-box {
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
 }
 
 .cropper-dashed {
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .cropper-handle {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #fff;
-  background-color: #333;
+  width: 12px !important;
+  height: 12px !important;
+  border: 1px solid #fff !important;
+  background-color: #333 !important;
+  opacity: 1 !important;
+}
+
+.cropper-handle:hover {
+  background-color: #555 !important;
+}
+
+.cropper-move {
+  cursor: move !important;
+}
+
+.cropper-crop {
+  cursor: crosshair !important;
+}
+
+.cropper-resize {
+  cursor: nwse-resize !important;
 }
 </style>
 
@@ -943,19 +970,18 @@ $(function() {
             
             cropper = new Cropper($cropImage[0], {
                 aspectRatio: 1,
-                viewMode: 2,
+                viewMode: 3,
                 dragMode: 'move',
-                autoCropArea: 0.6,
+                autoCropArea: 0.5,
                 cropBoxMovable: true,
                 cropBoxResizable: true,
                 movable: true,
                 scalable: true,
                 zoomable: true,
                 rotatable: false,
-                minCropBoxWidth: 100,
-                minCropBoxHeight: 100,
-                maxCropBoxWidth: 600,
-                maxCropBoxHeight: 600
+                minCropBoxWidth: 50,
+                minCropBoxHeight: 50,
+                toggleDragModeOnDblclick: true
             });
             
             // 显示模态框

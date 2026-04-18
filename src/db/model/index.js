@@ -20,8 +20,24 @@ Comment.belongsTo(User, {
     foreignKey: 'userId'
 })
 
+Comment.belongsTo(User, {
+    foreignKey: 'replyUserId',
+    as: 'replyUser'
+})
+
 Comment.belongsTo(Blog, {
     foreignKey: 'blogId'
+})
+
+// 评论自关联（楼中楼）
+Comment.belongsTo(Comment, {
+    foreignKey: 'parentId',
+    as: 'parent'
+})
+
+Comment.hasMany(Comment, {
+    foreignKey: 'parentId',
+    as: 'children'
 })
 
 User.hasMany(Comment, {
@@ -79,12 +95,20 @@ Like.belongsTo(Blog, {
     foreignKey: 'blogId'
 })
 
+Like.belongsTo(Comment, {
+    foreignKey: 'commentId'
+})
+
 User.hasMany(Like, {
     foreignKey: 'userId'
 })
 
 Blog.hasMany(Like, {
     foreignKey: 'blogId'
+})
+
+Comment.hasMany(Like, {
+    foreignKey: 'commentId'
 })
 
 // @提醒 关联

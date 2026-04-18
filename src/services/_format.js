@@ -7,12 +7,27 @@ const { DEFAULT_PICTURE, REG_FOR_AT_WHO } = require('../conf/constant')
 const { timeFormat } = require('../utils/dt')
 
 /**
- * 用户默认头像
+ * 格式化用户对象，确保所有属性都有默认值
  * @param {Object} obj 用户对象
  */
-function _formatUserPicture(obj) {
+function _formatUser(obj) {
     if (obj.picture == null) {
         obj.picture = DEFAULT_PICTURE
+    }
+    if (obj.nickName == null) {
+        obj.nickName = obj.userName || ''
+    }
+    if (obj.city == null) {
+        obj.city = ''
+    }
+    if (obj.signature == null) {
+        obj.signature = ''
+    }
+    if (obj.bio == null) {
+        obj.bio = ''
+    }
+    if (obj.coverImage == null) {
+        obj.coverImage = ''
     }
     return obj
 }
@@ -28,11 +43,11 @@ function formatUser(list) {
 
     if (list instanceof Array) {
         // 数组 用户列表
-        return list.map(_formatUserPicture)
+        return list.map(_formatUser)
     }
 
     // 单个对象
-    return _formatUserPicture(list)
+    return _formatUser(list)
 }
 
 /**

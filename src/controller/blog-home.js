@@ -10,7 +10,7 @@ const { createBlogFailInfo, duplicateContentInfo, sensitiveContentInfo } = requi
 const { PAGE_SIZE, REG_FOR_AT_WHO } = require("../conf/constant");
 const { getUserInfo } = require("../services/user");
 const { createAtReminder } = require("../services/at");
-const { contentSecurityCheck } = require("../middlewares/contentSecurity");
+const { contentSecurityCheck, setDuplicateCache } = require("../middlewares/contentSecurity");
 
 /**
  * 创建微博
@@ -53,6 +53,8 @@ async function create({ userId, content, image }) {
     if (atUserIdList.length > 0) {
       await createAtReminder(userId, atUserIdList, blog.id, null, 'blog');
     }
+
+    await setDuplicateCache(userId, securityCheck.normalizedContent, 'blog');
 
     return new SuccessModel(blog);
   } catch (ex) {

@@ -5,7 +5,7 @@
         data-count="<%= count%>"
         data-container-selector="<%= containerSelector%>"
         data-api="<%= api%>"
-        <% if (keyword) { %>data-keyword="<%= keyword%>"<% } %>
+        <% if (typeof keyword !== 'undefined' && keyword) { %>data-keyword="<%= keyword%>"<% } %>
     >
         点击加载更多
     </button>
@@ -25,7 +25,7 @@
     var $btnLoadMore = $('#btn-load-more')
     var $containerWeiboList = $('<%= containerSelector%>')
     var api = '<%= api%>'
-    var keyword = '<%= keyword || '' %>'
+    var keyword = '<%= typeof keyword !== 'undefined' ? keyword : '' %>'
 
     // 加载更多
     $btnLoadMore.click(function () {

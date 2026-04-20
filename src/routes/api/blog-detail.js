@@ -13,6 +13,7 @@ const {
     likeComment,
     unlikeComment
 } = require('../../controller/blog-detail')
+const { recordViewHistory } = require('../../controller/viewHistory')
 const { ErrorModel } = require('../../model/ResModel')
 
 router.prefix('/api/blog')
@@ -27,6 +28,11 @@ router.get('/detail/:blogId', loginCheck, async (ctx, next) => {
     }
     const { id: userId } = ctx.session.userInfo || {}
     const result = await getBlogDetail(blogIdNum, userId)
+    
+    if (result.errno === 0 && userId) {
+        await recordViewHistory(userId, blogIdNum)
+    }
+    
     ctx.body = result
 })
 

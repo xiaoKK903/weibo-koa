@@ -12,6 +12,7 @@ const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
 const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
+const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -333,6 +334,9 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
     return;
   }
 
+  // 记录浏览历史
+  await recordViewHistory(userInfo.id, blogIdNum);
+
   const blog = result.data;
 
   // 获取关注数和粉丝数
@@ -357,6 +361,30 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
     },
     blogData: {
       blog,
+    },
+  });
+});
+
+// 浏览历史页面
+router.get("/view-history", loginRedirect, async (ctx, next) => {
+  const userInfo = ctx.session.userInfo;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
+
+  // 获取第一页浏览历史
+  const result = await getViewHistoryList(userInfo.id, 0, 10);
+  const { count, validCount, historyList } = result.data;
+
+  await ctx.render("view-history", {
+    isLogin: true,
+    unreadAtCount,
+    currentUserId: userInfo.id,
+    historyData: {
+      isEmpty: historyList.length === 0,
+      count,
+      validCount,
+      historyList,
     },
   });
 });

@@ -18,8 +18,8 @@ seq
   });
 
 // 执行同步
-// force: true 重新创建所有表（会清空数据），确保字段和索引正确创建
-seq.sync({ force: true }).then(() => {
+// alter: true 安全同步表结构（不会删除数据）
+seq.sync({ alter: true }).then(() => {
   console.log("sync ok");
   process.exit();
 });

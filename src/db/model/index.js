@@ -10,6 +10,7 @@ const Collect = require('./Collect')
 const Follow = require('./Follow')
 const Like = require('./Like')
 const At = require('./At')
+const ViewHistory = require('./ViewHistory')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -148,6 +149,22 @@ Comment.hasMany(At, {
     foreignKey: 'commentId'
 })
 
+ViewHistory.belongsTo(User, {
+    foreignKey: 'userId'
+})
+
+ViewHistory.belongsTo(Blog, {
+    foreignKey: 'blogId'
+})
+
+User.hasMany(ViewHistory, {
+    foreignKey: 'userId'
+})
+
+Blog.hasMany(ViewHistory, {
+    foreignKey: 'blogId'
+})
+
 module.exports = {
     User,
     Blog,
@@ -155,5 +172,6 @@ module.exports = {
     Collect,
     Follow,
     Like,
-    At
+    At,
+    ViewHistory
 }

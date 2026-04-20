@@ -1,0 +1,515 @@
+<%- include('layout/header', { title: '微博 - 浏览历史', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-8">
+            <div class="d-flex justify-content-between align-items-center margin-bottom-20 padding-bottom-10 border-bottom">
+                <h4>
+                    <i class="fa fa-history"></i> 浏览历史
+                </h4>
+                <div>
+                    <% if (historyData && historyData.count > 0) { %>
+                    <span class="text-muted mr-3">共 <%= historyData.count %> 条记录</span>
+                    <button class="btn btn-sm btn-outline-danger" id="btn-clear-all">
+                        <i class="fa fa-trash"></i> 清空全部
+                    </button>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if (!historyData || historyData.isEmpty) { %>
+                <div class="no-history">
+                    <div class="text-center">
+                        <i class="fa fa-file-text-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h5 class="text-muted">暂无浏览历史</h5>
+                        <p class="text-muted">去广场看看有什么有趣的微博吧</p>
+                        <a href="/square" class="btn btn-primary">
+                            <i class="fa fa-compass"></i> 去广场
+                        </a>
+                    </div>
+                </div>
+            <% } else { %>
+                <div id="container-history-list" class="history-list">
+                    <% historyData.historyList.forEach(function(historyItem) { %>
+                    <div class="history-item" data-history-id="<%= historyItem.id %>" data-blog-id="<%= historyItem.blogId %>">
+                        <% if (historyItem.blog) { %>
+                        <div class="history-avatar">
+                            <img src="<%= historyItem.blog.user ? historyItem.blog.user.picture : '/images/1724131894164-avatar.png' %>" alt="头像">
+                        </div>
+                        <div class="history-content">
+                            <div class="history-header">
+                                <a href="/profile/<%= historyItem.blog.user ? historyItem.blog.user.userName : '' %>" class="history-user">
+                                    <%= historyItem.blog.user ? historyItem.blog.user.nickName : '用户' %>
+                                </a>
+                                <span class="history-time" data-time="<%= historyItem.updatedAt || historyItem.createdAt %>">
+                                    <i class="fa fa-clock-o"></i> 
+                                    刚刚
+                                </span>
+                            </div>
+                            <div class="history-blog">
+                                <a href="/detail/<%= historyItem.blog.id %>" class="history-blog-link">
+                                    <div class="history-blog-content"><%- historyItem.blog.contentFormat %></div>
+                                    <% if (historyItem.blog.image) { %>
+                                    <div class="history-blog-image">
+                                        <img src="<%= historyItem.blog.image %>" alt="微博图片">
+                                    </div>
+                                    <% } %>
+                                </a>
+                            </div>
+                            <div class="history-actions">
+                                <div class="history-stats">
+                                    <% if (historyItem.blog.likeCount > 0) { %>
+                                    <span class="stat-item">
+                                        <i class="fa fa-thumbs-up"></i> <%= historyItem.blog.likeCount %>
+                                    </span>
+                                    <% } %>
+                                    <% if (historyItem.blog.collectCount > 0) { %>
+                                    <span class="stat-item">
+                                        <i class="fa fa-star"></i> <%= historyItem.blog.collectCount %>
+                                    </span>
+                                    <% } %>
+                                </div>
+                                <button class="btn btn-sm btn-link text-danger btn-delete-history" title="删除">
+                                    <i class="fa fa-times"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        <% } else { %>
+                        <div class="history-content">
+                            <div class="text-muted">
+                                <i class="fa fa-exclamation-circle"></i> 该微博已被删除
+                            </div>
+                            <button class="btn btn-sm btn-link text-danger btn-delete-history" title="删除">
+                                <i class="fa fa-times"></i> 删除
+                            </button>
+                        </div>
+                        <% } %>
+                    </div>
+                    <% }) %>
+                </div>
+                
+                <% if (historyData.count > historyData.historyList.length) { %>
+                    <div class="text-center margin-top-20">
+                        <button class="btn btn-outline-primary" id="btn-load-more">加载更多</button>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<style>
+.history-list {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.history-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item:hover {
+    background: rgba(0, 123, 255, 0.02);
+}
+
+.history-avatar {
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.history-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+.history-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.history-user {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+.history-user:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.history-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.history-blog {
+    margin-bottom: 8px;
+}
+
+.history-blog-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.history-blog-link:hover {
+    text-decoration: none;
+}
+
+.history-blog-content {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.history-blog-content img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.history-blog-image {
+    margin-top: 8px;
+}
+
+.history-blog-image img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.history-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-item {
+    font-size: 12px;
+    color: #999;
+}
+
+.stat-item i {
+    margin-right: 3px;
+}
+
+.btn-delete-history {
+    font-size: 12px;
+    padding: 2px 8px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.btn-delete-history:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.no-history {
+    padding: 80px 20px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+#btn-load-more {
+    min-width: 150px;
+    transition: all 0.3s ease;
+}
+
+#btn-load-more:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+#btn-load-more:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#btn-clear-all {
+    transition: all 0.3s ease;
+}
+
+#btn-clear-all:hover {
+    background: #dc3545;
+    color: #fff;
+}
+</style>
+
+<script>
+$(function () {
+    var currentPage = 0
+    var pageSize = 10
+    var hasMore = <%= historyData && historyData.count > historyData.historyList.length ? 'true' : 'false' %>
+
+    formatAllTimes()
+
+    function formatAllTimes() {
+        $('.history-time').each(function () {
+            var $this = $(this)
+            var timeStr = $this.data('time')
+            if (timeStr) {
+                $this.html('<i class="fa fa-clock-o"></i> ' + formatTime(timeStr))
+            }
+        })
+    }
+
+    $(document).on('click', '.btn-delete-history', function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        var $item = $(this).closest('.history-item')
+        var historyId = $item.data('history-id')
+        
+        if (!confirm('确定要删除这条浏览记录吗？')) {
+            return
+        }
+        
+        $.ajax({
+            url: '/api/view-history/delete',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: historyId }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    $item.fadeOut(300, function () {
+                        $(this).remove()
+                        
+                        var remainingItems = $('.history-item').length
+                        if (remainingItems === 0) {
+                            location.reload()
+                        }
+                    })
+                } else {
+                    alert(res.message || '删除失败')
+                }
+            },
+            error: function () {
+                alert('删除失败，请重试')
+            }
+        })
+    })
+
+    $('#btn-clear-all').click(function (e) {
+        e.preventDefault()
+        
+        if (!confirm('确定要清空所有浏览历史吗？此操作不可恢复。')) {
+            return
+        }
+        
+        var $btn = $(this)
+        $btn.prop('disabled', true).text('清空中...')
+        
+        $.ajax({
+            url: '/api/view-history/clear',
+            type: 'POST',
+            success: function (res) {
+                if (res.errno === 0) {
+                    location.reload()
+                } else {
+                    alert(res.message || '清空失败')
+                    $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> 清空全部')
+                }
+            },
+            error: function () {
+                alert('清空失败，请重试')
+                $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> 清空全部')
+            }
+        })
+    })
+
+    $('#btn-load-more').click(function (e) {
+        e.preventDefault()
+        
+        if (!hasMore) {
+            return
+        }
+        
+        var $btn = $(this)
+        $btn.prop('disabled', true).text('加载中...')
+        currentPage++
+        
+        $.ajax({
+            url: '/api/view-history/list',
+            type: 'GET',
+            data: {
+                pageIndex: currentPage,
+                pageSize: pageSize
+            },
+            success: function (res) {
+                if (res.errno === 0) {
+                    var historyList = res.data.historyList
+                    
+                    if (historyList.length === 0) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                        return
+                    }
+                    
+                    var html = ''
+                    historyList.forEach(function (historyItem) {
+                        html += createHistoryItemHtml(historyItem)
+                    })
+                    
+                    $('#container-history-list').append(html)
+                    
+                    formatAllTimes()
+                    
+                    if (historyList.length < pageSize) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                    } else {
+                        $btn.prop('disabled', false).text('加载更多')
+                    }
+                } else {
+                    alert(res.message || '加载失败')
+                    $btn.prop('disabled', false).text('加载更多')
+                    currentPage--
+                }
+            },
+            error: function () {
+                alert('加载失败，请重试')
+                $btn.prop('disabled', false).text('加载更多')
+                currentPage--
+            }
+        })
+    })
+
+    function createHistoryItemHtml(historyItem) {
+        if (!historyItem.blog) {
+            return `
+                <div class="history-item" data-history-id="${historyItem.id}" data-blog-id="${historyItem.blogId}">
+                    <div class="history-content">
+                        <div class="text-muted">
+                            <i class="fa fa-exclamation-circle"></i> 该微博已被删除
+                        </div>
+                        <button class="btn btn-sm btn-link text-danger btn-delete-history" title="删除">
+                            <i class="fa fa-times"></i> 删除
+                        </button>
+                    </div>
+                </div>
+            `
+        }
+        
+        var blog = historyItem.blog
+        var user = blog.user || {}
+        
+        var imageHtml = ''
+        if (blog.image) {
+            imageHtml = `
+                <div class="history-blog-image">
+                    <img src="${blog.image}" alt="微博图片">
+                </div>
+            `
+        }
+        
+        var statsHtml = ''
+        if (blog.likeCount > 0 || blog.collectCount > 0) {
+            statsHtml = '<div class="history-stats">'
+            if (blog.likeCount > 0) {
+                statsHtml += `<span class="stat-item"><i class="fa fa-thumbs-up"></i> ${blog.likeCount}</span>`
+            }
+            if (blog.collectCount > 0) {
+                statsHtml += `<span class="stat-item"><i class="fa fa-star"></i> ${blog.collectCount}</span>`
+            }
+            statsHtml += '</div>'
+        }
+        
+        return `
+            <div class="history-item" data-history-id="${historyItem.id}" data-blog-id="${historyItem.blogId}">
+                <div class="history-avatar">
+                    <img src="${user.picture || '/images/1724131894164-avatar.png'}" alt="头像">
+                </div>
+                <div class="history-content">
+                    <div class="history-header">
+                        <a href="/profile/${user.userName || ''}" class="history-user">${escapeHtml(user.nickName || '用户')}</a>
+                        <span class="history-time" data-time="${historyItem.updatedAt || historyItem.createdAt}">
+                            <i class="fa fa-clock-o"></i> 刚刚
+                        </span>
+                    </div>
+                    <div class="history-blog">
+                        <a href="/detail/${blog.id}" class="history-blog-link">
+                            <div class="history-blog-content">${blog.contentFormat || escapeHtml(blog.content)}</div>
+                            ${imageHtml}
+                        </a>
+                    </div>
+                    <div class="history-actions">
+                        ${statsHtml}
+                        <button class="btn btn-sm btn-link text-danger btn-delete-history" title="删除">
+                            <i class="fa fa-times"></i> 删除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `
+    }
+
+    function escapeHtml(text) {
+        if (!text) return ''
+        var div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '刚刚'
+        
+        var date = new Date(timeStr)
+        var now = new Date()
+        var diff = now - date
+        
+        if (diff < 60 * 1000) {
+            return '刚刚'
+        }
+        if (diff < 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 1000)) + '分钟前'
+        }
+        if (diff < 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 60 * 1000)) + '小时前'
+        }
+        if (diff < 7 * 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (24 * 60 * 60 * 1000)) + '天前'
+        }
+        
+        var month = date.getMonth() + 1
+        var day = date.getDate()
+        var hour = date.getHours()
+        var minute = date.getMinutes()
+        
+        return month + '月' + day + '日 ' + hour + ':' + (minute < 10 ? '0' : '') + minute
+    }
+})
+</script>

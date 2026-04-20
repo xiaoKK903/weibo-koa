@@ -196,10 +196,47 @@ async function getBlogByIdWithDeleted(blogId, userId = null) {
     }
 }
 
+async function clearAllRecycle(userId) {
+    const deletedBlogs = await Blog.findAll({
+        where: {
+            userId,
+            deletedAt: {
+                [Op.ne]: null
+            }
+        },
+        attributes: ['id']
+    })
+    
+    const blogIds = deletedBlogs.map(b => b.id)
+    
+    if (blogIds.length === 0) {
+        return { success: true, deletedCount: 0 }
+    }
+    
+    await Comment.destroy({
+        where: { blogId: { [Op.in]: blogIds } }
+    })
+    
+    await Collect.destroy({
+        where: { blogId: { [Op.in]: blogIds } }
+    })
+    
+    await Like.destroy({
+        where: { blogId: { [Op.in]: blogIds } }
+    })
+    
+    const deletedCount = await Blog.destroy({
+        where: { id: { [Op.in]: blogIds } }
+    })
+    
+    return { success: true, deletedCount }
+}
+
 module.exports = {
     softDeleteBlog,
     restoreBlog,
     permanentDeleteBlog,
     getRecycleList,
-    getBlogByIdWithDeleted
+    getBlogByIdWithDeleted,
+    clearAllRecycle
 }

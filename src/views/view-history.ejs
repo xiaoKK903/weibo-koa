@@ -100,6 +100,8 @@
 
 <%- include('layout/footer')%>
 
+<div id="toast-container" class="toast-container"></div>
+
 <style>
 .history-list {
     background: #fff;
@@ -267,6 +269,103 @@
     background: #dc3545;
     color: #fff;
 }
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 280px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast.warning {
+    border-color: #ffa502;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast.warning .toast-icon {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
 </style>
 
 <script>
@@ -276,6 +375,41 @@ $(function () {
     var hasMore = <%= historyData && historyData.count > historyData.historyList.length ? 'true' : 'false' %>
 
     formatAllTimes()
+
+    function showToast(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        }
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + (message || '') + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>')
+        
+        $('#toast-container').append(toast)
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        })
+        
+        setTimeout(function() {
+            toast.addClass('show')
+        }, 10)
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        }, 3000)
+    }
 
     function formatAllTimes() {
         $('.history-time').each(function () {
@@ -294,10 +428,6 @@ $(function () {
         var $item = $(this).closest('.history-item')
         var historyId = $item.data('history-id')
         
-        if (!confirm('确定要删除这条浏览记录吗？')) {
-            return
-        }
-        
         $.ajax({
             url: '/api/view-history/delete',
             type: 'POST',
@@ -307,28 +437,27 @@ $(function () {
                 if (res.errno === 0) {
                     $item.fadeOut(300, function () {
                         $(this).remove()
+                        showToast('success', '删除成功', '已删除该条浏览记录')
                         
                         var remainingItems = $('.history-item').length
                         if (remainingItems === 0) {
-                            location.reload()
+                            setTimeout(function() {
+                                location.reload()
+                            }, 500)
                         }
                     })
                 } else {
-                    alert(res.message || '删除失败')
+                    showToast('error', '删除失败', res.message || '请稍后重试')
                 }
             },
             error: function () {
-                alert('删除失败，请重试')
+                showToast('error', '删除失败', '网络错误，请稍后重试')
             }
         })
     })
 
     $('#btn-clear-all').click(function (e) {
         e.preventDefault()
-        
-        if (!confirm('确定要清空所有浏览历史吗？此操作不可恢复。')) {
-            return
-        }
         
         var $btn = $(this)
         $btn.prop('disabled', true).text('清空中...')
@@ -338,14 +467,17 @@ $(function () {
             type: 'POST',
             success: function (res) {
                 if (res.errno === 0) {
-                    location.reload()
+                    showToast('success', '清空成功', '已清空所有浏览记录')
+                    setTimeout(function() {
+                        location.reload()
+                    }, 500)
                 } else {
-                    alert(res.message || '清空失败')
+                    showToast('error', '清空失败', res.message || '请稍后重试')
                     $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> 清空全部')
                 }
             },
             error: function () {
-                alert('清空失败，请重试')
+                showToast('error', '清空失败', '网络错误，请稍后重试')
                 $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> 清空全部')
             }
         })
@@ -395,13 +527,13 @@ $(function () {
                         $btn.prop('disabled', false).text('加载更多')
                     }
                 } else {
-                    alert(res.message || '加载失败')
+                    showToast('error', '加载失败', res.message || '请稍后重试')
                     $btn.prop('disabled', false).text('加载更多')
                     currentPage--
                 }
             },
             error: function () {
-                alert('加载失败，请重试')
+                showToast('error', '加载失败', '网络错误，请稍后重试')
                 $btn.prop('disabled', false).text('加载更多')
                 currentPage--
             }

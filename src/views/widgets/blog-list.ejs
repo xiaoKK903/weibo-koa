@@ -606,12 +606,139 @@
         align-self: stretch;
     }
 }
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 280px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
 </style>
 
 <script>
 $(function () {
     var currentUserId = parseInt('<%= typeof currentUserId !== "undefined" ? currentUserId : 0 %>');
     var $mainContainer = $('#blog-list-main');
+    
+    if (!$('#toast-container').length) {
+        $('body').append('<div id="toast-container" class="toast-container"></div>');
+    }
+    
+    window.showToast = window.showToast || function(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        };
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + (message || '') + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>');
+        
+        $('#toast-container').append(toast);
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove();
+            });
+        });
+        
+        setTimeout(function() {
+            toast.addClass('show');
+        }, 10);
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove();
+            });
+        }, 3000);
+    };
     
     window.refreshBlogList = function() {
         var pageIndex = 0;
@@ -882,18 +1009,22 @@ $(function () {
             var blogId = $btn.data('blog-id');
             var $item = $btn.closest('.item-wrapper');
             
-            if (confirm('确定要删除这条微博吗？删除后可在回收站中恢复。')) {
-                ajax.post('/api/blog/delete', { blogId: blogId }, function(err) {
-                    if (err) {
-                        var errorMsg = err.message || err;
-                        alert(errorMsg);
-                        return;
-                    }
-                    $item.fadeOut(300, function() {
-                        $(this).remove();
-                    });
+            $btn.prop('disabled', true);
+            
+            ajax.post('/api/blog/delete', { blogId: blogId }, function(err) {
+                if (err) {
+                    var errorMsg = err.message || err;
+                    window.showToast('error', '删除失败', errorMsg);
+                    $btn.prop('disabled', false);
+                    return;
+                }
+                
+                window.showToast('success', '删除成功', '微博已移入回收站');
+                
+                $item.fadeOut(300, function() {
+                    $(this).remove();
                 });
-            }
+            });
         });
         
         $(document).off('click', '.btn-reply').on('click', '.btn-reply', function(e) {
@@ -1013,18 +1144,19 @@ $(function () {
             e.preventDefault();
             var commentId = $(this).data('comment-id');
             var blogId = $(this).data('blog-id');
+            var $btn = $(this);
             
-            if (!confirm('确定要删除这条评论吗？')) {
-                return;
-            }
+            $btn.prop('disabled', true);
             
             ajax.post('/api/blog/comment/delete', { commentId: Number(commentId) }, function(err) {
                 if (err) {
                     var errorMsg = err.message || err;
-                    alert(errorMsg);
+                    window.showToast('error', '删除失败', errorMsg);
+                    $btn.prop('disabled', false);
                     return;
                 }
                 
+                window.showToast('success', '删除成功', '评论已删除');
                 loadComments(blogId);
             });
         });

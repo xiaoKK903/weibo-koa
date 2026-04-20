@@ -5,7 +5,6 @@
 
 const { ViewHistory, Blog, User, Collect, Like } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
-const { Op } = require('sequelize')
 
 async function addViewHistory(userId, blogId) {
     try {

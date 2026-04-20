@@ -325,6 +325,32 @@ $(function () {
         }, 3000)
     }
 
+    function formatTime(timeStr) {
+        if (!timeStr) return '刚刚'
+        
+        var date = new Date(timeStr)
+        var now = new Date()
+        var diff = now - date
+        
+        if (diff < 60 * 1000) {
+            return '刚刚'
+        }
+        if (diff < 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 1000)) + '分钟前'
+        }
+        if (diff < 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 60 * 1000)) + '小时前'
+        }
+        if (diff < 7 * 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (24 * 60 * 60 * 1000)) + '天前'
+        }
+        
+        var year = date.getFullYear()
+        var month = date.getMonth() + 1
+        var day = date.getDate()
+        return year + '-' + (month < 10 ? '0' + month : month) + '-' + (day < 10 ? '0' + day : day)
+    }
+
     function formatAllTimes() {
         $('.recycle-time').each(function () {
             var $this = $(this)

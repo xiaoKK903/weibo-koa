@@ -8,6 +8,10 @@ const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
 const { Op } = require('sequelize')
 
+const DEFAULT_WHERE = {
+    deletedAt: null
+}
+
 /**
  * 创建微博
  * @param {Object} param0 创建微博的数据 { userId, content, image }
@@ -35,7 +39,9 @@ async function getBlogListByUser(
     }
 
     // 搜索条件
-    const blogWhereOpts = {}
+    const blogWhereOpts = {
+        ...DEFAULT_WHERE
+    }
     if (keyword) {
         blogWhereOpts.content = {
             [Symbol.for('like')]: `%${keyword}%`
@@ -138,6 +144,7 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         order: [
             ['id', 'desc']
         ],
+        where: DEFAULT_WHERE,
         include: [
             {
                 model: User,
@@ -217,7 +224,8 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
 async function getBlogById(blogId, userId = null) {
     const result = await Blog.findOne({
         where: {
-            id: blogId
+            id: blogId,
+            ...DEFAULT_WHERE
         },
         include: [
             {

@@ -11,6 +11,7 @@ const Follow = require('./Follow')
 const Like = require('./Like')
 const At = require('./At')
 const ViewHistory = require('./ViewHistory')
+const Draft = require('./Draft')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -165,6 +166,14 @@ Blog.hasMany(ViewHistory, {
     foreignKey: 'blogId'
 })
 
+Draft.belongsTo(User, {
+    foreignKey: 'userId'
+})
+
+User.hasMany(Draft, {
+    foreignKey: 'userId'
+})
+
 module.exports = {
     User,
     Blog,
@@ -173,5 +182,6 @@ module.exports = {
     Follow,
     Like,
     At,
-    ViewHistory
+    ViewHistory,
+    Draft
 }

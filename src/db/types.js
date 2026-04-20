@@ -11,4 +11,5 @@ module.exports = {
   TEXT: Sequelize.TEXT,
   INTEGER: Sequelize.INTEGER,
   BOOLEAN: Sequelize.BOOLEAN,
+  DATE: Sequelize.DATE,
 };

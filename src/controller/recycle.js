@@ -7,7 +7,8 @@ const {
     softDeleteBlog,
     restoreBlog,
     permanentDeleteBlog,
-    getRecycleList
+    getRecycleList,
+    clearAllRecycle
 } = require('../services/recycle')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const {
@@ -70,9 +71,15 @@ async function getRecycleListCtrl(userId, pageIndex = 0, pageSize = 10) {
     return new SuccessModel(result)
 }
 
+async function clearAllRecycleCtrl(userId) {
+    const result = await clearAllRecycle(userId)
+    return new SuccessModel(result)
+}
+
 module.exports = {
     deleteBlog,
     restoreBlog: restoreBlogCtrl,
     permanentDeleteBlog: permanentDeleteBlogCtrl,
-    getRecycleList: getRecycleListCtrl
+    getRecycleList: getRecycleListCtrl,
+    clearAllRecycle: clearAllRecycleCtrl
 }

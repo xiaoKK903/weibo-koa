@@ -8,7 +8,8 @@ const {
     deleteBlog,
     restoreBlog,
     permanentDeleteBlog,
-    getRecycleList
+    getRecycleList,
+    clearAllRecycle
 } = require("../../controller/recycle");
 const { loginCheck } = require("../../middlewares/loginChecks");
 
@@ -38,6 +39,11 @@ router.post("/api/recycle/restore", loginCheck, async (ctx, next) => {
 router.post("/api/recycle/delete", loginCheck, async (ctx, next) => {
     const { blogId } = ctx.request.body;
     ctx.body = await permanentDeleteBlog(blogId, ctx.session.userInfo.id);
+});
+
+// 一键清空回收站
+router.post("/api/recycle/clear", loginCheck, async (ctx, next) => {
+    ctx.body = await clearAllRecycle(ctx.session.userInfo.id);
 });
 
 module.exports = router;

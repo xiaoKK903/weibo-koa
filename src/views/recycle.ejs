@@ -10,6 +10,9 @@
                 <div>
                     <% if (recycleData && recycleData.count > 0) { %>
                     <span class="text-muted mr-3">共 <%= recycleData.count %> 条已删微博</span>
+                    <button class="btn btn-outline-danger btn-sm" id="btn-clear-all" title="清空回收站">
+                        <i class="fa fa-trash"></i> 清空回收站
+                    </button>
                     <% } %>
                 </div>
             </div>
@@ -362,6 +365,29 @@ $(function () {
     }
 
     function bindEvents() {
+        $('#btn-clear-all').off('click').on('click', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+            
+            var $btn = $(this)
+            
+            $btn.prop('disabled', true).text('清空中...')
+            
+            ajax.post('/api/recycle/clear', {}, function (err, res) {
+                if (err) {
+                    showToast('error', '清空失败', err.message || '请稍后重试')
+                    $btn.prop('disabled', false).html('<i class="fa fa-trash"></i> 清空回收站')
+                    return
+                }
+                
+                showToast('success', '清空成功', '回收站已清空')
+                
+                setTimeout(function() {
+                    location.reload()
+                }, 500)
+            })
+        })
+
         $('.btn-restore').off('click').on('click', function (e) {
             e.preventDefault()
             e.stopPropagation()

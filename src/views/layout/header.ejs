@@ -60,11 +60,19 @@
                     首页
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/profile">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-user"></i>
                     我的空间
                 </a>
+                <div class="dropdown-menu" aria-labelledby="profileDropdown">
+                    <a class="dropdown-item" href="/profile">
+                        <i class="fa fa-user-o"></i> 个人主页
+                    </a>
+                    <a class="dropdown-item" href="/view-history">
+                        <i class="fa fa-history"></i> 浏览历史
+                    </a>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/square">
@@ -76,12 +84,6 @@
                 <a class="nav-link" href="/setting">
                     <i class="fa fa-gear"></i>
                     设置
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/view-history">
-                    <i class="fa fa-history"></i>
-                    浏览历史
                 </a>
             </li>
             <li class="nav-item">

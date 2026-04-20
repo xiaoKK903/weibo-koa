@@ -19,6 +19,8 @@ const { getUserInfo } = require('../services/user')
 const { createAtReminder } = require('../services/at')
 const xss = require('xss')
 const { contentSecurityCheck, setDuplicateCache } = require('../middlewares/contentSecurity')
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 获取微博详情
@@ -101,6 +103,10 @@ async function createComment({ blogId, userId, content, parentId = null, replyUs
             blogId, 
             parentId
         );
+
+        addPoint(userId, ACTION_TYPES.COMMENT, comment.id).catch(err => {
+            console.error('[积分服务] 发表评论添加积分失败:', err.message);
+        });
 
         return new SuccessModel(fullComment)
     } catch (ex) {

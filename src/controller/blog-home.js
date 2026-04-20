@@ -11,6 +11,8 @@ const { PAGE_SIZE, REG_FOR_AT_WHO } = require("../conf/constant");
 const { getUserInfo } = require("../services/user");
 const { createAtReminder } = require("../services/at");
 const { contentSecurityCheck, setDuplicateCache } = require("../middlewares/contentSecurity");
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 创建微博
@@ -55,6 +57,10 @@ async function create({ userId, content, image }) {
     }
 
     await setDuplicateCache(userId, securityCheck.normalizedContent, 'blog');
+
+    addPoint(userId, ACTION_TYPES.BLOG, blog.id).catch(err => {
+      console.error('[积分服务] 发布微博添加积分失败:', err.message);
+    });
 
     return new SuccessModel(blog);
   } catch (ex) {

@@ -6,6 +6,8 @@
 const { followUser, unfollowUser, checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require('../services/follow')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { followFailInfo, unfollowFailInfo } = require('../model/ErrorInfo')
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 关注用户
@@ -18,6 +20,10 @@ async function follow(ctx, followingId) {
     try {
         const result = await followUser(followerId, followingId)
         if (result) {
+            addPoint(followerId, ACTION_TYPES.FOLLOW, followingId).catch(err => {
+                console.error('[积分服务] 关注添加积分失败:', err.message);
+            });
+            
             return new SuccessModel()
         } else {
             return new ErrorModel(followFailInfo)

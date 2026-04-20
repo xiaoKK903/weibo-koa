@@ -6,6 +6,8 @@
 const { createLike, deleteLike, getLikesByUserId, getLikeByUserIdAndBlogId, getLikeCountByBlogId } = require('../services/like')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { likeFailInfo, cancelLikeFailInfo, getLikesFailInfo } = require('../model/ErrorInfo')
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 点赞微博
@@ -20,6 +22,11 @@ async function like(ctx, blogId) {
             return new SuccessModel()
         }
         await createLike(userId, blogId)
+        
+        addPoint(userId, ACTION_TYPES.LIKE, blogId).catch(err => {
+            console.error('[积分服务] 点赞添加积分失败:', err.message);
+        });
+        
         return new SuccessModel()
     } catch (ex) {
         console.error(ex.message, ex.stack)

@@ -6,6 +6,8 @@
 const { createCollect, deleteCollect, getCollectsByUserId, getCollectByUserIdAndBlogId, getCollectCountByBlogId } = require('../services/collect')
 const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { collectFailInfo, cancelCollectFailInfo, getCollectsFailInfo } = require('../model/ErrorInfo')
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 收藏微博
@@ -22,6 +24,11 @@ async function collect(ctx, blogId) {
         }
         // 创建收藏
         await createCollect(userId, blogId)
+        
+        addPoint(userId, ACTION_TYPES.COLLECT, blogId).catch(err => {
+            console.error('[积分服务] 收藏添加积分失败:', err.message);
+        });
+        
         return new SuccessModel()
     } catch (ex) {
         console.error(ex.message, ex.stack)

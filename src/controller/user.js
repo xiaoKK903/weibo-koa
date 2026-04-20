@@ -25,6 +25,8 @@ const {
   nickNameExistInfo,
 } = require("../model/ErrorInfo");
 const doCrypto = require("../utils/cryp");
+const { addPoint } = require("../services/point");
+const { ACTION_TYPES } = require("../conf/pointRules");
 
 /**
  * 用户名是否存在
@@ -145,6 +147,11 @@ async function login(ctx, userName, password) {
     if (ctx.session.userInfo == null) {
       ctx.session.userInfo = userInfo;
     }
+
+    addPoint(userInfo.id, ACTION_TYPES.LOGIN).catch(err => {
+      console.error('[积分服务] 登录添加积分失败:', err.message);
+    });
+
     return new SuccessModel();
   } catch (error) {
     console.error('CRITICAL_ERROR_TRACE: login error');

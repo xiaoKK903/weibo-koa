@@ -22,7 +22,10 @@
             <% } %>
             <a href="/profile/<%= blog.user.userName%>">
                 <%= blog.user.nickName%>
-            </a>:
+            </a>
+            <span class="blog-user-level-badge" data-user-id="<%= blog.user.id%>" style="display: none;">
+                <span class="blog-level-number">L1</span>
+            </span>:
             <span class="blog-content-summary"><%= blog.contentSummary%></span>
             <a href="/detail/<%= blog.id %>" class="blog-detail-link">查看全文</a>
         </div>
@@ -122,6 +125,25 @@
 .blog-detail-link:hover {
     opacity: 1;
     text-decoration: underline;
+}
+
+/* 等级徽章样式 */
+.blog-user-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 6px;
+    background: linear-gradient(135deg, #808080 0%, #696969 100%);
+    color: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.blog-level-number {
+    font-weight: bold;
 }
 
 /* 多图容器 */
@@ -817,7 +839,10 @@ $(function () {
         html += imagesHtml;
         html += '<a href="/profile/' + (user.userName || '') + '">';
         html += (user.nickName || user.userName || '用户');
-        html += '</a>:';
+        html += '</a>';
+        html += '<span class="blog-user-level-badge" data-user-id="' + user.id + '" style="display: none;">';
+        html += '<span class="blog-level-number">L1</span>';
+        html += '</span>:';
         html += '<span class="blog-content-summary">' + (blog.contentSummary || '') + '</span>';
         html += '<a href="/detail/' + blog.id + '" class="blog-detail-link">查看全文</a>';
         html += '</div>';
@@ -1284,5 +1309,60 @@ $(function () {
     }
     
     bindBlogEvents();
+    loadUserLevelBadges();
 });
+
+function loadUserLevelBadges() {
+    var $badges = $('.blog-user-level-badge:visible');
+    var userIds = [];
+    var userIdMap = {};
+    
+    $badges.each(function() {
+        var userId = $(this).data('user-id');
+        if (userId && !userIdMap[userId]) {
+            userIdMap[userId] = true;
+            userIds.push(userId);
+        }
+    });
+    
+    if (userIds.length === 0) {
+        return;
+    }
+    
+    userIds.forEach(function(userId) {
+        $.ajax({
+            url: '/api/point/level/' + userId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.code === 0 && res.data) {
+                    var levelInfo = res.data;
+                    var level = levelInfo.level || 1;
+                    var badgeColor = levelInfo.badgeColor || '#808080';
+                    
+                    $('.blog-user-level-badge[data-user-id="' + userId + '"]').each(function() {
+                        var $badge = $(this);
+                        $badge.find('.blog-level-number').text('L' + level);
+                        $badge.css('background', 'linear-gradient(135deg, ' + badgeColor + ' 0%, ' + adjustColor(badgeColor, -20) + ' 100%)');
+                        $badge.show();
+                    });
+                }
+            },
+            error: function() {
+                $('.blog-user-level-badge[data-user-id="' + userId + '"]').show();
+            }
+        });
+    });
+}
+
+function adjustColor(hex, amount) {
+    var num = parseInt(hex.replace('#', ''), 16);
+    var r = (num >> 16) + amount;
+    var g = ((num >> 8) & 0x00FF) + amount;
+    var b = (num & 0x0000FF) + amount;
+    r = Math.min(255, Math.max(0, r));
+    g = Math.min(255, Math.max(0, g));
+    b = Math.min(255, Math.max(0, b));
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
 </script>

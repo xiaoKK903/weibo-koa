@@ -1,6 +1,12 @@
 <div class="user-info clear-fix">
     <img src="<%= userInfo.picture%>" class="header-img float-left"/>
-    <h4 class="user-name"><%= userInfo.nickName%></h4>
+    <div class="user-info-header">
+        <h4 class="user-name"><%= userInfo.nickName%></h4>
+        <span class="level-badge" id="user-level-badge" data-user-id="<%= userInfo.id%>">
+            <span class="level-number">L1</span>
+            <span class="level-name">初入江湖</span>
+        </span>
+    </div>
 </div>
 
 <% if (isMe) { %>
@@ -24,3 +30,117 @@
     <span class="margin-left-10 margin-right-10">|</span>
     <a href="/profile/<%= userInfo.userName %>/follower" class="fan-count">粉丝 (<span class="follower-count"><%= fansData ? fansData.count : 0%></span>)</a>
 </div>
+
+<style>
+.user-info-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+    background: linear-gradient(135deg, #808080 0%, #696969 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.level-number {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.level-name {
+    opacity: 0.95;
+}
+
+.level-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.level-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.level-exp-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+}
+</style>
+
+<script>
+$(function() {
+    var $badge = $('#user-level-badge');
+    var userId = $badge.data('user-id');
+    
+    if (userId) {
+        $.ajax({
+            url: '/api/point/level/' + userId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.code === 0 && res.data) {
+                    var levelInfo = res.data;
+                    var level = levelInfo.level || 1;
+                    var levelName = levelInfo.levelName || '初入江湖';
+                    var badgeColor = levelInfo.badgeColor || '#808080';
+                    var progress = levelInfo.progress || 0;
+                    var minExp = levelInfo.minExp || 0;
+                    var maxExp = levelInfo.maxExp || 0;
+                    var totalExp = levelInfo.totalExp || 0;
+                    
+                    $badge.find('.level-number').text('L' + level);
+                    $badge.find('.level-name').text(levelName);
+                    $badge.css('background', 'linear-gradient(135deg, ' + badgeColor + ' 0%, ' + adjustColor(badgeColor, -20) + ' 100%)');
+                    
+                    if ($('.level-progress-bar').length === 0) {
+                        var progressHtml = '<div class="level-progress-bar">';
+                        progressHtml += '<div class="level-progress-fill" style="width: ' + progress + '%; background: ' + badgeColor + ';"></div>';
+                        progressHtml += '</div>';
+                        progressHtml += '<div class="level-exp-info">';
+                        progressHtml += '<span>经验: ' + totalExp + '</span>';
+                        if (maxExp !== Infinity) {
+                            progressHtml += '<span>下一等级: ' + maxExp + ' exp</span>';
+                        } else {
+                            progressHtml += '<span>已达最高等级</span>';
+                        }
+                        progressHtml += '</div>';
+                        $badge.closest('.user-info').after(progressHtml);
+                    }
+                }
+            },
+            error: function() {
+                console.log('获取用户等级信息失败');
+            }
+        });
+    }
+    
+    function adjustColor(hex, amount) {
+        var num = parseInt(hex.replace('#', ''), 16);
+        var r = (num >> 16) + amount;
+        var g = ((num >> 8) & 0x00FF) + amount;
+        var b = (num & 0x0000FF) + amount;
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+        return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+});
+</script>

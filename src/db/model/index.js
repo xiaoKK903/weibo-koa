@@ -12,6 +12,8 @@ const Like = require('./Like')
 const At = require('./At')
 const ViewHistory = require('./ViewHistory')
 const Draft = require('./Draft')
+const UserLevel = require('./UserLevel')
+const PointLog = require('./PointLog')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -174,6 +176,24 @@ User.hasMany(Draft, {
     foreignKey: 'userId'
 })
 
+// 用户等级关联
+UserLevel.belongsTo(User, {
+    foreignKey: 'userId'
+})
+
+User.hasOne(UserLevel, {
+    foreignKey: 'userId'
+})
+
+// 积分记录关联
+PointLog.belongsTo(User, {
+    foreignKey: 'userId'
+})
+
+User.hasMany(PointLog, {
+    foreignKey: 'userId'
+})
+
 module.exports = {
     User,
     Blog,
@@ -183,5 +203,7 @@ module.exports = {
     Like,
     At,
     ViewHistory,
-    Draft
+    Draft,
+    UserLevel,
+    PointLog
 }

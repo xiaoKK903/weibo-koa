@@ -116,20 +116,22 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: none;
-    align-items: center;
-    justify-content: center;
     z-index: 99999;
 }
 
 .level-rules-modal-overlay.show {
-    display: flex;
+    display: block;
 }
 
 .level-rules-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: white;
     border-radius: 12px;
     width: 90%;
@@ -139,7 +141,6 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    margin: auto;
 }
 
 .level-rules-header {
@@ -492,20 +493,31 @@ $(function() {
     var $showBtn = $('#show-level-rules');
     var $closeBtn = $('#close-level-rules');
     
-    $showBtn.on('click', function(e) {
-        e.stopPropagation();
-        $overlay.addClass('show');
-    });
-    
-    $closeBtn.on('click', function() {
-        $overlay.removeClass('show');
-    });
-    
-    $overlay.on('click', function(e) {
-        if (e.target === this) {
-            $overlay.removeClass('show');
-        }
-    });
+    if (!window._levelRulesInitialized) {
+        window._levelRulesInitialized = true;
+        
+        $(document).off('click', '#show-level-rules').on('click', '#show-level-rules', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#level-rules-overlay').addClass('show');
+        });
+        
+        $(document).off('click', '#close-level-rules').on('click', '#close-level-rules', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#level-rules-overlay').removeClass('show');
+        });
+        
+        $(document).off('click', '.level-rules-modal-overlay').on('click', '.level-rules-modal-overlay', function(e) {
+            if (e.target === this) {
+                $(this).removeClass('show');
+            }
+        });
+        
+        $(document).off('click', '.level-rules-modal').on('click', '.level-rules-modal', function(e) {
+            e.stopPropagation();
+        });
+    }
     
     function adjustColor(hex, amount) {
         var num = parseInt(hex.replace('#', ''), 16);

@@ -4,7 +4,7 @@
  */
 
 const seq = require('../seq')
-const { INTEGER, STRING, TEXT } = require('../types')
+const { INTEGER, STRING, TEXT, DATE } = require('../types')
 
 const Blog = seq.define('blog', {
     userId: {
@@ -20,6 +20,11 @@ const Blog = seq.define('blog', {
     image: {
         type: TEXT,
         comment: '图片地址，多张图片用逗号分隔'
+    },
+    deletedAt: {
+        type: DATE,
+        allowNull: true,
+        comment: '软删除时间戳，null 表示未删除'
     }
 })
 

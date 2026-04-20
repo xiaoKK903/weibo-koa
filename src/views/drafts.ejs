@@ -1,0 +1,374 @@
+<%- include('layout/header', { title: '微博 - 草稿箱', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-8">
+            <div class="d-flex justify-content-between align-items-center margin-bottom-20 padding-bottom-10 border-bottom">
+                <h4>
+                    <i class="fa fa-file-text-o"></i> 草稿箱
+                </h4>
+                <div>
+                    <span class="text-muted mr-3" id="draft-count">暂无草稿</span>
+                </div>
+            </div>
+
+            <div class="no-drafts" id="no-drafts" style="display: none;">
+                <div class="text-center">
+                    <i class="fa fa-file-text-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                    <h5 class="text-muted">暂无草稿</h5>
+                    <p class="text-muted">编辑微博时会自动保存草稿</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fa fa-pencil"></i> 写微博
+                    </a>
+                </div>
+            </div>
+
+            <div id="container-draft-list" class="draft-list" style="display: none;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<div id="toast-container" class="toast-container"></div>
+
+<style>
+.draft-list {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.draft-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.draft-item:last-child {
+    border-bottom: none;
+}
+
+.draft-item:hover {
+    background: rgba(0, 123, 255, 0.02);
+}
+
+.draft-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.draft-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.draft-content {
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 10px;
+    max-height: 120px;
+    overflow: hidden;
+}
+
+.draft-content img {
+    max-width: 200px;
+    max-height: 100px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.draft-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit-draft:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+.btn-delete-draft:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
+.no-drafts {
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 280px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast.warning {
+    border-color: #ffa502;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast.warning .toast-icon {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
+</style>
+
+<script>
+$(function () {
+    var currentPage = 0
+    var pageSize = 10
+    var hasMore = true
+
+    loadDrafts()
+
+    function showToast(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        }
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + (message || '') + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>')
+        
+        $('#toast-container').append(toast)
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        })
+        
+        setTimeout(function() {
+            toast.addClass('show')
+        }, 10)
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        }, 3000)
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return ''
+        var date = new Date(timeStr)
+        var now = new Date()
+        var diff = now.getTime() - date.getTime()
+        
+        if (diff < 60 * 1000) {
+            return '刚刚'
+        }
+        if (diff < 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 1000)) + '分钟前'
+        }
+        if (diff < 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 60 * 1000)) + '小时前'
+        }
+        if (diff < 7 * 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (24 * 60 * 60 * 1000)) + '天前'
+        }
+        
+        var year = date.getFullYear()
+        var month = date.getMonth() + 1
+        var day = date.getDate()
+        return year + '-' + (month < 10 ? '0' + month : month) + '-' + (day < 10 ? '0' + day : day)
+    }
+
+    function loadDrafts() {
+        $.ajax({
+            url: '/api/draft/list',
+            type: 'GET',
+            data: {
+                pageIndex: currentPage,
+                pageSize: pageSize
+            },
+            success: function(res) {
+                if (res.errno === 0) {
+                    var draftList = res.data.draftList || []
+                    var count = res.data.count || 0
+                    
+                    $('#draft-count').text(count > 0 ? '共 ' + count + ' 条草稿' : '暂无草稿')
+                    
+                    if (count === 0) {
+                        $('#no-drafts').show()
+                        $('#container-draft-list').hide()
+                        return
+                    }
+                    
+                    $('#no-drafts').hide()
+                    $('#container-draft-list').show()
+                    
+                    var html = ''
+                    draftList.forEach(function(draftItem) {
+                        html += '<div class="draft-item" data-draft-id="' + draftItem.id + '">'
+                        html += '<div class="draft-header">'
+                        html += '<span class="draft-time"><i class="fa fa-clock-o"></i> ' + formatTime(draftItem.lastSaveAt) + '</span>'
+                        html += '</div>'
+                        html += '<div class="draft-content">' + (draftItem.content || '（空内容）') + '</div>'
+                        if (draftItem.image) {
+                            var images = draftItem.image.split(',')
+                            if (images.length > 0 && images[0]) {
+                                html += '<img src="' + images[0] + '" alt="草稿图片">'
+                                if (images.length > 1) {
+                                    html += '<span class="text-muted ml-2">...共' + images.length + '张图</span>'
+                                }
+                            }
+                        }
+                        html += '<div class="draft-actions">'
+                        html += '<button class="btn btn-sm btn-outline-primary btn-edit-draft" title="编辑草稿">'
+                        html += '<i class="fa fa-pencil"></i> 继续编辑'
+                        html += '</button>'
+                        html += '<button class="btn btn-sm btn-outline-danger btn-delete-draft" title="删除草稿">'
+                        html += '<i class="fa fa-times"></i> 删除'
+                        html += '</button>'
+                        html += '</div>'
+                        html += '</div>'
+                    })
+                    
+                    $('#container-draft-list').html(html)
+                    
+                    hasMore = count > (currentPage + 1) * pageSize
+                }
+            },
+            error: function() {
+                showToast('error', '加载失败', '网络错误，请稍后重试')
+            }
+        })
+    }
+
+    $(document).on('click', '.btn-edit-draft', function() {
+        var draftId = $(this).closest('.draft-item').data('draft-id')
+        location.href = '/?draft=' + draftId
+    })
+
+    $(document).on('click', '.btn-delete-draft', function() {
+        var $item = $(this).closest('.draft-item')
+        var draftId = $item.data('draft-id')
+        var $btn = $(this)
+        
+        $btn.prop('disabled', true).text('删除中...')
+        
+        $.ajax({
+            url: '/api/draft/delete',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ draftId: draftId }),
+            success: function(res) {
+                if (res.errno === 0) {
+                    $item.fadeOut(300, function() {
+                        $(this).remove()
+                        showToast('success', '删除成功', '草稿已删除')
+                        
+                        var remainingItems = $('.draft-item').length
+                        if (remainingItems === 0) {
+                            setTimeout(function() {
+                                location.reload()
+                            }, 500)
+                        }
+                    })
+                } else {
+                    showToast('error', '删除失败', res.message || '请稍后重试')
+                    $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 删除')
+                }
+            },
+            error: function() {
+                showToast('error', '删除失败', '网络错误，请稍后重试')
+                $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 删除')
+            }
+        })
+    })
+})
+</script>

@@ -13,6 +13,7 @@ const { getBlogDetail } = require("../../controller/blog-detail");
 const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
 const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
+const { getRecycleList } = require("../../controller/recycle");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -386,6 +387,43 @@ router.get("/view-history", loginRedirect, async (ctx, next) => {
       validCount,
       historyList,
     },
+  });
+});
+
+// 回收站页面
+router.get("/recycle", loginRedirect, async (ctx, next) => {
+  const userInfo = ctx.session.userInfo;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
+
+  // 获取第一页回收站数据
+  const result = await getRecycleList(userInfo.id, 0, 10);
+  const { count, blogList } = result.data;
+
+  await ctx.render("recycle", {
+    isLogin: true,
+    unreadAtCount,
+    currentUserId: userInfo.id,
+    recycleData: {
+      isEmpty: blogList.length === 0,
+      count,
+      blogList,
+    },
+  });
+});
+
+// 草稿箱页面
+router.get("/drafts", loginRedirect, async (ctx, next) => {
+  const userInfo = ctx.session.userInfo;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
+
+  await ctx.render("drafts", {
+    isLogin: true,
+    unreadAtCount,
+    currentUserId: userInfo.id,
   });
 });
 

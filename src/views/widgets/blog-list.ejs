@@ -59,6 +59,14 @@
             </a>
             &nbsp;
             <span class="like-count" data-blog-id="<%= blog.id%>"><%= blog.likeCount || 0%></span>
+            &nbsp;
+            <% if (locals.currentUserId && blog.userId === locals.currentUserId) { %>
+            <a href="#" class="blog-delete-btn text-danger"
+                data-blog-id="<%= blog.id%>"
+            >
+                <i class="fa fa-trash"></i> 删除
+            </a>
+            <% } %>
             <% } %>
         </div>
         <!-- 评论区域（默认隐藏） -->
@@ -730,6 +738,15 @@ $(function () {
             html += '</a>';
             html += '&nbsp;';
             html += '<span class="like-count" data-blog-id="' + blog.id + '">' + (blog.likeCount || 0) + '</span>';
+            html += '&nbsp;';
+            
+            if (currentUserId > 0 && blog.userId === currentUserId) {
+                html += '<a href="#" class="blog-delete-btn text-danger"';
+                html += ' data-blog-id="' + blog.id + '"';
+                html += '>';
+                html += '<i class="fa fa-trash"></i> 删除';
+                html += '</a>';
+            }
         }
         
         html += '</div>';
@@ -856,6 +873,27 @@ $(function () {
                     $countSpan.text(currentCount + 1);
                 }
             });
+        });
+        
+        $('.blog-delete-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var $item = $btn.closest('.item-wrapper');
+            
+            if (confirm('确定要删除这条微博吗？删除后可在回收站中恢复。')) {
+                ajax.post('/api/blog/delete', { blogId: blogId }, function(err) {
+                    if (err) {
+                        var errorMsg = err.message || err;
+                        alert(errorMsg);
+                        return;
+                    }
+                    $item.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                });
+            }
         });
         
         $(document).off('click', '.btn-reply').on('click', '.btn-reply', function(e) {

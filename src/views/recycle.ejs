@@ -1,0 +1,518 @@
+<%- include('layout/header', { title: '微博 - 回收站', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-8">
+            <div class="d-flex justify-content-between align-items-center margin-bottom-20 padding-bottom-10 border-bottom">
+                <h4>
+                    <i class="fa fa-trash"></i> 回收站
+                </h4>
+                <div>
+                    <% if (recycleData && recycleData.count > 0) { %>
+                    <span class="text-muted mr-3">共 <%= recycleData.count %> 条已删微博</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if (!recycleData || recycleData.isEmpty) { %>
+                <div class="no-history">
+                    <div class="text-center">
+                        <i class="fa fa-recycle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h5 class="text-muted">回收站为空</h5>
+                        <p class="text-muted">删除的微博会暂时保存在这里</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <div id="container-recycle-list" class="recycle-list">
+                    <% recycleData.blogList.forEach(function(blogItem) { %>
+                    <div class="recycle-item" data-blog-id="<%= blogItem.id %>">
+                        <div class="recycle-avatar">
+                            <img src="<%= blogItem.user ? blogItem.user.picture : '/images/1724131894164-avatar.png' %>" alt="头像">
+                        </div>
+                        <div class="recycle-content">
+                            <div class="recycle-header">
+                                <span class="recycle-user">
+                                    <%= blogItem.user ? blogItem.user.nickName : '用户' %>
+                                </span>
+                                <span class="recycle-time" data-time="<%= blogItem.deletedAt %>">
+                                    <i class="fa fa-trash"></i> 删除于 刚刚
+                                </span>
+                            </div>
+                            <div class="recycle-blog">
+                                <div class="recycle-blog-content"><%- blogItem.contentFormat %></div>
+                                <% if (blogItem.image) { %>
+                                <div class="recycle-blog-image">
+                                    <img src="<%= blogItem.image %>" alt="微博图片">
+                                </div>
+                                <% } %>
+                            </div>
+                            <div class="recycle-actions">
+                                <div class="recycle-stats">
+                                    <% if (blogItem.likeCount > 0) { %>
+                                    <span class="stat-item">
+                                        <i class="fa fa-thumbs-up"></i> <%= blogItem.likeCount %>
+                                    </span>
+                                    <% } %>
+                                    <% if (blogItem.collectCount > 0) { %>
+                                    <span class="stat-item">
+                                        <i class="fa fa-star"></i> <%= blogItem.collectCount %>
+                                    </span>
+                                    <% } %>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-outline-primary btn-restore" title="恢复微博">
+                                        <i class="fa fa-undo"></i> 恢复
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger btn-permanent-delete" title="彻底删除">
+                                        <i class="fa fa-times"></i> 彻底删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div>
+                
+                <% if (recycleData.count > recycleData.blogList.length) { %>
+                    <div class="text-center margin-top-20">
+                        <button class="btn btn-outline-primary" id="btn-load-more">加载更多</button>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<div id="toast-container" class="toast-container"></div>
+
+<style>
+.recycle-list {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.recycle-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+}
+
+.recycle-item:last-child {
+    border-bottom: none;
+}
+
+.recycle-item:hover {
+    background: rgba(0, 123, 255, 0.02);
+    opacity: 1;
+}
+
+.recycle-avatar {
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.recycle-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+    opacity: 0.6;
+}
+
+.recycle-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.recycle-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.recycle-user {
+    font-weight: 600;
+    color: #333;
+    margin-right: 10px;
+}
+
+.recycle-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.recycle-blog {
+    margin-bottom: 10px;
+}
+
+.recycle-blog-content {
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.recycle-blog-image {
+    margin-top: 10px;
+}
+
+.recycle-blog-image img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+    opacity: 0.7;
+}
+
+.recycle-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recycle-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-item {
+    font-size: 13px;
+    color: #999;
+}
+
+.stat-item i {
+    margin-right: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-restore:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+.btn-permanent-delete:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
+.no-history {
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 280px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast.warning {
+    border-color: #ffa502;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast.warning .toast-icon {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
+</style>
+
+<script>
+$(function () {
+    var currentPage = 0
+    var pageSize = 10
+    var hasMore = <%= recycleData && recycleData.count > recycleData.blogList.length ? 'true' : 'false' %>
+
+    formatAllTimes()
+
+    function showToast(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        }
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + (message || '') + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>')
+        
+        $('#toast-container').append(toast)
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        })
+        
+        setTimeout(function() {
+            toast.addClass('show')
+        }, 10)
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        }, 3000)
+    }
+
+    function formatAllTimes() {
+        $('.recycle-time').each(function () {
+            var $this = $(this)
+            var timeStr = $this.data('time')
+            if (timeStr) {
+                $this.html('<i class="fa fa-trash"></i> 删除于 ' + formatTime(timeStr))
+            }
+        })
+    }
+
+    $(document).on('click', '.btn-restore', function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        var $item = $(this).closest('.recycle-item')
+        var blogId = $item.data('blog-id')
+        var $btn = $(this)
+        
+        $btn.prop('disabled', true).text('恢复中...')
+        
+        $.ajax({
+            url: '/api/recycle/restore',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ blogId: blogId }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    $item.fadeOut(300, function () {
+                        $(this).remove()
+                        showToast('success', '恢复成功', '微博已恢复到主页')
+                        
+                        var remainingItems = $('.recycle-item').length
+                        if (remainingItems === 0) {
+                            setTimeout(function() {
+                                location.reload()
+                            }, 500)
+                        }
+                    })
+                } else {
+                    showToast('error', '恢复失败', res.message || '请稍后重试')
+                    $btn.prop('disabled', false).html('<i class="fa fa-undo"></i> 恢复')
+                }
+            },
+            error: function () {
+                showToast('error', '恢复失败', '网络错误，请稍后重试')
+                $btn.prop('disabled', false).html('<i class="fa fa-undo"></i> 恢复')
+            }
+        })
+    })
+
+    $(document).on('click', '.btn-permanent-delete', function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        var $item = $(this).closest('.recycle-item')
+        var blogId = $item.data('blog-id')
+        var $btn = $(this)
+        
+        $btn.prop('disabled', true).text('删除中...')
+        
+        $.ajax({
+            url: '/api/recycle/delete',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ blogId: blogId }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    $item.fadeOut(300, function () {
+                        $(this).remove()
+                        showToast('success', '删除成功', '微博已彻底删除')
+                        
+                        var remainingItems = $('.recycle-item').length
+                        if (remainingItems === 0) {
+                            setTimeout(function() {
+                                location.reload()
+                            }, 500)
+                        }
+                    })
+                } else {
+                    showToast('error', '删除失败', res.message || '请稍后重试')
+                    $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 彻底删除')
+                }
+            },
+            error: function () {
+                showToast('error', '删除失败', '网络错误，请稍后重试')
+                $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 彻底删除')
+            }
+        })
+    })
+
+    $('#btn-load-more').click(function() {
+        var $btn = $(this)
+        currentPage++
+        
+        $btn.prop('disabled', true).text('加载中...')
+        
+        $.ajax({
+            url: '/api/recycle/list',
+            type: 'GET',
+            data: {
+                pageIndex: currentPage,
+                pageSize: pageSize
+            },
+            success: function(res) {
+                if (res.errno === 0 && res.data.blogList.length > 0) {
+                    var html = ''
+                    res.data.blogList.forEach(function(blogItem) {
+                        html += '<div class="recycle-item" data-blog-id="' + blogItem.id + '">'
+                        html += '<div class="recycle-avatar">'
+                        html += '<img src="' + (blogItem.user ? blogItem.user.picture : '/images/1724131894164-avatar.png') + '" alt="头像">'
+                        html += '</div>'
+                        html += '<div class="recycle-content">'
+                        html += '<div class="recycle-header">'
+                        html += '<span class="recycle-user">' + (blogItem.user ? blogItem.user.nickName : '用户') + '</span>'
+                        html += '<span class="recycle-time" data-time="' + blogItem.deletedAt + '">'
+                        html += '<i class="fa fa-trash"></i> 删除于 刚刚'
+                        html += '</span>'
+                        html += '</div>'
+                        html += '<div class="recycle-blog">'
+                        html += '<div class="recycle-blog-content">' + blogItem.contentFormat + '</div>'
+                        if (blogItem.image) {
+                            html += '<div class="recycle-blog-image">'
+                            html += '<img src="' + blogItem.image + '" alt="微博图片">'
+                            html += '</div>'
+                        }
+                        html += '</div>'
+                        html += '<div class="recycle-actions">'
+                        html += '<div class="recycle-stats">'
+                        if (blogItem.likeCount > 0) {
+                            html += '<span class="stat-item"><i class="fa fa-thumbs-up"></i> ' + blogItem.likeCount + '</span>'
+                        }
+                        if (blogItem.collectCount > 0) {
+                            html += '<span class="stat-item"><i class="fa fa-star"></i> ' + blogItem.collectCount + '</span>'
+                        }
+                        html += '</div>'
+                        html += '<div class="action-buttons">'
+                        html += '<button class="btn btn-sm btn-outline-primary btn-restore" title="恢复微博"><i class="fa fa-undo"></i> 恢复</button>'
+                        html += '<button class="btn btn-sm btn-outline-danger btn-permanent-delete" title="彻底删除"><i class="fa fa-times"></i> 彻底删除</button>'
+                        html += '</div>'
+                        html += '</div>'
+                        html += '</div>'
+                        html += '</div>'
+                    })
+                    
+                    $('#container-recycle-list').append(html)
+                    formatAllTimes()
+                    
+                    if (res.data.count <= (currentPage + 1) * pageSize) {
+                        $btn.hide()
+                    } else {
+                        $btn.prop('disabled', false).text('加载更多')
+                    }
+                } else {
+                    $btn.hide()
+                }
+            },
+            error: function() {
+                showToast('error', '加载失败', '网络错误，请稍后重试')
+                $btn.prop('disabled', false).text('加载更多')
+                currentPage--
+            }
+        })
+    })
+})
+</script>

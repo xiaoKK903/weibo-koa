@@ -1,0 +1,369 @@
+<style>
+.level-rules-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 99999;
+}
+
+.level-rules-modal-overlay.show {
+    display: block;
+}
+
+.level-rules-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.level-rules-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.level-rules-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.level-rules-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.level-rules-close:hover {
+    opacity: 1;
+}
+
+.level-rules-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.level-rules-section {
+    margin-bottom: 24px;
+}
+
+.level-rules-section:last-child {
+    margin-bottom: 0;
+}
+
+.level-rules-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.level-rules-section-title i {
+    color: #667eea;
+}
+
+.level-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.level-table th {
+    background: #f8f9fa;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.level-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.level-table tr:last-child td {
+    border-bottom: none;
+}
+
+.level-badge-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+}
+
+.points-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.points-table th {
+    background: #f8f9fa;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.points-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.points-table tr:last-child td {
+    border-bottom: none;
+}
+
+.points-table .exp-plus {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.points-table .exp-limit {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.level-notice {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #856404;
+}
+
+.level-notice p {
+    margin: 0 0 8px 0;
+}
+
+.level-notice p:last-child {
+    margin-bottom: 0;
+}
+</style>
+
+<div class="level-rules-modal-overlay" id="global-level-rules-overlay">
+    <div class="level-rules-modal">
+        <div class="level-rules-header">
+            <h3><i class="fa fa-star"></i> 等级规则说明</h3>
+            <button class="level-rules-close" id="global-close-level-rules">&times;</button>
+        </div>
+        <div class="level-rules-content">
+            <div class="level-rules-section">
+                <div class="level-rules-section-title">
+                    <i class="fa fa-trophy"></i> 等级体系
+                </div>
+                <table class="level-table">
+                    <thead>
+                        <tr>
+                            <th>等级</th>
+                            <th>名称</th>
+                            <th>经验范围</th>
+                            <th>徽章</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>L1</td>
+                            <td>初入江湖</td>
+                            <td>0 - 99</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #808080 0%, #696969 100%);">L1</span></td>
+                        </tr>
+                        <tr>
+                            <td>L2</td>
+                            <td>小有名气</td>
+                            <td>100 - 299</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #20B2AA 0%, #1a9a92 100%);">L2</span></td>
+                        </tr>
+                        <tr>
+                            <td>L3</td>
+                            <td>渐入佳境</td>
+                            <td>300 - 599</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #4169E1 0%, #3559c5 100%);">L3</span></td>
+                        </tr>
+                        <tr>
+                            <td>L4</td>
+                            <td>炉火纯青</td>
+                            <td>600 - 999</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #9370DB 0%, #7c5bc0 100%);">L4</span></td>
+                        </tr>
+                        <tr>
+                            <td>L5</td>
+                            <td>登峰造极</td>
+                            <td>1000 - 1499</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #FF69B4 0%, #e55a9f 100%);">L5</span></td>
+                        </tr>
+                        <tr>
+                            <td>L6</td>
+                            <td>一代宗师</td>
+                            <td>1500 - 2099</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #FF8C00 0%, #e57c00 100%);">L6</span></td>
+                        </tr>
+                        <tr>
+                            <td>L7</td>
+                            <td>绝世高手</td>
+                            <td>2100 - 2799</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #DC143C 0%, #c11234 100%);">L7</span></td>
+                        </tr>
+                        <tr>
+                            <td>L8</td>
+                            <td>传奇人物</td>
+                            <td>2800 - 3599</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #8B008B 0%, #750075 100%);">L8</span></td>
+                        </tr>
+                        <tr>
+                            <td>L9</td>
+                            <td>神话传说</td>
+                            <td>3600 - 4499</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #FFD700 0%, #e5c100 100%);">L9</span></td>
+                        </tr>
+                        <tr>
+                            <td>L10</td>
+                            <td>至尊无敌</td>
+                            <td>4500+</td>
+                            <td><span class="level-badge-small" style="background: linear-gradient(135deg, #FF4500 0%, #e53d00 100%);">L10</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="level-rules-section">
+                <div class="level-rules-section-title">
+                    <i class="fa fa-plus-circle"></i> 经验获取规则
+                </div>
+                <table class="points-table">
+                    <thead>
+                        <tr>
+                            <th>行为</th>
+                            <th>单次经验</th>
+                            <th>每日上限</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fa fa-sign-in" style="color: #28a745;"></i> 每日登录</td>
+                            <td><span class="exp-plus">+5</span></td>
+                            <td><span class="exp-limit">最多 1 次</span></td>
+                            <td>每天首次登录获得</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa fa-pencil" style="color: #007bff;"></i> 发布微博</td>
+                            <td><span class="exp-plus">+10</span></td>
+                            <td><span class="exp-limit">最多 50 经验</span></td>
+                            <td>发布原创微博</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa fa-comment" style="color: #6f42c1;"></i> 发表评论</td>
+                            <td><span class="exp-plus">+5</span></td>
+                            <td><span class="exp-limit">最多 30 经验</span></td>
+                            <td>评论他人微博</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa fa-thumbs-up" style="color: #dc3545;"></i> 点赞</td>
+                            <td><span class="exp-plus">+2</span></td>
+                            <td><span class="exp-limit">最多 20 经验</span></td>
+                            <td>点赞微博或评论</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa fa-star" style="color: #fd7e14;"></i> 收藏</td>
+                            <td><span class="exp-plus">+3</span></td>
+                            <td><span class="exp-limit">最多 15 经验</span></td>
+                            <td>收藏喜欢的微博</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa fa-user-plus" style="color: #20c997;"></i> 关注用户</td>
+                            <td><span class="exp-plus">+3</span></td>
+                            <td><span class="exp-limit">最多 10 经验</span></td>
+                            <td>关注新用户</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="level-rules-section">
+                <div class="level-notice">
+                    <p><strong><i class="fa fa-info-circle"></i> 温馨提示：</strong></p>
+                    <p>1. 每种行为都有每日经验上限，达到上限后当天不再获得该行为的经验值。</p>
+                    <p>2. 同一微博的点赞、收藏，同一用户的关注，每日只计算一次经验。</p>
+                    <p>3. 等级仅作为成长展示，不影响任何功能权限。</p>
+                    <p>4. 经验值达到当前等级上限后自动升级，解锁更高等级徽章。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var overlayId = 'global-level-rules-overlay';
+    var closeBtnId = 'global-close-level-rules';
+    var initialized = false;
+    
+    function init() {
+        if (initialized) return;
+        initialized = true;
+        
+        var $overlay = $('#' + overlayId);
+        
+        $(document).on('click', '#show-level-rules', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $overlay.addClass('show');
+        });
+        
+        $(document).on('click', '#' + closeBtnId, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $overlay.removeClass('show');
+        });
+        
+        $overlay.on('click', function(e) {
+            if (e.target === this) {
+                $(this).removeClass('show');
+            }
+        });
+    }
+    
+    if (window.jQuery) {
+        init();
+    } else {
+        $(document).ready(init);
+    }
+})();
+</script>

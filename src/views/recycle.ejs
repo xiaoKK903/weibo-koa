@@ -47,18 +47,6 @@
                                 <% } %>
                             </div>
                             <div class="recycle-actions">
-                                <div class="recycle-stats">
-                                    <% if (blogItem.likeCount > 0) { %>
-                                    <span class="stat-item">
-                                        <i class="fa fa-thumbs-up"></i> <%= blogItem.likeCount %>
-                                    </span>
-                                    <% } %>
-                                    <% if (blogItem.collectCount > 0) { %>
-                                    <span class="stat-item">
-                                        <i class="fa fa-star"></i> <%= blogItem.collectCount %>
-                                    </span>
-                                    <% } %>
-                                </div>
                                 <div class="action-buttons">
                                     <button class="btn btn-sm btn-outline-primary btn-restore" title="恢复微博">
                                         <i class="fa fa-undo"></i> 恢复
@@ -171,22 +159,8 @@
 
 .recycle-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-}
-
-.recycle-stats {
-    display: flex;
-    gap: 15px;
-}
-
-.stat-item {
-    font-size: 13px;
-    color: #999;
-}
-
-.stat-item i {
-    margin-right: 4px;
 }
 
 .action-buttons {
@@ -361,85 +335,71 @@ $(function () {
         })
     }
 
-    $(document).on('click', '.btn-restore', function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        
-        var $item = $(this).closest('.recycle-item')
-        var blogId = $item.data('blog-id')
-        var $btn = $(this)
-        
-        $btn.prop('disabled', true).text('恢复中...')
-        
-        $.ajax({
-            url: '/api/recycle/restore',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ blogId: blogId }),
-            success: function (res) {
-                if (res.errno === 0) {
-                    $item.fadeOut(300, function () {
-                        $(this).remove()
-                        showToast('success', '恢复成功', '微博已恢复到主页')
-                        
-                        var remainingItems = $('.recycle-item').length
-                        if (remainingItems === 0) {
-                            setTimeout(function() {
-                                location.reload()
-                            }, 500)
-                        }
-                    })
-                } else {
-                    showToast('error', '恢复失败', res.message || '请稍后重试')
+    function bindEvents() {
+        $('.btn-restore').off('click').on('click', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+            
+            var $item = $(this).closest('.recycle-item')
+            var blogId = $item.data('blog-id')
+            var $btn = $(this)
+            
+            $btn.prop('disabled', true).text('恢复中...')
+            
+            ajax.post('/api/recycle/restore', { blogId: blogId }, function (err, res) {
+                if (err) {
+                    showToast('error', '恢复失败', err.message || '请稍后重试')
                     $btn.prop('disabled', false).html('<i class="fa fa-undo"></i> 恢复')
+                    return
                 }
-            },
-            error: function () {
-                showToast('error', '恢复失败', '网络错误，请稍后重试')
-                $btn.prop('disabled', false).html('<i class="fa fa-undo"></i> 恢复')
-            }
+                
+                $item.fadeOut(300, function () {
+                    $(this).remove()
+                    showToast('success', '恢复成功', '微博已恢复到主页')
+                    
+                    var remainingItems = $('.recycle-item').length
+                    if (remainingItems === 0) {
+                        setTimeout(function() {
+                            location.reload()
+                        }, 500)
+                    }
+                })
+            })
         })
-    })
 
-    $(document).on('click', '.btn-permanent-delete', function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        
-        var $item = $(this).closest('.recycle-item')
-        var blogId = $item.data('blog-id')
-        var $btn = $(this)
-        
-        $btn.prop('disabled', true).text('删除中...')
-        
-        $.ajax({
-            url: '/api/recycle/delete',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ blogId: blogId }),
-            success: function (res) {
-                if (res.errno === 0) {
-                    $item.fadeOut(300, function () {
-                        $(this).remove()
-                        showToast('success', '删除成功', '微博已彻底删除')
-                        
-                        var remainingItems = $('.recycle-item').length
-                        if (remainingItems === 0) {
-                            setTimeout(function() {
-                                location.reload()
-                            }, 500)
-                        }
-                    })
-                } else {
-                    showToast('error', '删除失败', res.message || '请稍后重试')
+        $('.btn-permanent-delete').off('click').on('click', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+            
+            var $item = $(this).closest('.recycle-item')
+            var blogId = $item.data('blog-id')
+            var $btn = $(this)
+            
+            $btn.prop('disabled', true).text('删除中...')
+            
+            ajax.post('/api/recycle/delete', { blogId: blogId }, function (err, res) {
+                if (err) {
+                    showToast('error', '删除失败', err.message || '请稍后重试')
                     $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 彻底删除')
+                    return
                 }
-            },
-            error: function () {
-                showToast('error', '删除失败', '网络错误，请稍后重试')
-                $btn.prop('disabled', false).html('<i class="fa fa-times"></i> 彻底删除')
-            }
+                
+                $item.fadeOut(300, function () {
+                    $(this).remove()
+                    showToast('success', '删除成功', '微博已彻底删除')
+                    
+                    var remainingItems = $('.recycle-item').length
+                    if (remainingItems === 0) {
+                        setTimeout(function() {
+                            location.reload()
+                        }, 500)
+                    }
+                })
+            })
         })
-    })
+    }
+
+    bindEvents()
 
     $('#btn-load-more').click(function() {
         var $btn = $(this)
@@ -447,70 +407,60 @@ $(function () {
         
         $btn.prop('disabled', true).text('加载中...')
         
-        $.ajax({
-            url: '/api/recycle/list',
-            type: 'GET',
-            data: {
-                pageIndex: currentPage,
-                pageSize: pageSize
-            },
-            success: function(res) {
-                if (res.errno === 0 && res.data.blogList.length > 0) {
-                    var html = ''
-                    res.data.blogList.forEach(function(blogItem) {
-                        html += '<div class="recycle-item" data-blog-id="' + blogItem.id + '">'
-                        html += '<div class="recycle-avatar">'
-                        html += '<img src="' + (blogItem.user ? blogItem.user.picture : '/images/1724131894164-avatar.png') + '" alt="头像">'
-                        html += '</div>'
-                        html += '<div class="recycle-content">'
-                        html += '<div class="recycle-header">'
-                        html += '<span class="recycle-user">' + (blogItem.user ? blogItem.user.nickName : '用户') + '</span>'
-                        html += '<span class="recycle-time" data-time="' + blogItem.deletedAt + '">'
-                        html += '<i class="fa fa-trash"></i> 删除于 刚刚'
-                        html += '</span>'
-                        html += '</div>'
-                        html += '<div class="recycle-blog">'
-                        html += '<div class="recycle-blog-content">' + blogItem.contentFormat + '</div>'
-                        if (blogItem.image) {
-                            html += '<div class="recycle-blog-image">'
-                            html += '<img src="' + blogItem.image + '" alt="微博图片">'
-                            html += '</div>'
-                        }
-                        html += '</div>'
-                        html += '<div class="recycle-actions">'
-                        html += '<div class="recycle-stats">'
-                        if (blogItem.likeCount > 0) {
-                            html += '<span class="stat-item"><i class="fa fa-thumbs-up"></i> ' + blogItem.likeCount + '</span>'
-                        }
-                        if (blogItem.collectCount > 0) {
-                            html += '<span class="stat-item"><i class="fa fa-star"></i> ' + blogItem.collectCount + '</span>'
-                        }
-                        html += '</div>'
-                        html += '<div class="action-buttons">'
-                        html += '<button class="btn btn-sm btn-outline-primary btn-restore" title="恢复微博"><i class="fa fa-undo"></i> 恢复</button>'
-                        html += '<button class="btn btn-sm btn-outline-danger btn-permanent-delete" title="彻底删除"><i class="fa fa-times"></i> 彻底删除</button>'
-                        html += '</div>'
-                        html += '</div>'
-                        html += '</div>'
-                        html += '</div>'
-                    })
-                    
-                    $('#container-recycle-list').append(html)
-                    formatAllTimes()
-                    
-                    if (res.data.count <= (currentPage + 1) * pageSize) {
-                        $btn.hide()
-                    } else {
-                        $btn.prop('disabled', false).text('加载更多')
-                    }
-                } else {
-                    $btn.hide()
-                }
-            },
-            error: function() {
-                showToast('error', '加载失败', '网络错误，请稍后重试')
+        ajax.get('/api/recycle/list', {
+            pageIndex: currentPage,
+            pageSize: pageSize
+        }, function(err, res) {
+            if (err) {
+                showToast('error', '加载失败', err.message || '网络错误，请稍后重试')
                 $btn.prop('disabled', false).text('加载更多')
                 currentPage--
+                return
+            }
+            
+            if (res && res.data && res.data.blogList.length > 0) {
+                var html = ''
+                res.data.blogList.forEach(function(blogItem) {
+                    html += '<div class="recycle-item" data-blog-id="' + blogItem.id + '">'
+                    html += '<div class="recycle-avatar">'
+                    html += '<img src="' + (blogItem.user ? blogItem.user.picture : '/images/1724131894164-avatar.png') + '" alt="头像">'
+                    html += '</div>'
+                    html += '<div class="recycle-content">'
+                    html += '<div class="recycle-header">'
+                    html += '<span class="recycle-user">' + (blogItem.user ? blogItem.user.nickName : '用户') + '</span>'
+                    html += '<span class="recycle-time" data-time="' + blogItem.deletedAt + '">'
+                    html += '<i class="fa fa-trash"></i> 删除于 刚刚'
+                    html += '</span>'
+                    html += '</div>'
+                    html += '<div class="recycle-blog">'
+                    html += '<div class="recycle-blog-content">' + blogItem.contentFormat + '</div>'
+                    if (blogItem.image) {
+                        html += '<div class="recycle-blog-image">'
+                        html += '<img src="' + blogItem.image + '" alt="微博图片">'
+                        html += '</div>'
+                    }
+                    html += '</div>'
+                    html += '<div class="recycle-actions">'
+                    html += '<div class="action-buttons">'
+                    html += '<button class="btn btn-sm btn-outline-primary btn-restore" title="恢复微博"><i class="fa fa-undo"></i> 恢复</button>'
+                    html += '<button class="btn btn-sm btn-outline-danger btn-permanent-delete" title="彻底删除"><i class="fa fa-times"></i> 彻底删除</button>'
+                    html += '</div>'
+                    html += '</div>'
+                    html += '</div>'
+                    html += '</div>'
+                })
+                
+                $('#container-recycle-list').append(html)
+                formatAllTimes()
+                bindEvents()
+                
+                if (res.data.count <= (currentPage + 1) * pageSize) {
+                    $btn.hide()
+                } else {
+                    $btn.prop('disabled', false).text('加载更多')
+                }
+            } else {
+                $btn.hide()
             }
         })
     })

@@ -893,6 +893,16 @@ $(function () {
             html += '&nbsp;';
             
             if (currentUserId > 0 && blog.userId === currentUserId) {
+                html += '<div class="dropdown" style="display: inline-block; margin-right: 10px;">';
+                html += '<a href="#" class="blog-visible-type-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+                html += '<i class="fa fa-eye"></i> 权限';
+                html += '</a>';
+                html += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="min-width: 120px;">';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="0">公开</a>';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="1">仅自己可见</a>';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="2">仅粉丝可见</a>';
+                html += '</div>';
+                html += '</div>';
                 html += '<a href="#" class="blog-delete-btn text-danger"';
                 html += ' data-blog-id="' + blog.id + '"';
                 html += '>';
@@ -1049,6 +1059,25 @@ $(function () {
                 $item.fadeOut(300, function() {
                     $(this).remove();
                 });
+            });
+        });
+        
+        $('.dropdown-menu a[data-visible-type]').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var visibleType = $btn.data('visible-type');
+            var visibleTypeName = $btn.text();
+            
+            ajax.post('/api/blog/update-visible-type', { blogId: blogId, visibleType: visibleType }, function(err) {
+                if (err) {
+                    var errorMsg = err.message || err;
+                    window.showToast('error', '修改失败', errorMsg);
+                    return;
+                }
+                
+                window.showToast('success', '修改成功', '微博权限已修改为' + visibleTypeName);
             });
         });
         

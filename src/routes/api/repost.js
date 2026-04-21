@@ -5,10 +5,9 @@
 
 const router = require("koa-router")({ prefix: "/api/repost" })
 const { loginCheck } = require("../../middlewares/loginChecks")
-const { genValidator } = require("../../middlewares/validator")
 const { create, cancel, check, getList, getRepostInfo } = require("../../controller/repost")
 
-router.post("/create", loginCheck, genValidator("blog"), async (ctx, next) => {
+router.post("/create", loginCheck, async (ctx, next) => {
     const { sourceBlogId, content } = ctx.request.body
     ctx.body = await create(ctx, { sourceBlogId, content })
 })

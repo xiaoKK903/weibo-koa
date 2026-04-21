@@ -28,7 +28,7 @@
             <%= amIFollowed ? '已关注' : '关注' %>
         </button>
         &nbsp;
-        <button class="btn btn-danger btn-sm block-btn" data-user-id="<%= userInfo.id%>" data-blocked="<%= amIBlocked%>">
+        <button class="btn btn-danger btn-sm block-btn" data-user-id="<%= userInfo.id%>" data-blocked="<%= amIBlocked || false%>">
             <%= amIBlocked ? '取消屏蔽' : '屏蔽该用户' %>
         </button>
     </div>

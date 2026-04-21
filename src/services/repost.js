@@ -331,10 +331,36 @@ async function createRepost(userId, sourceBlogId, content = '') {
         }
     }
     
+    const currentUser = await User.findOne({
+        where: {
+            id: userId
+        },
+        attributes: ['id', 'userName', 'nickName', 'picture']
+    })
+    
+    const formattedBlog = formatBlog(newBlog)
+    const formattedUser = formatUser(currentUser.dataValues)
+    
+    const collectCount = 0
+    const isCollected = false
+    const likeCount = 0
+    const isLiked = false
+    const repostCount = 0
+    
+    const completeBlog = {
+        ...formattedBlog,
+        user: formattedUser,
+        collectCount,
+        isCollected,
+        likeCount,
+        isLiked,
+        repostCount
+    }
+    
     return {
         success: true,
         data: {
-            blog: newBlog,
+            blog: completeBlog,
             repostLevel,
             rootBlogId
         }

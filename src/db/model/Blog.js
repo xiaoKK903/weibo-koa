@@ -5,6 +5,7 @@
 
 const seq = require('../seq')
 const { INTEGER, STRING, TEXT, DATE } = require('../types')
+const { VISIBLE_TYPE } = require('../../conf/visibleType')
 
 const Blog = seq.define('blog', {
     userId: {
@@ -25,6 +26,12 @@ const Blog = seq.define('blog', {
         type: DATE,
         allowNull: true,
         comment: '软删除时间戳，null 表示未删除'
+    },
+    visibleType: {
+        type: INTEGER,
+        allowNull: false,
+        defaultValue: VISIBLE_TYPE.PUBLIC,
+        comment: '可见权限类型：0-公开，1-仅自己可见，2-仅粉丝可见'
     }
 })
 

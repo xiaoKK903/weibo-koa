@@ -7,38 +7,147 @@ const { Blog, User, UserRelation, Comment, Collect, Like } = require('../db/mode
 const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
 const { Op } = require('sequelize')
+const { VISIBLE_TYPE, getVisibleTypeInfo } = require('../conf/visibleType')
+const { checkFollowStatus } = require('./follow')
 
 const DEFAULT_WHERE = {
     deletedAt: null
 }
 
 /**
- * 创建微博
- * @param {Object} param0 创建微博的数据 { userId, content, image }
+ * 检查用户是否有权限查看微博
+ * @param {Object} blog 微博对象
+ * @param {number} currentUserId 当前用户ID
  */
-async function createBlog({ userId, content, image }) {
+async function canViewBlog(blog, currentUserId = null) {
+    if (!blog) {
+        return false
+    }
+    
+    const visibleType = blog.visibleType !== undefined ? blog.visibleType : VISIBLE_TYPE.PUBLIC
+    const blogUserId = blog.userId
+    
+    if (visibleType === VISIBLE_TYPE.PUBLIC) {
+        return true
+    }
+    
+    if (visibleType === VISIBLE_TYPE.PRIVATE) {
+        return currentUserId !== null && currentUserId === blogUserId
+    }
+    
+    if (visibleType === VISIBLE_TYPE.FANS_ONLY) {
+        if (currentUserId === blogUserId) {
+            return true
+        }
+        if (!currentUserId) {
+            return false
+        }
+        return await checkFollowStatus(currentUserId, blogUserId)
+    }
+    
+    return true
+}
+
+/**
+ * 构建可见权限的查询条件
+ * @param {number} currentUserId 当前用户ID
+ * @param {number} targetUserId 目标用户ID（可选，用于个人主页查询）
+ */
+async function buildVisibleWhere(currentUserId = null, targetUserId = null) {
+    const whereClauses = []
+    
+    whereClauses.push({
+        visibleType: VISIBLE_TYPE.PUBLIC
+    })
+    
+    if (currentUserId) {
+        if (currentUserId === targetUserId) {
+            return {
+                [Op.or]: [
+                    { visibleType: VISIBLE_TYPE.PUBLIC },
+                    { visibleType: VISIBLE_TYPE.PRIVATE },
+                    { visibleType: VISIBLE_TYPE.FANS_ONLY }
+                ]
+            }
+        }
+        
+        whereClauses.push({
+            userId: currentUserId,
+            visibleType: {
+                [Op.in]: [VISIBLE_TYPE.PRIVATE, VISIBLE_TYPE.FANS_ONLY]
+            }
+        })
+        
+        whereClauses.push({
+            visibleType: VISIBLE_TYPE.FANS_ONLY,
+            userId: {
+                [Op.ne]: currentUserId
+            }
+        })
+    }
+    
+    return {
+        [Op.or]: whereClauses
+    }
+}
+
+/**
+ * 创建微博
+ * @param {Object} param0 创建微博的数据 { userId, content, image, visibleType }
+ */
+async function createBlog({ userId, content, image, visibleType = VISIBLE_TYPE.PUBLIC }) {
     const result = await Blog.create({
         userId,
         content,
-        image
+        image,
+        visibleType
     })
     return result.dataValues
 }
 
 /**
+ * 更新微博可见权限
+ * @param {number} blogId 微博ID
+ * @param {number} userId 用户ID
+ * @param {number} visibleType 可见权限类型
+ */
+async function updateBlogVisibleType(blogId, userId, visibleType) {
+    const blog = await Blog.findOne({
+        where: {
+            id: blogId,
+            ...DEFAULT_WHERE
+        }
+    })
+    
+    if (!blog) {
+        return { success: false, message: '微博不存在' }
+    }
+    
+    if (blog.userId !== userId) {
+        return { success: false, message: '无权限修改该微博' }
+    }
+    
+    if (!Object.values(VISIBLE_TYPE).includes(visibleType)) {
+        return { success: false, message: '无效的可见权限类型' }
+    }
+    
+    await blog.update({ visibleType })
+    
+    return { success: true, visibleType }
+}
+
+/**
  * 根据用户获取微博列表
- * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10, userId, keyword }
+ * @param {Object} param0 查询参数 { userName, pageIndex = 0, pageSize = 10, userId, keyword, currentUserId }
  */
 async function getBlogListByUser(
-    { userName, pageIndex = 0, pageSize = 10, userId, keyword }
+    { userName, pageIndex = 0, pageSize = 10, userId, keyword, currentUserId }
 ) {
-    // 拼接查询条件
     const userWhereOpts = {}
     if (userName) {
         userWhereOpts.userName = userName
     }
 
-    // 搜索条件
     const blogWhereOpts = {
         ...DEFAULT_WHERE
     }
@@ -48,10 +157,9 @@ async function getBlogListByUser(
         }
     }
 
-    // 执行查询
     const result = await Blog.findAndCountAll({
-        limit: pageSize, // 每页多少条
-        offset: pageSize * pageIndex, // 跳过多少条
+        limit: pageSize,
+        offset: pageSize * pageIndex,
         order: [
             ['id', 'desc']
         ],
@@ -64,13 +172,9 @@ async function getBlogListByUser(
             }
         ]
     })
-    // result.count 总数，跟分页无关
-    // result.rows 查询结果，数组
 
-    // 获取 dataValues
     let blogList = result.rows.map(row => row.dataValues)
 
-    // 格式化
     blogList = formatBlog(blogList)
     blogList = blogList.map(blogItem => {
         const user = blogItem.user.dataValues
@@ -78,16 +182,21 @@ async function getBlogListByUser(
         return blogItem
     })
 
-    // 添加收藏状态和收藏数、点赞状态和点赞数
-    blogList = await Promise.all(blogList.map(async (blogItem) => {
-        // 获取收藏数
+    const filteredBlogList = []
+    for (const blogItem of blogList) {
+        const canView = await canViewBlog(blogItem, currentUserId)
+        if (canView) {
+            filteredBlogList.push(blogItem)
+        }
+    }
+
+    const blogListWithExtra = await Promise.all(filteredBlogList.map(async (blogItem) => {
         const collectCount = await Collect.count({
             where: {
                 blogId: blogItem.id
             }
         })
         
-        // 检查当前用户是否收藏
         let isCollected = false
         if (userId) {
             const collect = await Collect.findOne({
@@ -99,14 +208,12 @@ async function getBlogListByUser(
             isCollected = !!collect
         }
 
-        // 获取点赞数
         const likeCount = await Like.count({
             where: {
                 blogId: blogItem.id
             }
         })
         
-        // 检查当前用户是否点赞
         let isLiked = false
         if (userId) {
             const like = await Like.findOne({
@@ -128,8 +235,8 @@ async function getBlogListByUser(
     }))
 
     return {
-        count: result.count,
-        blogList
+        count: blogListWithExtra.length,
+        blogList: blogListWithExtra
     }
 }
 
@@ -139,8 +246,8 @@ async function getBlogListByUser(
  */
 async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
     const result = await Blog.findAndCountAll({
-        limit: pageSize, // 每页多少条
-        offset: pageSize * pageIndex, // 跳过多少条
+        limit: pageSize,
+        offset: pageSize * pageIndex,
         order: [
             ['id', 'desc']
         ],
@@ -153,7 +260,6 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         ]
     })
 
-    // 格式化数据
     let blogList = result.rows.map(row => row.dataValues)
     blogList = formatBlog(blogList)
     blogList = blogList.map(blogItem => {
@@ -161,16 +267,21 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         return blogItem
     })
 
-    // 添加收藏状态和收藏数、点赞状态和点赞数
-    blogList = await Promise.all(blogList.map(async (blogItem) => {
-        // 获取收藏数
+    const filteredBlogList = []
+    for (const blogItem of blogList) {
+        const canView = await canViewBlog(blogItem, userId)
+        if (canView) {
+            filteredBlogList.push(blogItem)
+        }
+    }
+
+    const blogListWithExtra = await Promise.all(filteredBlogList.map(async (blogItem) => {
         const collectCount = await Collect.count({
             where: {
                 blogId: blogItem.id
             }
         })
         
-        // 检查当前用户是否收藏
         let isCollected = false
         if (userId) {
             const collect = await Collect.findOne({
@@ -182,14 +293,12 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
             isCollected = !!collect
         }
 
-        // 获取点赞数
         const likeCount = await Like.count({
             where: {
                 blogId: blogItem.id
             }
         })
         
-        // 检查当前用户是否点赞
         let isLiked = false
         if (userId) {
             const like = await Like.findOne({
@@ -211,8 +320,8 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
     }))
 
     return {
-        count: result.count,
-        blogList
+        count: blogListWithExtra.length,
+        blogList: blogListWithExtra
     }
 }
 
@@ -239,20 +348,22 @@ async function getBlogById(blogId, userId = null) {
         return null
     }
 
-    // 格式化
     const blog = result.dataValues
+
+    const canView = await canViewBlog(blog, userId)
+    if (!canView) {
+        return null
+    }
+
     const formattedBlog = formatBlog(blog)
     formattedBlog.user = formatUser(formattedBlog.user.dataValues)
 
-    // 添加收藏状态和收藏数
-    // 获取收藏数
     const collectCount = await Collect.count({
         where: {
             blogId: blogId
         }
     })
     
-    // 检查当前用户是否收藏
     let isCollected = false
     if (userId) {
         const collect = await Collect.findOne({
@@ -264,15 +375,12 @@ async function getBlogById(blogId, userId = null) {
         isCollected = !!collect
     }
 
-    // 添加点赞状态和点赞数
-    // 获取点赞数
     const likeCount = await Like.count({
         where: {
             blogId: blogId
         }
     })
     
-    // 检查当前用户是否点赞
     let isLiked = false
     if (userId) {
         const like = await Like.findOne({
@@ -547,5 +655,7 @@ module.exports = {
     getCommentById,
     deleteComment,
     likeComment,
-    unlikeComment
+    unlikeComment,
+    canViewBlog,
+    updateBlogVisibleType
 }

@@ -5,7 +5,7 @@
 
 const router = require('koa-router')()
 const { loginCheck } = require('../../middlewares/loginChecks')
-const { create } = require('../../controller/blog-home')
+const { create, updateVisibleType, getVisibleTypeListCtrl } = require('../../controller/blog-home')
 const { genValidator } = require('../../middlewares/validator')
 const blogValidate = require('../../validator/blog')
 const { getHomeBlogList } = require('../../controller/blog-home')
@@ -15,16 +15,15 @@ const { loginCheckFailInfo, createBlogFailInfo } = require('../../model/ErrorInf
 
 router.prefix('/api/blog')
 
-// 创建微博
 router.post('/create', loginCheck, genValidator(blogValidate), async (ctx, next) => {
   try {
-    const { content, image } = ctx.request.body
+    const { content, image, visibleType } = ctx.request.body
     if (!ctx.session || !ctx.session.userInfo) {
       ctx.body = new ErrorModel(loginCheckFailInfo)
       return
     }
     const { id: userId } = ctx.session.userInfo
-    ctx.body = await create({ userId, content, image })
+    ctx.body = await create({ userId, content, image, visibleType })
   } catch (error) {
     console.error('CRITICAL_ERROR_TRACE: create blog error')
     console.error('Error:', error)
@@ -33,18 +32,16 @@ router.post('/create', loginCheck, genValidator(blogValidate), async (ctx, next)
   }
 })
 
-// 加载更多
 router.get('/loadMore/:pageIndex', loginCheck, async (ctx, next) => {
   try {
     let { pageIndex } = ctx.params
-    pageIndex = parseInt(pageIndex)  // 转换 number 类型
+    pageIndex = parseInt(pageIndex)
     if (!ctx.session || !ctx.session.userInfo) {
       ctx.body = new ErrorModel(loginCheckFailInfo)
       return
     }
     const { id: userId } = ctx.session.userInfo
     const result = await getHomeBlogList(userId, pageIndex)
-    // 渲染模板
     result.data.blogListTpl = getBlogListStr(result.data.blogList)
 
     ctx.body = result
@@ -54,6 +51,34 @@ router.get('/loadMore/:pageIndex', loginCheck, async (ctx, next) => {
     console.error('Error stack:', error.stack || error)
     ctx.body = new ErrorModel(createBlogFailInfo)
   }
+})
+
+router.post('/update-visible-type', loginCheck, async (ctx, next) => {
+  try {
+    const { blogId, visibleType } = ctx.request.body
+    if (!ctx.session || !ctx.session.userInfo) {
+      ctx.body = new ErrorModel(loginCheckFailInfo)
+      return
+    }
+    const { id: userId } = ctx.session.userInfo
+    const blogIdNum = parseInt(blogId)
+    const visibleTypeNum = parseInt(visibleType)
+    
+    if (isNaN(blogIdNum)) {
+      ctx.body = new ErrorModel({ errno: 400, message: '无效的微博 ID' })
+      return
+    }
+    
+    ctx.body = await updateVisibleType(userId, blogIdNum, visibleTypeNum)
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: update visible type error')
+    console.error('Error:', error)
+    ctx.body = new ErrorModel({ errno: 500, message: '修改权限失败' })
+  }
+})
+
+router.get('/visible-types', loginCheck, async (ctx, next) => {
+  ctx.body = await getVisibleTypeListCtrl()
 })
 
 module.exports = router

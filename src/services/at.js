@@ -7,6 +7,7 @@ const { At, User, Blog, Comment } = require('../db/model/index')
 const { formatUser, formatBlog, formatComment } = require('./_format')
 const Sequelize = require('sequelize')
 const Op = Sequelize.Op
+const { checkIsBlockedBy, checkBlockStatus } = require('./block')
 
 /**
  * 从内容中提取 @用户名
@@ -74,14 +75,27 @@ async function createAtReminder(fromUserId, toUserIds, blogId, commentId = null,
     }
     
     // 过滤掉自己 @自己 的情况
-    const validToUserIds = toUserIds.filter(id => id !== fromUserId)
+    let validToUserIds = toUserIds.filter(id => id !== fromUserId)
     
     if (validToUserIds.length === 0) {
         return
     }
     
+    // 过滤掉屏蔽发送者的用户
+    const filteredToUserIds = []
+    for (const toUserId of validToUserIds) {
+        const isBlockedBy = await checkIsBlockedBy(fromUserId, toUserId)
+        if (!isBlockedBy) {
+            filteredToUserIds.push(toUserId)
+        }
+    }
+    
+    if (filteredToUserIds.length === 0) {
+        return
+    }
+    
     // 批量创建 @提醒
-    const promises = validToUserIds.map(toUserId => {
+    const promises = filteredToUserIds.map(toUserId => {
         return At.findOrCreate({
             where: {
                 fromUserId,
@@ -175,7 +189,26 @@ async function getAtListByUserId(toUserId, pageIndex = 0, pageSize = 10, onlyUnr
         ]
     })
     
-    const atList = result.rows.map(row => row.dataValues)
+    let atList = result.rows.map(row => row.dataValues)
+    
+    // 过滤掉被屏蔽用户的@提醒
+    const filteredAtList = []
+    for (const item of atList) {
+        const fromUserId = item.fromUserId
+        
+        const isBlocked = await checkBlockStatus(toUserId, fromUserId)
+        if (isBlocked) {
+            continue
+        }
+        
+        const isBlockedBy = await checkIsBlockedBy(toUserId, fromUserId)
+        if (isBlockedBy) {
+            continue
+        }
+        
+        filteredAtList.push(item)
+    }
+    atList = filteredAtList
     
     // 格式化数据
     const formattedList = atList.map(item => {
@@ -196,7 +229,7 @@ async function getAtListByUserId(toUserId, pageIndex = 0, pageSize = 10, onlyUnr
     })
     
     return {
-        count: result.count,
+        count: atList.length,
         atList: formattedList
     }
 }

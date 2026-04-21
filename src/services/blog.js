@@ -9,6 +9,7 @@ const { timeFormat } = require('../utils/dt')
 const { Op } = require('sequelize')
 const { VISIBLE_TYPE, getVisibleTypeInfo } = require('../conf/visibleType')
 const { checkFollowStatus } = require('./follow')
+const { checkBlockStatus, checkIsBlockedBy } = require('./block')
 
 const DEFAULT_WHERE = {
     deletedAt: null
@@ -26,6 +27,18 @@ async function canViewBlog(blog, currentUserId = null) {
     
     const visibleType = blog.visibleType !== undefined ? blog.visibleType : VISIBLE_TYPE.PUBLIC
     const blogUserId = blog.userId
+    
+    if (currentUserId) {
+        const isBlocked = await checkBlockStatus(currentUserId, blogUserId)
+        if (isBlocked) {
+            return false
+        }
+        
+        const isBlockedBy = await checkIsBlockedBy(currentUserId, blogUserId)
+        if (isBlockedBy) {
+            return false
+        }
+    }
     
     if (visibleType === VISIBLE_TYPE.PUBLIC) {
         return true
@@ -499,10 +512,30 @@ async function getCommentsByBlogId(blogId, userId = null) {
         return commentItem
     }))
     
+    if (userId) {
+        const filteredCommentList = []
+        for (const commentItem of commentList) {
+            const commentUserId = commentItem.userId
+            
+            const isBlocked = await checkBlockStatus(userId, commentUserId)
+            if (isBlocked) {
+                continue
+            }
+            
+            const isBlockedBy = await checkIsBlockedBy(userId, commentUserId)
+            if (isBlockedBy) {
+                continue
+            }
+            
+            filteredCommentList.push(commentItem)
+        }
+        commentList = filteredCommentList
+    }
+    
     const nestedComments = buildNestedComments(commentList)
 
     return {
-        count: result.count,
+        count: commentList.length,
         commentList: nestedComments
     }
 }

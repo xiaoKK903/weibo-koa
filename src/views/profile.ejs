@@ -105,5 +105,44 @@
                 })
             }
         })
+        
+        // 屏蔽/取消屏蔽
+        $('.block-btn').click(function() {
+            var $btn = $(this)
+            var userId = $btn.data('user-id')
+            var isBlocked = $btn.data('blocked')
+            
+            if (isBlocked) {
+                // 取消屏蔽
+                ajax.post('/api/block/cancel', {
+                    blockedId: userId
+                }, function(err, data) {
+                    if (err) {
+                        alert(err)
+                        return
+                    }
+                    // 更新按钮状态
+                    $btn.text('屏蔽该用户')
+                    $btn.data('blocked', false)
+                    alert('已取消屏蔽该用户')
+                })
+            } else {
+                // 屏蔽
+                if (confirm('确定要屏蔽该用户吗？屏蔽后将不再看到对方的微博、评论和@提醒。')) {
+                    ajax.post('/api/block/create', {
+                        blockedId: userId
+                    }, function(err, data) {
+                        if (err) {
+                            alert(err)
+                            return
+                        }
+                        // 更新按钮状态
+                        $btn.text('取消屏蔽')
+                        $btn.data('blocked', true)
+                        alert('已屏蔽该用户')
+                    })
+                }
+            }
+        })
     })
 </script>

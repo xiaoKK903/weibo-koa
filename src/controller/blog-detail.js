@@ -21,6 +21,7 @@ const xss = require('xss')
 const { contentSecurityCheck, setDuplicateCache } = require('../middlewares/contentSecurity')
 const { addPoint } = require("../services/point");
 const { ACTION_TYPES } = require("../conf/pointRules");
+const { checkIsBlockedBy } = require('../services/block');
 
 /**
  * 获取微博详情
@@ -44,6 +45,25 @@ async function createComment({ blogId, userId, content, parentId = null, replyUs
     // - parentId为null：一级评论（直接对微博评论），使用 'comment' 类型
     // - parentId有值：楼中楼回复（对评论的回复），使用 'reply' 类型
     const contentType = parentId ? 'reply' : 'comment';
+    
+    // 检查是否被微博作者屏蔽
+    const blog = await getBlogById(blogId, userId);
+    if (!blog) {
+        return new ErrorModel(blogNotExistInfo);
+    }
+    
+    const isBlockedByBlogAuthor = await checkIsBlockedBy(userId, blog.userId);
+    if (isBlockedByBlogAuthor) {
+        return new ErrorModel({ errno: -1, message: '评论失败' });
+    }
+    
+    // 如果是回复评论，检查是否被回复的用户屏蔽
+    if (replyUserId && replyUserId !== userId) {
+        const isBlockedByReplyUser = await checkIsBlockedBy(userId, replyUserId);
+        if (isBlockedByReplyUser) {
+            return new ErrorModel({ errno: -1, message: '评论失败' });
+        }
+    }
     
     const securityCheck = await contentSecurityCheck(
         userId, 

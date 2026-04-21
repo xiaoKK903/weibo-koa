@@ -131,4 +131,38 @@ router.get("/report-records", loginRedirect, async (ctx, next) => {
   }
 });
 
+// 黑名单管理页面
+router.get("/block-list", loginRedirect, async (ctx, next) => {
+  try {
+    console.log('=== block-list page ===');
+    
+    const userId = ctx.session.userInfo.id;
+    const userInfo = ctx.session.userInfo;
+    
+    // 获取已屏蔽用户列表
+    const { getBlockedUsers, getBlockedCount } = require('../../services/block');
+    const blockedList = await getBlockedUsers(userId);
+    const blockedCount = await getBlockedCount(userId);
+    
+    await ctx.render("block-list", {
+      isLogin: true,
+      userInfo: userInfo,
+      blockedList: blockedList,
+      blockedCount: blockedCount
+    });
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: block-list page error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    
+    // 渲染错误页面或返回错误信息
+    ctx.status = 500;
+    ctx.body = {
+      code: -1,
+      msg: "服务器内部错误",
+      error: process.env.NODE_ENV === "development" ? error.message : ""
+    };
+  }
+});
+
 module.exports = router;

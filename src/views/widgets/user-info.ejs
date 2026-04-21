@@ -22,10 +22,14 @@
         </a>
     </p>
 <% } else { %>
-    <%# 不是当前登录用户，显示关注按钮%>
+    <%# 不是当前登录用户，显示关注按钮和屏蔽按钮%>
     <div class="margin-top-10">
         <button class="btn btn-primary btn-sm follow-btn" data-user-id="<%= userInfo.id%>" data-followed="<%= amIFollowed%>">
             <%= amIFollowed ? '已关注' : '关注' %>
+        </button>
+        &nbsp;
+        <button class="btn btn-danger btn-sm block-btn" data-user-id="<%= userInfo.id%>" data-blocked="<%= amIBlocked%>">
+            <%= amIBlocked ? '取消屏蔽' : '屏蔽该用户' %>
         </button>
     </div>
 <% } %>

@@ -14,7 +14,6 @@ const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
 const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
 const { getRecycleList } = require("../../controller/recycle");
-const { checkBlockStatus } = require("../../services/block");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -97,10 +96,8 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
   let amIFollowed = false;
-  let amIBlocked = false;
   if (!isMe) {
     amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
-    amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
   }
 
   const followingCount = await getFollowingCount(curUserInfo.id);
@@ -133,7 +130,6 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
         list: [],
       },
       amIFollowed,
-      amIBlocked,
       atCount: 0,
     },
   });

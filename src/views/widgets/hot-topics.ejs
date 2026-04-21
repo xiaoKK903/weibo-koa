@@ -4,14 +4,12 @@
         <i class="fa fa-fire"></i> 热门话题
     </div>
     <div class="hot-topics-list">
-        <% hotTopics.forEach((topic, index) => { %>
+        <% for (let i = 0; i < hotTopics.length; i++) { 
+            const topic = hotTopics[i];
+        %>
         <div class="hot-topic-item">
             <div class="hot-topic-rank">
-                <% if (index < 3) { %>
-                <span class="rank-top"><%= index + 1 %></span>
-                <% } else { %>
-                <span class="rank-normal"><%= index + 1 %></span>
-                <% } %>
+                <span class="<%= i < 3 ? 'rank-top' : 'rank-normal' %>"><%= i + 1 %></span>
             </div>
             <div class="hot-topic-content">
                 <a href="/topic/<%= encodeURIComponent(topic.name) %>" class="hot-topic-link">#<%= topic.name %>#</a>
@@ -20,58 +18,68 @@
                 </div>
             </div>
         </div>
-        <% }) %>
+        <% } %>
     </div>
 </div>
 <% } %>
-
 <style>
-/* 热门话题样式 */
-.hot-topics-list {
-    padding: 10px 0;
+.right-item {
+    margin-bottom: 20px;
 }
-
+.right-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+.hot-topics-list {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 10px;
+}
 .hot-topic-item {
     display: flex;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f1f1;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
 }
-
 .hot-topic-item:last-child {
     border-bottom: none;
 }
-
 .hot-topic-rank {
-    width: 30px;
+    width: 24px;
     text-align: center;
     margin-right: 10px;
 }
-
+.rank-top {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+.rank-normal {
+    color: #6c757d;
+    font-size: 12px;
+}
 .hot-topic-content {
     flex: 1;
 }
-
 .hot-topic-link {
-    display: block;
     color: #007bff;
-    font-size: 14px;
-    line-height: 1.4;
-    margin-bottom: 5px;
+    font-size: 13px;
     text-decoration: none;
-    transition: color 0.3s ease;
 }
-
 .hot-topic-link:hover {
-    color: #0056b3;
     text-decoration: underline;
 }
-
 .hot-topic-meta {
-    font-size: 12px;
-    color: #999;
-}
-
-.hot-topic-count {
-    margin-right: 10px;
+    font-size: 11px;
+    color: #6c757d;
+    margin-top: 2px;
 }
 </style>

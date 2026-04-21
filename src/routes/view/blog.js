@@ -67,6 +67,7 @@ router.get("/", loginRedirect, async (ctx, next) => {
       count,
     },
     hotPosts,
+    hotTopics,
   });
 });
 

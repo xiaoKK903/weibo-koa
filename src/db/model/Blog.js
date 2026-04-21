@@ -32,13 +32,16 @@ const Blog = seq.define('blog', {
         allowNull: false,
         defaultValue: VISIBLE_TYPE.PUBLIC,
         comment: '可见权限类型：0-公开，1-仅自己可见，2-仅粉丝可见'
-    },
+    }
+    // 暂时注释掉，等待数据库表结构更新
+    /*
     isBlocked: {
         type: INTEGER,
         allowNull: false,
         defaultValue: 0,
         comment: '是否被风控限流隐藏：0-正常，1-被隐藏'
     }
+    */
 })
 
 module.exports = Blog

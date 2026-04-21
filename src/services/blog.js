@@ -42,7 +42,13 @@ async function canViewBlog(blog, currentUserId = null) {
         if (!currentUserId) {
             return false
         }
-        return await checkFollowStatus(currentUserId, blogUserId)
+        try {
+            const isFollowing = await checkFollowStatus(currentUserId, blogUserId)
+            return isFollowing
+        } catch (error) {
+            console.error('检查关注状态失败:', error)
+            return false
+        }
     }
     
     return true

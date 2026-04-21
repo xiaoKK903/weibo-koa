@@ -8,6 +8,8 @@ const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { collectFailInfo, cancelCollectFailInfo, getCollectsFailInfo } = require('../model/ErrorInfo')
 const { addPoint } = require("../services/point");
 const { ACTION_TYPES } = require("../conf/pointRules");
+const { getBlogById } = require('../services/blog');
+const { checkBlockStatus, checkIsBlockedBy } = require('../services/block');
 
 /**
  * 收藏微博
@@ -22,6 +24,25 @@ async function collect(ctx, blogId) {
         if (collect) {
             return new SuccessModel() // 已经收藏，返回成功
         }
+        
+        // 检查微博是否存在以及是否有权限访问
+        const blog = await getBlogById(blogId, userId)
+        if (!blog) {
+            return new ErrorModel(collectFailInfo)
+        }
+        
+        // 检查是否已屏蔽微博作者
+        const isBlocked = await checkBlockStatus(userId, blog.userId)
+        if (isBlocked) {
+            return new ErrorModel(collectFailInfo)
+        }
+        
+        // 检查是否被微博作者屏蔽
+        const isBlockedBy = await checkIsBlockedBy(userId, blog.userId)
+        if (isBlockedBy) {
+            return new ErrorModel(collectFailInfo)
+        }
+        
         // 创建收藏
         await createCollect(userId, blogId)
         

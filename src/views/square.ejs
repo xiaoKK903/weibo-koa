@@ -47,7 +47,10 @@
                 <!-- 微博列表 -->
                 <div id="container-weibo-list" class="weibo-list">
                     <%- include('widgets/blog-list', {
-                        blogList: blogData.blogList
+                        blogList: blogData.blogList,
+                        canReply: canReply,
+                        isLogin: isLogin,
+                        currentUserId: currentUserId
                     })%>
                 </div> <!-- 微博列表 结束 -->
                 <!-- 加载更多 -->

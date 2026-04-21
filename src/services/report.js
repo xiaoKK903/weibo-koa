@@ -67,6 +67,8 @@ async function createReport({ reporterId, reportedUserId, targetType, targetId, 
 
     // 如果举报数达到阈值，触发风控限流隐藏
     if (reportCount >= 3) {
+        // 暂时注释掉，等待数据库表结构更新
+        /*
         if (targetType === TARGET_TYPE.BLOG) {
             await Blog.update(
                 { isBlocked: 1 },
@@ -78,6 +80,7 @@ async function createReport({ reporterId, reportedUserId, targetType, targetId, 
                 { where: { id: targetId } }
             )
         }
+        */
     }
 
     return { success: true, reportId: result.id }

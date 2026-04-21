@@ -11,8 +11,7 @@ const { VISIBLE_TYPE, getVisibleTypeInfo } = require('../conf/visibleType')
 const { checkFollowStatus } = require('./follow')
 
 const DEFAULT_WHERE = {
-    deletedAt: null,
-    isBlocked: 0
+    deletedAt: null
 }
 
 /**

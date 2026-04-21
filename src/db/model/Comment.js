@@ -43,13 +43,16 @@ const Comment = seq.define("comment", {
     allowNull: false,
     defaultValue: false,
     comment: "是否已删除",
-  },
+  }
+  // 暂时注释掉，等待数据库表结构更新
+  /*
   isBlocked: {
     type: BOOLEAN,
     allowNull: false,
     defaultValue: false,
     comment: "是否被风控限流隐藏",
   },
+  */
 });
 
 module.exports = Comment;

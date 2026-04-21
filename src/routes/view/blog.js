@@ -496,6 +496,7 @@ router.get("/topic/:topicName", loginRedirect, async (ctx, next) => {
     unreadAtCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userInfo.id,
+    currentTopicName: decodedTopicName,
     topicData: {
       topic,
       blogs: blogResult.blogs,

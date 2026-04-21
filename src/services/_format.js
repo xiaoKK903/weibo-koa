@@ -75,14 +75,63 @@ function _formatDBTime(obj) {
 }
 
 /**
+ * 提取HTML摘要（保留指定的HTML标签）
+ * @param {string} html HTML内容
+ * @param {number} length 摘要长度
+ */
+function _getHtmlSummary(html, length = 80) {
+    const tagsToKeep = ['a'];
+    
+    const placeholderMap = {};
+    let placeholderIndex = 0;
+    
+    const processedHtml = html.replace(/<(a)\b[^>]*>.*?<\/\1>|<(\w+)[^>]*>.*?<\/\2>/gi, (match, tagName) => {
+        if (tagsToKeep.includes(tagName)) {
+            const placeholder = `__HTML_PLACEHOLDER_${placeholderIndex}__`;
+            placeholderMap[placeholder] = match;
+            placeholderIndex++;
+            return placeholder;
+        }
+        return match.replace(/<[^>]*>/g, '');
+    });
+    
+    const cleanHtml = processedHtml.replace(/<(?!\/?a\b)[^>]*>/g, '');
+    
+    let result = '';
+    let charCount = 0;
+    let i = 0;
+    
+    while (i < cleanHtml.length && charCount < length) {
+        const placeholderMatch = cleanHtml.substring(i).match(/^__HTML_PLACEHOLDER_\d+__/);
+        
+        if (placeholderMatch) {
+            const placeholder = placeholderMatch[0];
+            result += placeholderMap[placeholder];
+            i += placeholder.length;
+            charCount += 1;
+        } else {
+            result += cleanHtml[i];
+            if (cleanHtml[i] !== ' ') {
+                charCount++;
+            }
+            i++;
+        }
+    }
+    
+    if (i < cleanHtml.length) {
+        result += '...';
+    }
+    
+    return result;
+}
+
+/**
  * 提取纯文本并截取摘要
  * @param {string} html HTML内容
  * @param {number} length 摘要长度
  */
 function _getPlainTextSummary(html, length = 80) {
-    // 移除HTML标签
     const plainText = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
-    // 截取前length个字符
     return plainText.length > length ? plainText.substring(0, length) + '...' : plainText
 }
 
@@ -121,8 +170,8 @@ function _formatContent(obj) {
         }
     )
 
-    // 添加纯文本摘要
-    obj.contentSummary = _getPlainTextSummary(obj.content)
+    // 添加HTML摘要（保留@和话题链接）
+    obj.contentSummary = _getHtmlSummary(obj.contentFormat)
 
     return obj
 }

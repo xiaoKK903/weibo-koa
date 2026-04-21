@@ -55,6 +55,11 @@
                 hotPosts: hotPosts
             })%>
 
+            <!-- 热门话题 -->
+            <%- include('widgets/hot-topics', {
+                hotTopics: hotTopics
+            })%>
+
             <!-- 粉丝 -->
             <%- include('widgets/fans', {
                 count: userData.fansData.count,

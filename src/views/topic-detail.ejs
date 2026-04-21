@@ -1,0 +1,406 @@
+<%- include('layout/header', { title: '微博 - #' + topicData.topic.name + '#', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <!-- 左侧 -->
+        <div class="col-8">
+            <!-- 话题信息头部 -->
+            <div class="topic-header margin-bottom-20">
+                <div class="topic-info">
+                    <h2 class="topic-title">
+                        <i class="fa fa-hashtag"></i> #<%= topicData.topic.name %>#
+                    </h2>
+                    <div class="topic-stats">
+                        <span class="stat-item">
+                            <i class="fa fa-comment-o"></i>
+                            <span class="stat-value"><%= topicData.topic.blogCount %></span>
+                            <span class="stat-label">条动态</span>
+                        </span>
+                        <% if (topicData.topic.lastActivityAt) { %>
+                        <span class="stat-item">
+                            <i class="fa fa-clock-o"></i>
+                            <span class="stat-label">最后活跃: <%= topicData.topic.lastActivityAt.toLocaleString() %></span>
+                        </span>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入框 -->
+            <%- include('widgets/input')%>
+
+            <h4 class="margin-bottom-20 padding-bottom-10 border-bottom">
+                话题动态
+            </h4>
+
+            <% if (topicData.blogs.length === 0) { %>
+                <div>
+                    <center>该话题下暂无动态，快来发布第一条带 #<%= topicData.topic.name %># 的微博吧！</center>
+                </div>
+            <% } else { %>
+                <!-- 微博列表 -->
+                <div id="container-weibo-list" class="weibo-list">
+                    <%- include('widgets/blog-list', {
+                        blogList: topicData.blogs,
+                        canReply: true,
+                        isLogin: isLogin,
+                        currentUserId: currentUserId
+                    })%>
+                </div> <!-- 微博列表 结束 -->
+                <!-- 加载更多 -->
+                <% if (topicData.count > topicData.blogs.length) { %>
+                    <div class="load-more-wrapper text-center margin-top-20">
+                        <button class="load-more-btn btn btn-outline-primary"
+                            data-topic-id="<%= topicData.topic.id %>"
+                            data-page-size="<%= topicData.pageSize %>"
+                            data-page-index="<%= topicData.pageIndex %>"
+                            data-count="<%= topicData.count %>"
+                            data-container-selector="#container-weibo-list">
+                            加载更多
+                        </button>
+                        <div class="loading" style="display: none;">加载中...</div>
+                        <div class="no-more" style="display: none;">没有更多了</div>
+                    </div>
+                <% } %> <!-- 加载更多 结束 -->
+            <% } %>
+        </div> <!-- 左侧结束 -->
+        
+        <!-- 右侧 -->
+        <div class="col-4 right-col">
+            <div class="right-container">
+                <h5 class="right-title">
+                    <i class="fa fa-fire"></i> 热门话题
+                </h5>
+                <div class="hot-topic-list">
+                    <% if (hotTopics && hotTopics.length > 0) { %>
+                        <% hotTopics.forEach(function(topic, index) { %>
+                        <div class="hot-topic-item">
+                            <span class="hot-topic-rank <%= index < 3 ? 'top-three' : '' %>"><%= index + 1 %></span>
+                            <a href="/topic/<%= encodeURIComponent(topic.name) %>" class="hot-topic-name">
+                                #<%= topic.name %>#
+                            </a>
+                            <span class="hot-topic-count"><%= topic.blogCount %> 条</span>
+                        </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="text-muted text-center">暂无热门话题</div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<style>
+/* 话题头部样式 */
+.topic-header {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.topic-info {
+    text-align: left;
+}
+
+.topic-title {
+    margin: 0 0 15px 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.topic-title .fa {
+    color: #007bff;
+    margin-right: 8px;
+}
+
+.topic-stats {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #666;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    color: #999;
+}
+
+/* 右侧热门话题样式 */
+.right-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+}
+
+.right-title {
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
+
+.hot-topic-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.hot-topic-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f8f8;
+}
+
+.hot-topic-item:last-child {
+    border-bottom: none;
+}
+
+.hot-topic-rank {
+    width: 24px;
+    font-size: 13px;
+    color: #999;
+}
+
+.hot-topic-rank.top-three {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.hot-topic-name {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    margin: 0 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-topic-name:hover {
+    color: #007bff;
+}
+
+.hot-topic-count {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .topic-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .right-col {
+        margin-top: 20px;
+    }
+}
+</style>
+
+<script>
+$(function () {
+    // 加载更多功能
+    $(document).off('click', '.load-more-btn').on('click', '.load-more-btn', function () {
+        var $btn = $(this);
+        var topicId = parseInt($btn.data('topic-id'));
+        var pageSize = parseInt($btn.data('pageSize'));
+        var pageIndex = parseInt($btn.data('pageIndex'));
+        var count = parseInt($btn.data('count'));
+        var containerSelector = $btn.data('containerSelector');
+        
+        var $loading = $btn.siblings('.loading');
+        var $noMore = $btn.siblings('.no-more');
+        var $container = $(containerSelector);
+        
+        $btn.hide();
+        $loading.show();
+        
+        var apiUrl = '/api/topic/blogs?topicId=' + topicId + '&pageIndex=' + (pageIndex + 1);
+        
+        $.ajax({
+            url: apiUrl,
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    var blogs = res.data.blogs;
+                    
+                    blogs.forEach(function(blog) {
+                        var blogHtml = renderBlogHtml(blog);
+                        $container.append(blogHtml);
+                    });
+                    
+                    var newPageIndex = pageIndex + 1;
+                    var newCount = (newPageIndex + 1) * pageSize;
+                    
+                    if (newCount >= count) {
+                        $loading.hide();
+                        $noMore.show();
+                    } else {
+                        $loading.hide();
+                        $btn.show();
+                        $btn.data('pageIndex', newPageIndex);
+                    }
+                    
+                    bindBlogEvents();
+                } else {
+                    alert(res.message || '加载失败');
+                    $loading.hide();
+                    $btn.show();
+                }
+            },
+            error: function () {
+                alert('加载失败，请重试');
+                $loading.hide();
+                $btn.show();
+            }
+        });
+    });
+    
+    // 渲染单个微博 HTML
+    function renderBlogHtml(blog) {
+        var user = blog.user || {};
+        var imagesHtml = '';
+        
+        if (blog.image) {
+            var images = blog.image.split(',').filter(function(img) { return img && img.trim(); });
+            var imageCount = images.length;
+            var containerClass = imageCount > 1 ? 'multi-image' : 'single-image';
+            
+            imagesHtml = '<div class="blog-images-container ' + containerClass + '">';
+            
+            images.forEach(function(img, idx) {
+                if (idx < 9) {
+                    var moreOverlay = '';
+                    if (imageCount > 3 && idx === 2) {
+                        moreOverlay = '<span class="more-images-overlay">+' + (imageCount - 3) + '</span>';
+                    }
+                    
+                    imagesHtml += '<a href="' + img.trim() + '" target="_blank" class="blog-image-link">';
+                    imagesHtml += '<img class="blog-img" src="' + img.trim() + '" />';
+                    imagesHtml += moreOverlay;
+                    imagesHtml += '</a>';
+                }
+            });
+            
+            imagesHtml += '</div>';
+        }
+        
+        var html = '';
+        html += '<div class="item-wrapper" data-blog-id="' + blog.id + '">';
+        html += '<img class="user-picture" src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '"/>';
+        html += '<div class="content clear-fix blog-content-wrapper">';
+        html += imagesHtml;
+        html += '<a href="/profile/' + (user.userName || '') + '">';
+        html += (user.nickName || user.userName || '用户');
+        html += '</a>';
+        html += '<span class="blog-user-level-badge" data-user-id="' + user.id + '" style="display: none;">';
+        html += '<span class="blog-level-number">L1</span>';
+        html += '</span>:';
+        html += '<span class="blog-content-summary">' + (blog.contentSummary || '') + '</span>';
+        html += '<a href="/detail/' + blog.id + '" class="blog-detail-link">查看全文</a>';
+        html += '</div>';
+        
+        html += '<div class="info">';
+        html += '<span>' + (blog.createdAtFormat || '') + '</span>';
+        html += '&nbsp;';
+        
+        var currentUserId = window.currentUserId || 0;
+        if (currentUserId > 0) {
+            html += '<a href="#" class="blog-repost-btn"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += ' data-user-id="' + blog.userId + '"';
+            html += ' data-user-name="' + (user.userName || '') + '"';
+            html += ' data-nick-name="' + (user.nickName || '') + '"';
+            html += ' data-content="' + (blog.content || '') + '"';
+            html += ' data-image="' + (blog.image || '') + '"';
+            html += '>';
+            html += '<i class="fa fa-retweet"></i> 转发';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="repost-count" data-blog-id="' + blog.id + '">' + (blog.repostCount || 0) + '</span>';
+            html += '&nbsp;';
+        }
+        
+        if (currentUserId > 0) {
+            html += '<a href="#" class="blog-list-reply"';
+            html += ' data-content="' + (blog.content || '') + '"';
+            html += ' data-userName="' + (user.userName || '') + '"';
+            html += ' data-nickName="' + (user.nickName || '') + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa fa-comment"></i> 回复';
+            html += '</a>';
+            html += '&nbsp;';
+        }
+        
+        if (currentUserId > 0) {
+            var isCollected = blog.isCollected;
+            var collectClass = isCollected ? 'collected' : '';
+            var collectIcon = isCollected ? 'fa-star' : 'fa-star-o';
+            var collectText = isCollected ? '已收藏' : '收藏';
+            
+            html += '<a href="#" class="blog-collect-btn ' + collectClass + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa ' + collectIcon + ' collect-icon"></i> <span class="collect-text">' + collectText + '</span>';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="collect-count" data-blog-id="' + blog.id + '">' + (blog.collectCount || 0) + '</span>';
+            html += '&nbsp;';
+            
+            var isLiked = blog.isLiked;
+            var likeClass = isLiked ? 'liked' : '';
+            var likeIcon = isLiked ? 'fa-thumbs-up' : 'fa-thumbs-o-up';
+            var likeText = isLiked ? '已赞' : '赞';
+            
+            html += '<a href="#" class="blog-like-btn ' + likeClass + '"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += '>';
+            html += '<i class="fa ' + likeIcon + ' like-icon"></i> <span class="like-text">' + likeText + '</span>';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="like-count" data-blog-id="' + blog.id + '">' + (blog.likeCount || 0) + '</span>';
+            html += '&nbsp;';
+        }
+        
+        html += '</div>';
+        
+        html += '<div class="comment-section" data-blog-id="' + blog.id + '" style="display: none;">';
+        html += '<div class="comment-input-box">';
+        html += '<textarea class="comment-input" placeholder="写下你的评论..."></textarea>';
+        html += '<button class="btn-comment-submit" data-blog-id="' + blog.id + '">发表评论</button>';
+        html += '</div>';
+        html += '<div class="comment-list-area" data-blog-id="' + blog.id + '">';
+        html += '<div class="no-comments">暂无评论</div>';
+        html += '</div>';
+        html += '</div>';
+        
+        html += '</div>';
+        
+        return html;
+    }
+});
+</script>

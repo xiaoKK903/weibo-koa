@@ -17,6 +17,8 @@ const PointLog = require('./PointLog')
 const Report = require('./Report')
 const Block = require('./Block')
 const Repost = require('./Repost')
+const Topic = require('./Topic')
+const BlogTopic = require('./BlogTopic')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -310,6 +312,36 @@ Blog.hasMany(Repost, {
     as: 'allReposts'
 })
 
+BlogTopic.belongsTo(Blog, {
+    foreignKey: 'blogId'
+})
+
+BlogTopic.belongsTo(Topic, {
+    foreignKey: 'topicId'
+})
+
+Blog.belongsToMany(Topic, {
+    through: BlogTopic,
+    foreignKey: 'blogId',
+    otherKey: 'topicId',
+    as: 'topics'
+})
+
+Topic.belongsToMany(Blog, {
+    through: BlogTopic,
+    foreignKey: 'topicId',
+    otherKey: 'blogId',
+    as: 'blogs'
+})
+
+Blog.hasMany(BlogTopic, {
+    foreignKey: 'blogId'
+})
+
+Topic.hasMany(BlogTopic, {
+    foreignKey: 'topicId'
+})
+
 module.exports = {
     User,
     Blog,
@@ -324,5 +356,7 @@ module.exports = {
     PointLog,
     Report,
     Block,
-    Repost
+    Repost,
+    Topic,
+    BlogTopic
 }

@@ -107,6 +107,19 @@ function _formatContent(obj) {
             return `<a href="/profile/${userName}">@${displayName}</a>`
         }
     )
+    
+    // 格式化 #话题#
+    // 格式：#话题内容# 或 #话题内容
+    obj.contentFormat = obj.contentFormat.replace(
+        /#([^#\s]+)(?:#)?/g,
+        (matchStr, topicName) => {
+            if (!topicName || topicName.trim() === '') {
+                return matchStr
+            }
+            const encodedTopicName = encodeURIComponent(topicName)
+            return `<a href="/topic/${encodedTopicName}">#${topicName}#</a>`
+        }
+    )
 
     // 添加纯文本摘要
     obj.contentSummary = _getPlainTextSummary(obj.content)

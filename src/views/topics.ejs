@@ -1,0 +1,508 @@
+<%- include('layout/header', { title: '微博 - 话题广场', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <!-- 左侧 -->
+        <div class="col-8">
+            <!-- 搜索框 -->
+            <div class="search-box margin-bottom-20">
+                <form id="topicSearchForm" class="form-inline">
+                    <div class="input-group w-100">
+                        <input type="text" class="form-control" id="topicSearchKeyword" placeholder="搜索话题..." value="<%= topicData.keyword || '' %>">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-search"></i> 搜索
+                            </button>
+                            <% if (topicData.keyword) { %>
+                            <button type="button" class="btn btn-outline-secondary" id="clearTopicSearch">
+                                清除
+                            </button>
+                            <% } %>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 排序选项 -->
+            <div class="topic-sort-bar margin-bottom-20">
+                <div class="sort-links">
+                    <a href="/topics?sortBy=hot" class="sort-link <%= topicData.sortBy === 'hot' ? 'active' : '' %>">
+                        <i class="fa fa-fire"></i> 热门话题
+                    </a>
+                    <span class="sort-divider">|</span>
+                    <a href="/topics?sortBy=new" class="sort-link <%= topicData.sortBy === 'new' ? 'active' : '' %>">
+                        <i class="fa fa-clock-o"></i> 最新话题
+                    </a>
+                </div>
+            </div>
+
+            <h4 class="margin-bottom-20 padding-bottom-10 border-bottom">
+                <% if (topicData.keyword) { %>
+                搜索 "<%= topicData.keyword %>" 共找到 <%= topicData.count %> 个话题
+                <% } else { %>
+                话题广场
+                <% } %>
+            </h4>
+
+            <% if (topicData.topics.length === 0) { %>
+                <div>
+                    <center>暂无话题，快来发布带 #话题# 的微博吧！</center>
+                </div>
+            <% } else { %>
+                <!-- 话题列表 -->
+                <div id="topic-list" class="topic-list">
+                    <% topicData.topics.forEach(function(topic, index) { %>
+                    <div class="topic-item" data-topic-id="<%= topic.id %>" data-topic-name="<%= topic.name %>">
+                        <div class="topic-rank">
+                            <% if (index < 3) { %>
+                            <span class="rank-badge rank-<%= index + 1 %>"><%= index + 1 %></span>
+                            <% } else { %>
+                            <span class="rank-number"><%= index + 1 %></span>
+                            <% } %>
+                        </div>
+                        <div class="topic-content">
+                            <a href="/topic/<%= encodeURIComponent(topic.name) %>" class="topic-name">
+                                #<%= topic.name %>#
+                            </a>
+                            <div class="topic-meta">
+                                <span class="topic-count">
+                                    <i class="fa fa-comment-o"></i> <%= topic.blogCount %> 条动态
+                                </span>
+                                <% if (topic.lastActivityAt) { %>
+                                <span class="topic-time">
+                                    <i class="fa fa-clock-o"></i> 最后活跃: <%= topic.lastActivityAt.toLocaleString() %>
+                                </span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div> <!-- 话题列表 结束 -->
+                <!-- 加载更多 -->
+                <% if (topicData.count > topicData.topics.length) { %>
+                    <div class="load-more-wrapper text-center margin-top-20">
+                        <button class="load-more-btn btn btn-outline-primary"
+                            data-page-size="<%= topicData.pageSize %>"
+                            data-page-index="<%= topicData.pageIndex %>"
+                            data-count="<%= topicData.count %>"
+                            data-sort-by="<%= topicData.sortBy %>"
+                            data-keyword="<%= topicData.keyword || '' %>">
+                            加载更多
+                        </button>
+                        <div class="loading" style="display: none;">加载中...</div>
+                        <div class="no-more" style="display: none;">没有更多了</div>
+                    </div>
+                <% } %> <!-- 加载更多 结束 -->
+            <% } %>
+        </div> <!-- 左侧结束 -->
+        
+        <!-- 右侧 -->
+        <div class="col-4 right-col">
+            <div class="right-container">
+                <h5 class="right-title">
+                    <i class="fa fa-fire"></i> 热门话题
+                </h5>
+                <div class="hot-topic-list">
+                    <% if (hotTopics && hotTopics.length > 0) { %>
+                        <% hotTopics.forEach(function(topic, index) { %>
+                        <div class="hot-topic-item">
+                            <span class="hot-topic-rank <%= index < 3 ? 'top-three' : '' %>"><%= index + 1 %></span>
+                            <a href="/topic/<%= encodeURIComponent(topic.name) %>" class="hot-topic-name">
+                                #<%= topic.name %>#
+                            </a>
+                            <span class="hot-topic-count"><%= topic.blogCount %> 条</span>
+                        </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="text-muted text-center">暂无热门话题</div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<style>
+/* 搜索框样式 */
+.search-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.search-box .input-group {
+    display: flex;
+}
+
+.search-box .form-control {
+    flex: 1;
+    border-radius: 6px 0 0 6px;
+    border: 2px solid #e0e0e0;
+    padding: 10px 15px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    height: 48px;
+    box-sizing: border-box;
+}
+
+.search-box .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.search-box .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 0 6px 6px 0;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 48px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-box .btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.search-box .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.search-box .btn-outline-secondary {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 2px solid #e0e0e0;
+    margin-left: 5px;
+    border-radius: 6px;
+}
+
+.search-box .btn-outline-secondary:hover {
+    background: #e9ecef;
+}
+
+/* 排序栏样式 */
+.topic-sort-bar {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.sort-links {
+    display: flex;
+    align-items: center;
+}
+
+.sort-link {
+    color: #666;
+    text-decoration: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.sort-link:hover {
+    background: #f0f0f0;
+    color: #007bff;
+}
+
+.sort-link.active {
+    background: #007bff;
+    color: white;
+}
+
+.sort-divider {
+    color: #ddd;
+    margin: 0 10px;
+}
+
+/* 话题列表样式 */
+.topic-list {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.topic-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.topic-item:hover {
+    background: #fafafa;
+}
+
+.topic-item:last-child {
+    border-bottom: none;
+}
+
+.topic-rank {
+    width: 40px;
+    text-align: center;
+    margin-right: 15px;
+    padding-top: 5px;
+}
+
+.rank-badge {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+}
+
+.rank-badge.rank-1 {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+}
+
+.rank-badge.rank-2 {
+    background: linear-gradient(135deg, #ffa502 0%, #ff9500 100%);
+}
+
+.rank-badge.rank-3 {
+    background: linear-gradient(135deg, #ffd93d 0%, #ffcd00 100%);
+}
+
+.rank-number {
+    color: #999;
+    font-size: 14px;
+}
+
+.topic-content {
+    flex: 1;
+}
+
+.topic-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.topic-name:hover {
+    color: #007bff;
+}
+
+.topic-meta {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #999;
+}
+
+.topic-count {
+    margin-right: 15px;
+}
+
+.topic-time {
+    color: #bbb;
+}
+
+/* 右侧热门话题样式 */
+.right-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+}
+
+.right-title {
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
+
+.hot-topic-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.hot-topic-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f8f8;
+}
+
+.hot-topic-item:last-child {
+    border-bottom: none;
+}
+
+.hot-topic-rank {
+    width: 24px;
+    font-size: 13px;
+    color: #999;
+}
+
+.hot-topic-rank.top-three {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.hot-topic-name {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    margin: 0 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-topic-name:hover {
+    color: #007bff;
+}
+
+.hot-topic-count {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .search-box .input-group {
+        flex-direction: column;
+    }
+    
+    .search-box .form-control {
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+    
+    .search-box .input-group-append {
+        width: 100%;
+        display: flex;
+    }
+    
+    .search-box .btn {
+        flex: 1;
+        border-radius: 6px;
+    }
+    
+    .right-col {
+        margin-top: 20px;
+    }
+}
+</style>
+
+<script>
+$(function () {
+    // 搜索功能
+    $('#topicSearchForm').submit(function (e) {
+        e.preventDefault();
+        var keyword = $('#topicSearchKeyword').val().trim();
+        if (keyword) {
+            window.location.href = '/topics?keyword=' + encodeURIComponent(keyword);
+        } else {
+            window.location.href = '/topics';
+        }
+    });
+
+    // 清除搜索
+    $('#clearTopicSearch').click(function () {
+        window.location.href = '/topics';
+    });
+
+    // 加载更多功能
+    $(document).off('click', '.load-more-btn').on('click', '.load-more-btn', function () {
+        var $btn = $(this);
+        var pageSize = parseInt($btn.data('pageSize'));
+        var pageIndex = parseInt($btn.data('pageIndex'));
+        var count = parseInt($btn.data('count'));
+        var sortBy = $btn.data('sortBy');
+        var keyword = $btn.data('keyword');
+        
+        var $loading = $btn.siblings('.loading');
+        var $noMore = $btn.siblings('.no-more');
+        
+        $btn.hide();
+        $loading.show();
+        
+        var apiUrl = '/api/topic/list?pageIndex=' + (pageIndex + 1) + '&sortBy=' + sortBy;
+        if (keyword) {
+            apiUrl = '/api/topic/search?keyword=' + encodeURIComponent(keyword) + '&pageIndex=' + (pageIndex + 1);
+        }
+        
+        $.ajax({
+            url: apiUrl,
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    var topics = res.data.topics;
+                    var $topicList = $('#topic-list');
+                    
+                    topics.forEach(function(topic, idx) {
+                        var newIndex = (pageIndex + 1) * pageSize + idx;
+                        var rankHtml = '';
+                        
+                        if (newIndex < 3) {
+                            rankHtml = '<span class="rank-badge rank-' + (newIndex + 1) + '">' + (newIndex + 1) + '</span>';
+                        } else {
+                            rankHtml = '<span class="rank-number">' + (newIndex + 1) + '</span>';
+                        }
+                        
+                        var lastActivityAt = topic.lastActivityAt ? topic.lastActivityAt : '';
+                        
+                        var html = '<div class="topic-item" data-topic-id="' + topic.id + '" data-topic-name="' + topic.name + '">';
+                        html += '<div class="topic-rank">' + rankHtml + '</div>';
+                        html += '<div class="topic-content">';
+                        html += '<a href="/topic/' + encodeURIComponent(topic.name) + '" class="topic-name">#' + topic.name + '#</a>';
+                        html += '<div class="topic-meta">';
+                        html += '<span class="topic-count"><i class="fa fa-comment-o"></i> ' + topic.blogCount + ' 条动态</span>';
+                        if (lastActivityAt) {
+                            html += '<span class="topic-time"><i class="fa fa-clock-o"></i> 最后活跃: ' + lastActivityAt + '</span>';
+                        }
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                        
+                        $topicList.append(html);
+                    });
+                    
+                    var newPageIndex = pageIndex + 1;
+                    var newCount = (newPageIndex + 1) * pageSize;
+                    
+                    if (newCount >= count) {
+                        $loading.hide();
+                        $noMore.show();
+                    } else {
+                        $loading.hide();
+                        $btn.show();
+                        $btn.data('pageIndex', newPageIndex);
+                    }
+                } else {
+                    alert(res.message || '加载失败');
+                    $loading.hide();
+                    $btn.show();
+                }
+            },
+            error: function () {
+                alert('加载失败，请重试');
+                $loading.hide();
+                $btn.show();
+            }
+        });
+    });
+});
+</script>

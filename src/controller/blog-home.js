@@ -14,6 +14,7 @@ const { contentSecurityCheck, setDuplicateCache } = require("../middlewares/cont
 const { addPoint } = require("../services/point");
 const { ACTION_TYPES } = require("../conf/pointRules");
 const { VISIBLE_TYPE, getVisibleTypeInfo, getVisibleTypeList } = require("../conf/visibleType");
+const { extractTopics, associateBlogWithTopics } = require("../services/topic");
 
 /**
  * 创建微博
@@ -56,6 +57,11 @@ async function create({ userId, content, image, visibleType = VISIBLE_TYPE.PUBLI
 
     if (atUserIdList.length > 0) {
       await createAtReminder(userId, atUserIdList, blog.id, null, 'blog');
+    }
+    
+    const topics = extractTopics(content);
+    if (topics.length > 0) {
+      await associateBlogWithTopics(blog.id, topics);
     }
 
     await setDuplicateCache(userId, securityCheck.normalizedContent, 'blog');

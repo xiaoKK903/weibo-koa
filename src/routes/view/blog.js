@@ -14,6 +14,7 @@ const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
 const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
 const { getRecycleList } = require("../../controller/recycle");
+const { getTopicList, getTopicDetail, getTopicBlogs, getHotTopics } = require("../../services/topic");
 
 // 首页
 router.get("/", loginRedirect, async (ctx, next) => {
@@ -416,6 +417,89 @@ router.get("/drafts", loginRedirect, async (ctx, next) => {
     isLogin: true,
     unreadAtCount,
     currentUserId: userInfo.id,
+  });
+});
+
+// 话题广场页面
+router.get("/topics", loginRedirect, async (ctx, next) => {
+  const userInfo = ctx.session.userInfo;
+  const { keyword, pageIndex, sortBy } = ctx.query;
+
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(userInfo.id);
+  
+  let topicResult;
+  if (keyword && keyword.trim()) {
+    topicResult = await getTopicList(parseInt(pageIndex) || 0, 20, 'hot');
+  } else {
+    topicResult = await getTopicList(parseInt(pageIndex) || 0, 20, sortBy || 'hot');
+  }
+  
+  // 获取热门话题
+  const hotTopics = await getHotTopics(10);
+
+  await ctx.render("topics", {
+    isLogin: true,
+    unreadAtCount,
+    followingList: JSON.stringify(followingList),
+    currentUserId: userInfo.id,
+    topicData: {
+      topics: topicResult.topics,
+      count: topicResult.count,
+      pageIndex: parseInt(pageIndex) || 0,
+      pageSize: 20,
+      sortBy: sortBy || 'hot',
+      keyword
+    },
+    hotTopics
+  });
+});
+
+// 话题详情页
+router.get("/topic/:topicName", loginRedirect, async (ctx, next) => {
+  const userInfo = ctx.session.userInfo;
+  const { topicName } = ctx.params;
+  const { pageIndex } = ctx.query;
+
+  // URL 解码话题名称
+  const decodedTopicName = decodeURIComponent(topicName);
+  
+  // 获取未读 @提醒数量
+  const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  
+  // 获取关注列表（用于 @ 自动补全）
+  const followingList = await getFollowingList(userInfo.id);
+  
+  // 获取话题详情
+  const topic = await getTopicDetail(decodedTopicName);
+  
+  if (!topic) {
+    ctx.redirect("/topics");
+    return;
+  }
+  
+  // 获取话题下的微博
+  const blogResult = await getTopicBlogs(topic.id, parseInt(pageIndex) || 0, 10, userInfo.id);
+  
+  // 获取热门话题
+  const hotTopics = await getHotTopics(10);
+
+  await ctx.render("topic-detail", {
+    isLogin: true,
+    unreadAtCount,
+    followingList: JSON.stringify(followingList),
+    currentUserId: userInfo.id,
+    topicData: {
+      topic,
+      blogs: blogResult.blogs,
+      count: blogResult.count,
+      pageIndex: parseInt(pageIndex) || 0,
+      pageSize: 10
+    },
+    hotTopics
   });
 });
 

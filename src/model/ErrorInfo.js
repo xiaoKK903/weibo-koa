@@ -146,5 +146,23 @@ module.exports = {
     nickNameExistInfo: {
         errno: 17001,
         message: '该昵称已被使用，请换一个试试'
+    },
+
+    // 转发相关错误
+    repostFailInfo: {
+        errno: 18001,
+        message: '转发失败，请重试'
+    },
+    repostCancelFailInfo: {
+        errno: 18002,
+        message: '取消转发失败，请重试'
+    },
+    repostNotExistInfo: {
+        errno: 18003,
+        message: '转发记录不存在'
+    },
+    repostAlreadyExistInfo: {
+        errno: 18004,
+        message: '您已经转发过这条微博了'
     }
 }

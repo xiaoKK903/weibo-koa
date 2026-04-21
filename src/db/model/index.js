@@ -16,6 +16,7 @@ const UserLevel = require('./UserLevel')
 const PointLog = require('./PointLog')
 const Report = require('./Report')
 const Block = require('./Block')
+const Repost = require('./Repost')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -258,6 +259,57 @@ User.hasMany(Block, {
     as: 'beingBlockedUsers'
 })
 
+// 转发关联
+Repost.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'repostUser'
+})
+
+Repost.belongsTo(User, {
+    foreignKey: 'sourceUserId',
+    as: 'sourceUser'
+})
+
+Repost.belongsTo(User, {
+    foreignKey: 'rootUserId',
+    as: 'rootUser'
+})
+
+Repost.belongsTo(Blog, {
+    foreignKey: 'blogId',
+    as: 'repostBlog'
+})
+
+Repost.belongsTo(Blog, {
+    foreignKey: 'sourceBlogId',
+    as: 'sourceBlog'
+})
+
+Repost.belongsTo(Blog, {
+    foreignKey: 'rootBlogId',
+    as: 'rootBlog'
+})
+
+User.hasMany(Repost, {
+    foreignKey: 'userId',
+    as: 'myReposts'
+})
+
+Blog.hasMany(Repost, {
+    foreignKey: 'blogId',
+    as: 'repostRecords'
+})
+
+Blog.hasMany(Repost, {
+    foreignKey: 'sourceBlogId',
+    as: 'directReposts'
+})
+
+Blog.hasMany(Repost, {
+    foreignKey: 'rootBlogId',
+    as: 'allReposts'
+})
+
 module.exports = {
     User,
     Blog,
@@ -271,5 +323,6 @@ module.exports = {
     UserLevel,
     PointLog,
     Report,
-    Block
+    Block,
+    Repost
 }

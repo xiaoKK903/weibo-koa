@@ -32,6 +32,21 @@
         <div class="info">
             <span><%= blog.createdAtFormat%></span>
             &nbsp;
+            <% if (locals.isLogin) { %>
+            <a href="#" class="blog-repost-btn"
+                data-blog-id="<%= blog.id%>"
+                data-user-id="<%= blog.userId%>"
+                data-user-name="<%= blog.user.userName%>"
+                data-nick-name="<%= blog.user.nickName%>"
+                data-content="<%= blog.content%>"
+                data-image="<%= blog.image || ''%>"
+            >
+                <i class="fa fa-retweet"></i> 转发
+            </a>
+            &nbsp;
+            <span class="repost-count" data-blog-id="<%= blog.id%>"><%= blog.repostCount || 0%></span>
+            &nbsp;
+            <% } %>
             <% if (locals.canReply) { %>
             <%# 可以回复 %>
             <a href="#" class="blog-list-reply"
@@ -557,6 +572,204 @@
 .btn-report-submit:disabled {
     background: #ccc;
     cursor: not-allowed;
+}
+
+/* 转发弹窗样式 */
+.repost-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+}
+
+.repost-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.repost-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 550px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.repost-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.repost-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.repost-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.repost-modal-close:hover {
+    color: #333;
+}
+
+.repost-modal-body {
+    padding: 16px 20px;
+}
+
+.repost-source-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-left: 3px solid #007bff;
+}
+
+.repost-source-user {
+    margin-bottom: 8px;
+}
+
+.repost-source-nickname {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 14px;
+}
+
+.repost-source-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    max-height: 150px;
+    overflow-y: auto;
+    word-break: break-all;
+}
+
+.repost-source-image {
+    margin-top: 10px;
+}
+
+.repost-source-image img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.repost-input-container {
+    position: relative;
+}
+
+.repost-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.repost-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.repost-input::placeholder {
+    color: #aaa;
+}
+
+.repost-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-repost-cancel {
+    padding: 8px 24px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-repost-cancel:hover {
+    background: #f5f5f5;
+}
+
+.btn-repost-submit {
+    padding: 8px 28px;
+    background: #007bff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-repost-submit:hover {
+    background: #0056b3;
+}
+
+.btn-repost-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* 转发按钮样式 */
+.blog-repost-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.blog-repost-btn:hover {
+    color: #007bff;
+    background: rgba(0, 123, 255, 0.08);
+}
+
+.repost-count {
+    color: #999;
+    font-size: 13px;
 }
 
 /* 举报按钮样式 */
@@ -1185,6 +1398,22 @@ $(function () {
         html += '&nbsp;';
         
         if (currentUserId > 0) {
+            html += '<a href="#" class="blog-repost-btn"';
+            html += ' data-blog-id="' + blog.id + '"';
+            html += ' data-user-id="' + blog.userId + '"';
+            html += ' data-user-name="' + (user.userName || '') + '"';
+            html += ' data-nick-name="' + (user.nickName || '') + '"';
+            html += ' data-content="' + (blog.content || '') + '"';
+            html += ' data-image="' + (blog.image || '') + '"';
+            html += '>';
+            html += '<i class="fa fa-retweet"></i> 转发';
+            html += '</a>';
+            html += '&nbsp;';
+            html += '<span class="repost-count" data-blog-id="' + blog.id + '">' + (blog.repostCount || 0) + '</span>';
+            html += '&nbsp;';
+        }
+        
+        if (currentUserId > 0) {
             html += '<a href="#" class="blog-list-reply"';
             html += ' data-content="' + (blog.content || '') + '"';
             html += ' data-userName="' + (user.userName || '') + '"';
@@ -1613,6 +1842,21 @@ $(function () {
             
             openReportModal(blogId, targetType, commentId);
         });
+        
+        // 微博转发按钮点击事件
+        $('.blog-repost-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var userId = $btn.data('user-id');
+            var userName = $btn.data('user-name');
+            var nickName = $btn.data('nick-name');
+            var content = $btn.data('content');
+            var image = $btn.data('image');
+            
+            openRepostModal(blogId, userId, userName, nickName, content, image);
+        });
     }
     
     // 打开举报弹窗
@@ -1731,6 +1975,85 @@ $(function () {
     // 关闭举报弹窗
     function closeReportModal() {
         $('#report-modal').remove();
+    }
+    
+    // 打开转发弹窗
+    function openRepostModal(blogId, userId, userName, nickName, content, image) {
+        var modalHtml = '<div id="repost-modal" class="repost-modal" style="display: block;">';
+        modalHtml += '<div class="repost-modal-overlay"></div>';
+        modalHtml += '<div class="repost-modal-content">';
+        modalHtml += '<div class="repost-modal-header">';
+        modalHtml += '<h3>转发微博</h3>';
+        modalHtml += '<button class="repost-modal-close">&times;</button>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="repost-modal-body">';
+        modalHtml += '<div class="repost-source-info">';
+        modalHtml += '<div class="repost-source-user">';
+        modalHtml += '<span class="repost-source-nickname">@' + (nickName || userName) + '</span>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="repost-source-content">' + content + '</div>';
+        if (image) {
+            modalHtml += '<div class="repost-source-image"><img src="' + image + '" alt="配图" /></div>';
+        }
+        modalHtml += '</div>';
+        modalHtml += '<div class="repost-input-container">';
+        modalHtml += '<textarea class="repost-input" placeholder="说点什么..."></textarea>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="repost-modal-footer">';
+        modalHtml += '<button class="btn-repost-cancel">取消</button>';
+        modalHtml += '<button class="btn-repost-submit" data-blog-id="' + blogId + '">转发</button>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        
+        $('body').append(modalHtml);
+        $('.repost-input').focus();
+        
+        bindRepostModalEvents();
+    }
+    
+    // 绑定转发弹窗事件
+    function bindRepostModalEvents() {
+        $('.repost-modal-close, .repost-modal-overlay, .btn-repost-cancel').off('click').on('click', function() {
+            closeRepostModal();
+        });
+        
+        $('.btn-repost-submit').off('click').on('click', function() {
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var content = $('.repost-input').val().trim();
+            
+            $btn.prop('disabled', true);
+            $btn.text('转发中...');
+            
+            ajax.post('/api/repost/create', {
+                sourceBlogId: blogId,
+                content: content
+            }, function(err, data) {
+                $btn.prop('disabled', false);
+                $btn.text('转发');
+                
+                if (err) {
+                    var errorMsg = err.message || err;
+                    window.showToast('error', '转发失败', errorMsg);
+                    return;
+                }
+                
+                window.showToast('success', '转发成功', '微博已转发');
+                
+                var $countSpan = $('.repost-count[data-blog-id="' + blogId + '"]');
+                var currentCount = parseInt($countSpan.text()) || 0;
+                $countSpan.text(currentCount + 1);
+                
+                closeRepostModal();
+            });
+        });
+    }
+    
+    // 关闭转发弹窗
+    function closeRepostModal() {
+        $('#repost-modal').remove();
     }
     
     function renderCommentItem(comment, level, blogId) {

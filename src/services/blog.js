@@ -3,12 +3,13 @@
  * @author milk
  */
 
-const { Blog, User, Comment, Collect, Like } = require('../db/model/index')
+const { Blog, User, Comment, Collect, Like, Repost } = require('../db/model/index')
 const { formatUser, formatBlog } = require('./_format')
 const { timeFormat } = require('../utils/dt')
 const { Op } = require('sequelize')
 const { VISIBLE_TYPE, getVisibleTypeInfo } = require('../conf/visibleType')
 const { checkFollowStatus } = require('./follow')
+const { batchGetRepostCount, getRepostChain } = require('./repost')
 
 const DEFAULT_WHERE = {
     deletedAt: null
@@ -183,7 +184,7 @@ async function getBlogListByUser(
 
     blogList = formatBlog(blogList)
     blogList = blogList.map(blogItem => {
-        const user = blogItem.user.dataValues
+        const user = blogItem.user
         blogItem.user = formatUser(user)
         return blogItem
     })
@@ -195,6 +196,9 @@ async function getBlogListByUser(
             filteredBlogList.push(blogItem)
         }
     }
+
+    const blogIds = filteredBlogList.map(item => item.id)
+    const repostCountMap = await batchGetRepostCount(blogIds)
 
     const blogListWithExtra = await Promise.all(filteredBlogList.map(async (blogItem) => {
         const collectCount = await Collect.count({
@@ -231,12 +235,15 @@ async function getBlogListByUser(
             isLiked = !!like
         }
         
+        const repostCount = repostCountMap[blogItem.id] || 0
+        
         return {
             ...blogItem,
             collectCount,
             isCollected,
             likeCount,
-            isLiked
+            isLiked,
+            repostCount
         }
     }))
 
@@ -281,6 +288,9 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
         }
     }
 
+    const blogIds = filteredBlogList.map(item => item.id)
+    const repostCountMap = await batchGetRepostCount(blogIds)
+
     const blogListWithExtra = await Promise.all(filteredBlogList.map(async (blogItem) => {
         const collectCount = await Collect.count({
             where: {
@@ -316,12 +326,15 @@ async function getFollowersBlogList({ userId, pageIndex = 0, pageSize = 10 }) {
             isLiked = !!like
         }
         
+        const repostCount = repostCountMap[blogItem.id] || 0
+        
         return {
             ...blogItem,
             collectCount,
             isCollected,
             likeCount,
-            isLiked
+            isLiked,
+            repostCount
         }
     }))
 

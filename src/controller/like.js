@@ -8,6 +8,8 @@ const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { likeFailInfo, cancelLikeFailInfo, getLikesFailInfo } = require('../model/ErrorInfo')
 const { addPoint } = require("../services/point");
 const { ACTION_TYPES } = require("../conf/pointRules");
+const { getBlogById } = require('../services/blog');
+const { checkBlockStatus, checkIsBlockedBy } = require('../services/block');
 
 /**
  * 点赞微博
@@ -21,6 +23,25 @@ async function like(ctx, blogId) {
         if (like) {
             return new SuccessModel()
         }
+        
+        // 检查微博是否存在以及是否有权限访问
+        const blog = await getBlogById(blogId, userId)
+        if (!blog) {
+            return new ErrorModel(likeFailInfo)
+        }
+        
+        // 检查是否已屏蔽微博作者
+        const isBlocked = await checkBlockStatus(userId, blog.userId)
+        if (isBlocked) {
+            return new ErrorModel(likeFailInfo)
+        }
+        
+        // 检查是否被微博作者屏蔽
+        const isBlockedBy = await checkIsBlockedBy(userId, blog.userId)
+        if (isBlockedBy) {
+            return new ErrorModel(likeFailInfo)
+        }
+        
         await createLike(userId, blogId)
         
         addPoint(userId, ACTION_TYPES.LIKE, blogId).catch(err => {

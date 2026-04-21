@@ -8,6 +8,7 @@ const { SuccessModel, ErrorModel } = require('../model/ResModel')
 const { followFailInfo, unfollowFailInfo } = require('../model/ErrorInfo')
 const { addPoint } = require("../services/point");
 const { ACTION_TYPES } = require("../conf/pointRules");
+const { checkBlockStatus, checkIsBlockedBy } = require('../services/block');
 
 /**
  * 关注用户
@@ -18,6 +19,18 @@ async function follow(ctx, followingId) {
     const { id: followerId } = ctx.session.userInfo
     
     try {
+        // 检查是否已屏蔽该用户
+        const isBlocked = await checkBlockStatus(followerId, followingId)
+        if (isBlocked) {
+            return new ErrorModel({ errno: -1, message: '关注失败' })
+        }
+        
+        // 检查是否被该用户屏蔽
+        const isBlockedBy = await checkIsBlockedBy(followerId, followingId)
+        if (isBlockedBy) {
+            return new ErrorModel({ errno: -1, message: '关注失败' })
+        }
+        
         const result = await followUser(followerId, followingId)
         if (result) {
             addPoint(followerId, ACTION_TYPES.FOLLOW, followingId).catch(err => {

@@ -64,6 +64,14 @@
             <span class="like-count" data-blog-id="<%= blog.id%>"><%= blog.likeCount || 0%></span>
             &nbsp;
             <% if (locals.isLogin && blog.userId !== locals.currentUserId) { %>
+            <a href="#" class="blog-block-btn"
+                data-user-id="<%= blog.userId%>"
+                data-user-name="<%= blog.user.userName%>"
+                data-nick-name="<%= blog.user.nickName%>"
+            >
+                <i class="fa fa-ban"></i> 屏蔽
+            </a>
+            &nbsp;
             <a href="#" class="blog-report-btn"
                 data-blog-id="<%= blog.id%>"
                 data-target-type="1"
@@ -566,6 +574,24 @@
 .blog-report-btn:hover {
     color: #ff6b6b;
     background-color: rgba(255, 107, 107, 0.1);
+    text-decoration: none;
+}
+
+/* 屏蔽按钮样式 */
+.blog-block-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.blog-block-btn:hover {
+    color: #ff9f43;
+    background-color: rgba(255, 159, 67, 0.1);
     text-decoration: none;
 }
 
@@ -1200,6 +1226,14 @@ $(function () {
             html += '&nbsp;';
             
             if (currentUserId > 0 && blog.userId !== currentUserId) {
+                html += '<a href="#" class="blog-block-btn"';
+                html += ' data-user-id="' + blog.userId + '"';
+                html += ' data-user-name="' + (blog.user ? blog.user.userName : '') + '"';
+                html += ' data-nick-name="' + (blog.user ? blog.user.nickName : '') + '"';
+                html += '>';
+                html += '<i class="fa fa-ban"></i> 屏蔽';
+                html += '</a>';
+                html += '&nbsp;';
                 html += '<a href="#" class="blog-report-btn"';
                 html += ' data-blog-id="' + blog.id + '"';
                 html += ' data-target-type="1"';
@@ -1530,6 +1564,31 @@ $(function () {
                 window.showToast('success', '删除成功', '评论已删除');
                 loadComments(blogId);
             });
+        });
+        
+        // 微博屏蔽按钮点击事件
+        $('.blog-block-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var userId = $btn.data('user-id');
+            var nickName = $btn.data('nick-name') || '该用户';
+            
+            if (confirm('确定要屏蔽 ' + nickName + ' 吗？屏蔽后将不再看到对方的微博、评论和@提醒。')) {
+                ajax.post('/api/block/create', {
+                    blockedId: userId
+                }, function(err, data) {
+                    if (err) {
+                        alert(err);
+                        return;
+                    }
+                    alert('已屏蔽 ' + nickName);
+                    // 刷新页面或移除该微博
+                    $btn.closest('.item-wrapper').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                });
+            }
         });
         
         // 微博举报按钮点击事件

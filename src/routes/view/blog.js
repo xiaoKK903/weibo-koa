@@ -73,186 +73,70 @@ router.get("/profile", loginRedirect, async (ctx, next) => {
   ctx.redirect(`/profile/${userName}`);
 });
 router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
-  try {
-    console.log('=== profile page START ===');
-    
-    // 已登录用户的信息
-    const myUserInfo = ctx.session.userInfo;
-    console.log('myUserInfo:', myUserInfo);
-    
-    if (!myUserInfo) {
-      console.error('CRITICAL_ERROR: myUserInfo is null/undefined');
-      ctx.redirect("/login");
-      return;
-    }
-    
-    const myUserName = myUserInfo.userName;
-    console.log('myUserName:', myUserName);
+  const myUserInfo = ctx.session.userInfo;
+  const myUserName = myUserInfo.userName;
 
-    // 获取未读 @提醒数量
-    const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
+  const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
 
-    let curUserInfo;
-    const { userName: curUserName } = ctx.params;
-    console.log('curUserName:', curUserName);
-    
-    const isMe = myUserName === curUserName;
-    console.log('isMe:', isMe);
-    
-    if (isMe) {
-      // 是当前登录用户
-      curUserInfo = myUserInfo;
-      console.log('curUserInfo (self):', curUserInfo);
-    } else {
-      // 不是当前登录用户
-      console.log('Calling isExist for:', curUserName);
-      const existResult = await isExist(curUserName);
-      console.log('existResult:', existResult);
-      console.log('existResult.errno:', existResult.errno);
-      console.log('existResult.data:', existResult.data);
-      
-      if (existResult.errno !== 0) {
-        // 用户名不存在
-        console.log('User not found, redirecting to home');
-        ctx.redirect("/");
-        return;
-      }
-      // 用户名存在
-      curUserInfo = existResult.data;
-      console.log('curUserInfo (other):', curUserInfo);
-    }
-
-    // 确保 curUserInfo 有 id
-    if (!curUserInfo) {
-      console.error('CRITICAL_ERROR: curUserInfo is null/undefined');
+  let curUserInfo;
+  const { userName: curUserName } = ctx.params;
+  const isMe = myUserName === curUserName;
+  
+  if (isMe) {
+    curUserInfo = myUserInfo;
+  } else {
+    const existResult = await isExist(curUserName);
+    if (existResult.errno !== 0) {
       ctx.redirect("/");
       return;
     }
-    
-    if (!curUserInfo.id) {
-      console.error('CRITICAL_ERROR: curUserInfo.id is null/undefined');
-      console.error('curUserInfo:', JSON.stringify(curUserInfo));
-      // 尝试从其他属性获取 id
-      if (curUserInfo.data && curUserInfo.data.id) {
-        curUserInfo.id = curUserInfo.data.id;
-        console.log('Fixed: using curUserInfo.data.id:', curUserInfo.id);
-      } else {
-        ctx.redirect("/");
-        return;
-      }
-    }
-
-    console.log('curUserInfo.id:', curUserInfo.id);
-
-    // 获取微博第一页数据
-    console.log('Calling getProfileBlogList with:', curUserName, myUserInfo.id);
-    const result = await getProfileBlogList(curUserName, 0, myUserInfo.id);
-    console.log('getProfileBlogList result:', result);
-    console.log('result.errno:', result.errno);
-    console.log('result.data:', result.data);
-    
-    if (!result || !result.data) {
-      console.error('CRITICAL_ERROR: getProfileBlogList returned invalid data');
-      // 使用空数据
-      result.data = {
-        isEmpty: true,
-        blogList: [],
-        pageSize: 10,
-        pageIndex: 0,
-        count: 0
-      };
-    }
-    
-    const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
-    console.log('isEmpty:', isEmpty);
-    console.log('blogList count:', blogList ? blogList.length : 0);
-
-    // 我是否关注了此人？
-    let amIFollowed = false;
-    let amIBlocked = false;
-    if (!isMe) {
-      console.log('Checking follow status:', myUserInfo.id, curUserInfo.id);
-      amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
-      console.log('amIFollowed:', amIFollowed);
-      
-      console.log('Checking block status:', myUserInfo.id, curUserInfo.id);
-      try {
-        amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
-        console.log('amIBlocked:', amIBlocked);
-      } catch (blockError) {
-        console.error('Error checking block status:', blockError);
-        amIBlocked = false;
-      }
-    }
-
-    // 获取关注数和粉丝数
-    console.log('Getting following count for:', curUserInfo.id);
-    let followingCount = 0;
-    let followerCount = 0;
-    try {
-      followingCount = await getFollowingCount(curUserInfo.id);
-      followerCount = await getFollowerCount(curUserInfo.id);
-      console.log('followingCount:', followingCount);
-      console.log('followerCount:', followerCount);
-    } catch (countError) {
-      console.error('Error getting follow counts:', countError);
-    }
-
-    // 获取关注列表（用于 @ 自动补全）
-    console.log('Getting following list for:', myUserInfo.id);
-    let followingList = [];
-    try {
-      followingList = await getFollowingList(myUserInfo.id);
-      console.log('followingList count:', followingList.length);
-    } catch (listError) {
-      console.error('Error getting following list:', listError);
-    }
-
-    console.log('=== profile page: rendering template ===');
-    await ctx.render("profile", {
-      isLogin: true,
-      canReply: true,
-      unreadAtCount,
-      followingList: JSON.stringify(followingList),
-      currentUserId: myUserInfo.id,
-      blogData: {
-        isEmpty,
-        blogList,
-        pageSize,
-        pageIndex,
-        count,
-      },
-      userData: {
-        userInfo: curUserInfo,
-        isMe,
-        fansData: {
-          count: followerCount,
-          list: [],
-        },
-        followersData: {
-          count: followingCount,
-          list: [],
-        },
-        amIFollowed,
-        amIBlocked,
-        atCount: 0,
-      },
-    });
-    console.log('=== profile page END ===');
-  } catch (error) {
-    console.error('CRITICAL_ERROR_TRACE: profile page error');
-    console.error('Error:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack || error);
-    
-    // 渲染错误页面或返回错误信息
-    ctx.status = 500;
-    ctx.body = {
-      code: -1,
-      msg: "服务器内部错误",
-      error: process.env.NODE_ENV === "development" ? error.message : ""
-    };
+    curUserInfo = existResult.data;
   }
+
+  const result = await getProfileBlogList(curUserName, 0, myUserInfo.id);
+  const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
+
+  let amIFollowed = false;
+  let amIBlocked = false;
+  if (!isMe) {
+    amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
+    amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
+  }
+
+  const followingCount = await getFollowingCount(curUserInfo.id);
+  const followerCount = await getFollowerCount(curUserInfo.id);
+
+  const followingList = await getFollowingList(myUserInfo.id);
+
+  await ctx.render("profile", {
+    isLogin: true,
+    canReply: true,
+    unreadAtCount,
+    followingList: JSON.stringify(followingList),
+    currentUserId: myUserInfo.id,
+    blogData: {
+      isEmpty,
+      blogList,
+      pageSize,
+      pageIndex,
+      count,
+    },
+    userData: {
+      userInfo: curUserInfo,
+      isMe,
+      fansData: {
+        count: followerCount,
+        list: [],
+      },
+      followersData: {
+        count: followingCount,
+        list: [],
+      },
+      amIFollowed,
+      amIBlocked,
+      atCount: 0,
+    },
+  });
 });
 
 // 关注列表页面

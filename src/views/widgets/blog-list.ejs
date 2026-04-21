@@ -2046,6 +2046,20 @@ $(function () {
                 var currentCount = parseInt($countSpan.text()) || 0;
                 $countSpan.text(currentCount + 1);
                 
+                if (data && data.blog) {
+                    var newBlogHtml = renderBlogItem(data.blog);
+                    var $blogList = $('.weibo-list');
+                    
+                    if ($blogList.length > 0) {
+                        $blogList.prepend(newBlogHtml);
+                        
+                        var $newItem = $blogList.find('.item-wrapper:first');
+                        $newItem.hide().fadeIn(300);
+                        
+                        bindBlogEvents();
+                    }
+                }
+                
                 closeRepostModal();
             });
         });

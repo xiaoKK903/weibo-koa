@@ -97,4 +97,38 @@ router.get("/setting", loginRedirect, async (ctx, next) => {
   }
 });
 
+// 举报记录页面
+router.get("/report-records", loginRedirect, async (ctx, next) => {
+  try {
+    console.log('=== report-records page ===');
+    
+    const { pageIndex = 0, pageSize = 10 } = ctx.query;
+    const userId = ctx.session.userInfo.id;
+    
+    // 获取举报记录
+    const { getReportRecords } = require('../../services/report');
+    const reportData = await getReportRecords(userId, {
+      pageIndex: parseInt(pageIndex),
+      pageSize: parseInt(pageSize)
+    });
+    
+    await ctx.render("report-records", {
+      isLogin: true,
+      reportData: reportData
+    });
+  } catch (error) {
+    console.error('CRITICAL_ERROR_TRACE: report-records page error');
+    console.error('Error:', error);
+    console.error('Error stack:', error.stack || error);
+    
+    // 渲染错误页面或返回错误信息
+    ctx.status = 500;
+    ctx.body = {
+      code: -1,
+      msg: "服务器内部错误",
+      error: process.env.NODE_ENV === "development" ? error.message : ""
+    };
+  }
+});
+
 module.exports = router;

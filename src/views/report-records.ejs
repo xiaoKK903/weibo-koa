@@ -1,0 +1,558 @@
+<%- include('layout/header', { title: '微博 - 我的举报', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-8">
+            <div class="d-flex justify-content-between align-items-center margin-bottom-20 padding-bottom-10 border-bottom">
+                <h4>
+                    <i class="fa fa-flag"></i> 我的举报
+                </h4>
+                <div>
+                    <% if (reportData && reportData.count > 0) { %>
+                    <span class="text-muted mr-3">共 <%= reportData.count %> 条记录</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if (!reportData || reportData.reportList.length === 0) { %>
+                <div class="no-history">
+                    <div class="text-center">
+                        <i class="fa fa-file-text-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h5 class="text-muted">暂无举报记录</h5>
+                        <p class="text-muted">您还没有举报过任何内容</p>
+                        <a href="/square" class="btn btn-primary">
+                            <i class="fa fa-compass"></i> 去广场
+                        </a>
+                    </div>
+                </div>
+            <% } else { %>
+                <div id="container-report-list" class="history-list">
+                    <% reportData.reportList.forEach(function(reportItem) { %>
+                    <div class="history-item" data-report-id="<%= reportItem.id %>">
+                        <div class="history-avatar">
+                            <img src="<%= reportItem.reportedUser ? reportItem.reportedUser.picture : '/images/1724131894164-avatar.png' %>" alt="头像">
+                        </div>
+                        <div class="history-content">
+                            <div class="history-header">
+                                <a href="/profile/<%= reportItem.reportedUser ? reportItem.reportedUser.userName : '' %>" class="history-user">
+                                    <%= reportItem.reportedUser ? reportItem.reportedUser.nickName : '用户' %>
+                                </a>
+                                <span class="history-time" data-time="<%= reportItem.createdAt %>">
+                                    <i class="fa fa-clock-o"></i> 
+                                    刚刚
+                                </span>
+                            </div>
+                            <div class="history-blog">
+                                <div class="history-blog-content">
+                                    <div class="report-info">
+                                        <strong>举报类型：</strong><%= reportItem.reportTypeText %><br>
+                                        <strong>目标类型：</strong><%= reportItem.targetTypeText %><br>
+                                        <strong>举报状态：</strong>
+                                        <% if (reportItem.status === 0) { %>
+                                        <span class="text-warning"><%= reportItem.statusText %></span>
+                                        <% } else if (reportItem.status === 1) { %>
+                                        <span class="text-success"><%= reportItem.statusText %></span>
+                                        <% } else { %>
+                                        <span class="text-muted"><%= reportItem.statusText %></span>
+                                        <% } %>
+                                    </div>
+                                    <% if (reportItem.content) { %>
+                                    <div class="report-content margin-top-10">
+                                        <strong>举报说明：</strong><%= reportItem.content %>
+                                    </div>
+                                    <% } %>
+                                    <% if (reportItem.targetBlog) { %>
+                                    <div class="report-target margin-top-10">
+                                        <strong>举报内容：</strong>
+                                        <a href="/detail/<%= reportItem.targetId %>" class="text-primary">
+                                            <%= reportItem.targetBlog.content ? reportItem.targetBlog.content.substring(0, 100) : '微博' %>
+                                            <% if (reportItem.targetBlog.content && reportItem.targetBlog.content.length > 100) { %>...<% } %>
+                                        </a>
+                                    </div>
+                                    <% } else if (reportItem.targetComment) { %>
+                                    <div class="report-target margin-top-10">
+                                        <strong>举报内容：</strong>
+                                        <span class="text-muted">
+                                            <%= reportItem.targetComment.content ? reportItem.targetComment.content.substring(0, 100) : '评论' %>
+                                            <% if (reportItem.targetComment.content && reportItem.targetComment.content.length > 100) { %>...<% } %>
+                                        </span>
+                                    </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div>
+                
+                <% if (reportData.count > reportData.reportList.length) { %>
+                    <div class="text-center margin-top-20">
+                        <button class="btn btn-outline-primary" id="btn-load-more">加载更多</button>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer')%>
+
+<div id="toast-container" class="toast-container"></div>
+
+<style>
+.history-list {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.history-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item:hover {
+    background: rgba(0, 123, 255, 0.02);
+}
+
+.history-avatar {
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.history-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+.history-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.history-user {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+.history-user:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.history-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.history-blog {
+    margin-bottom: 8px;
+}
+
+.report-info {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #666;
+}
+
+.report-content {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+}
+
+.report-target {
+    font-size: 14px;
+    color: #666;
+}
+
+.report-target a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.report-target a:hover {
+    text-decoration: underline;
+}
+
+.margin-top-10 {
+    margin-top: 10px;
+}
+
+.no-history {
+    padding: 80px 20px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+#btn-load-more {
+    min-width: 150px;
+    transition: all 0.3s ease;
+}
+
+#btn-load-more:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+#btn-load-more:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.text-primary {
+    color: #007bff;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    min-width: 280px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-color: #6bcb77;
+}
+
+.toast.error {
+    border-color: #ff6b6b;
+}
+
+.toast.warning {
+    border-color: #ffa502;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.toast.success .toast-icon {
+    background: rgba(107, 203, 119, 0.1);
+    color: #6bcb77;
+}
+
+.toast.error .toast-icon {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+.toast.warning .toast-icon {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #666;
+}
+</style>
+
+<script>
+$(function () {
+    var currentPage = 0
+    var pageSize = 10
+    var hasMore = <%= reportData && reportData.count > reportData.reportList.length ? 'true' : 'false' %>
+
+    formatAllTimes()
+
+    function showToast(type, title, message) {
+        var icons = {
+            success: '✓',
+            error: '✕',
+            warning: '!'
+        }
+        
+        var toast = $('<div class="toast ' + type + '">' +
+            '<div class="toast-icon">' + icons[type] + '</div>' +
+            '<div class="toast-content">' +
+                '<div class="toast-title">' + title + '</div>' +
+                '<div class="toast-message">' + (message || '') + '</div>' +
+            '</div>' +
+            '<button class="toast-close">&times;</button>' +
+        '</div>')
+        
+        $('#toast-container').append(toast)
+        
+        toast.find('.toast-close').click(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        })
+        
+        setTimeout(function() {
+            toast.addClass('show')
+        }, 10)
+        
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                toast.remove()
+            })
+        }, 3000)
+    }
+
+    function formatAllTimes() {
+        $('.history-time').each(function () {
+            var $this = $(this)
+            var timeStr = $this.data('time')
+            if (timeStr) {
+                $this.html('<i class="fa fa-clock-o"></i> ' + formatTime(timeStr))
+            }
+        })
+    }
+
+    $('#btn-load-more').click(function (e) {
+        e.preventDefault()
+        
+        if (!hasMore) {
+            return
+        }
+        
+        var $btn = $(this)
+        $btn.prop('disabled', true).text('加载中...')
+        currentPage++
+        
+        $.ajax({
+            url: '/api/report/records',
+            type: 'GET',
+            data: {
+                pageIndex: currentPage,
+                pageSize: pageSize
+            },
+            success: function (res) {
+                if (res.code === 0) {
+                    var reportList = res.data.reportList
+                    
+                    if (reportList.length === 0) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                        return
+                    }
+                    
+                    var html = ''
+                    reportList.forEach(function (reportItem) {
+                        html += createReportItemHtml(reportItem)
+                    })
+                    
+                    $('#container-report-list').append(html)
+                    
+                    formatAllTimes()
+                    
+                    if (reportList.length < pageSize) {
+                        hasMore = false
+                        $btn.text('没有更多了')
+                    } else {
+                        $btn.prop('disabled', false).text('加载更多')
+                    }
+                } else {
+                    showToast('error', '加载失败', res.msg || '请稍后重试')
+                    $btn.prop('disabled', false).text('加载更多')
+                    currentPage--
+                }
+            },
+            error: function () {
+                showToast('error', '加载失败', '网络错误，请稍后重试')
+                $btn.prop('disabled', false).text('加载更多')
+                currentPage--
+            }
+        })
+    })
+
+    function createReportItemHtml(reportItem) {
+        var reportedUser = reportItem.reportedUser || {}
+        var statusClass = ''
+        if (reportItem.status === 0) {
+            statusClass = 'text-warning'
+        } else if (reportItem.status === 1) {
+            statusClass = 'text-success'
+        } else {
+            statusClass = 'text-muted'
+        }
+        
+        var contentHtml = ''
+        if (reportItem.content) {
+            contentHtml = `
+                <div class="report-content margin-top-10">
+                    <strong>举报说明：</strong>${escapeHtml(reportItem.content)}
+                </div>
+            `
+        }
+        
+        var targetHtml = ''
+        if (reportItem.targetBlog) {
+            var blogContent = reportItem.targetBlog.content || ''
+            var displayContent = blogContent.length > 100 ? blogContent.substring(0, 100) + '...' : blogContent
+            targetHtml = `
+                <div class="report-target margin-top-10">
+                    <strong>举报内容：</strong>
+                    <a href="/detail/${reportItem.targetId}" class="text-primary">
+                        ${displayContent || '微博'}
+                    </a>
+                </div>
+            `
+        } else if (reportItem.targetComment) {
+            var commentContent = reportItem.targetComment.content || ''
+            var displayContent = commentContent.length > 100 ? commentContent.substring(0, 100) + '...' : commentContent
+            targetHtml = `
+                <div class="report-target margin-top-10">
+                    <strong>举报内容：</strong>
+                    <span class="text-muted">
+                        ${displayContent || '评论'}
+                    </span>
+                </div>
+            `
+        }
+        
+        return `
+            <div class="history-item" data-report-id="${reportItem.id}">
+                <div class="history-avatar">
+                    <img src="${reportedUser.picture || '/images/1724131894164-avatar.png'}" alt="头像">
+                </div>
+                <div class="history-content">
+                    <div class="history-header">
+                        <a href="/profile/${reportedUser.userName || ''}" class="history-user">${escapeHtml(reportedUser.nickName || '用户')}</a>
+                        <span class="history-time" data-time="${reportItem.createdAt}">
+                            <i class="fa fa-clock-o"></i> 刚刚
+                        </span>
+                    </div>
+                    <div class="history-blog">
+                        <div class="history-blog-content">
+                            <div class="report-info">
+                                <strong>举报类型：</strong>${reportItem.reportTypeText}<br>
+                                <strong>目标类型：</strong>${reportItem.targetTypeText}<br>
+                                <strong>举报状态：</strong>
+                                <span class="${statusClass}">${reportItem.statusText}</span>
+                            </div>
+                            ${contentHtml}
+                            ${targetHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `
+    }
+
+    function escapeHtml(text) {
+        if (!text) return ''
+        var div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '刚刚'
+        
+        var date = new Date(timeStr)
+        var now = new Date()
+        var diff = now - date
+        
+        if (diff < 60 * 1000) {
+            return '刚刚'
+        }
+        if (diff < 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 1000)) + '分钟前'
+        }
+        if (diff < 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (60 * 60 * 1000)) + '小时前'
+        }
+        if (diff < 7 * 24 * 60 * 60 * 1000) {
+            return Math.floor(diff / (24 * 60 * 60 * 1000)) + '天前'
+        }
+        
+        var month = date.getMonth() + 1
+        var day = date.getDate()
+        var hour = date.getHours()
+        var minute = date.getMinutes()
+        
+        return month + '月' + day + '日 ' + hour + ':' + (minute < 10 ? '0' : '') + minute
+    }
+})
+</script>

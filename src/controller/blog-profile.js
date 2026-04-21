@@ -11,7 +11,7 @@ const { SuccessModel } = require("../model/ResModel");
  * 获取个人主页微博列表
  * @param {string} userName 用户名
  * @param {number} pageIndex 当前页面
- * @param {number} userId 当前用户ID
+ * @param {number} userId 当前用户ID（用于权限校验）
  */
 async function getProfileBlogList(userName, pageIndex = 0, userId = null) {
   const result = await getBlogListByUser({
@@ -19,10 +19,10 @@ async function getProfileBlogList(userName, pageIndex = 0, userId = null) {
     pageIndex,
     pageSize: PAGE_SIZE,
     userId,
+    currentUserId: userId,
   });
   const blogList = result.blogList;
 
-  // 拼接返回数据
   return new SuccessModel({
     isEmpty: blogList.length === 0,
     blogList,

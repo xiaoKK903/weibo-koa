@@ -190,7 +190,7 @@ async function getBlogListByUser(
 
     const filteredBlogList = []
     for (const blogItem of blogList) {
-        const canView = await canViewBlog(blogItem, userId)
+        const canView = await canViewBlog(blogItem, currentUserId)
         if (canView) {
             filteredBlogList.push(blogItem)
         }

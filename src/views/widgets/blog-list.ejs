@@ -291,6 +291,81 @@
     border-radius: 4px;
 }
 
+/* 权限下拉菜单样式 */
+.blog-visible-type-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.blog-visible-type-btn:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+    text-decoration: none;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    float: left;
+    min-width: 150px;
+    padding: 8px 0;
+    margin: 2px 0 0;
+    font-size: 14px;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    clear: both;
+    font-weight: 400;
+    color: #333;
+    text-align: inherit;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    margin-right: 8px;
+    color: #007bff;
+}
+
 .blog-like-btn:hover {
     color: #007bff;
     background-color: rgba(0, 123, 255, 0.1);
@@ -908,9 +983,9 @@ $(function () {
                 html += '<i class="fa fa-eye"></i> 权限';
                 html += '</a>';
                 html += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="min-width: 150px;">';
-                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="0">公开</a>';
-                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="1">仅自己可见</a>';
-                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="2">仅粉丝可见</a>';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="0">' + (blog.visibleType === 0 ? '<i class="fa fa-check"></i> ' : '') + '公开</a>';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="1">' + (blog.visibleType === 1 ? '<i class="fa fa-check"></i> ' : '') + '仅自己可见</a>';
+                html += '<a class="dropdown-item" href="#" data-blog-id="' + blog.id + '" data-visible-type="2">' + (blog.visibleType === 2 ? '<i class="fa fa-check"></i> ' : '') + '仅粉丝可见</a>';
                 html += '</div>';
                 html += '</div>';
                 html += '<a href="#" class="blog-delete-btn text-danger"';

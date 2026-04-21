@@ -44,6 +44,12 @@ const Comment = seq.define("comment", {
     defaultValue: false,
     comment: "是否已删除",
   },
+  isBlocked: {
+    type: BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: "是否被风控限流隐藏",
+  },
 });
 
 module.exports = Comment;

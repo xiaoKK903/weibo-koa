@@ -14,6 +14,7 @@ const ViewHistory = require('./ViewHistory')
 const Draft = require('./Draft')
 const UserLevel = require('./UserLevel')
 const PointLog = require('./PointLog')
+const Report = require('./Report')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -194,6 +195,47 @@ User.hasMany(PointLog, {
     foreignKey: 'userId'
 })
 
+// 举报关联
+Report.belongsTo(User, {
+    foreignKey: 'reporterId',
+    as: 'reporter'
+})
+
+Report.belongsTo(User, {
+    foreignKey: 'reportedUserId',
+    as: 'reportedUser'
+})
+
+Report.belongsTo(Blog, {
+    foreignKey: 'targetId',
+    as: 'targetBlog'
+})
+
+Report.belongsTo(Comment, {
+    foreignKey: 'targetId',
+    as: 'targetComment'
+})
+
+User.hasMany(Report, {
+    foreignKey: 'reporterId',
+    as: 'reportedRecords'
+})
+
+User.hasMany(Report, {
+    foreignKey: 'reportedUserId',
+    as: 'beingReportedRecords'
+})
+
+Blog.hasMany(Report, {
+    foreignKey: 'targetId',
+    as: 'reportRecords'
+})
+
+Comment.hasMany(Report, {
+    foreignKey: 'targetId',
+    as: 'reportRecords'
+})
+
 module.exports = {
     User,
     Blog,
@@ -205,5 +247,6 @@ module.exports = {
     ViewHistory,
     Draft,
     UserLevel,
-    PointLog
+    PointLog,
+    Report
 }

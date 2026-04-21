@@ -63,6 +63,15 @@
             &nbsp;
             <span class="like-count" data-blog-id="<%= blog.id%>"><%= blog.likeCount || 0%></span>
             &nbsp;
+            <% if (locals.isLogin && blog.userId !== locals.currentUserId) { %>
+            <a href="#" class="blog-report-btn"
+                data-blog-id="<%= blog.id%>"
+                data-target-type="1"
+            >
+                <i class="fa fa-flag"></i> 举报
+            </a>
+            &nbsp;
+            <% } %>
             <% if (locals.currentUserId && blog.userId === locals.currentUserId) { %>
             <div class="dropdown" style="display: inline-block; margin-right: 10px;">
                 <a href="#" class="blog-visible-type-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -364,6 +373,219 @@
 .dropdown-item i {
     margin-right: 8px;
     color: #007bff;
+}
+
+/* 举报弹窗样式 */
+.report-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+}
+
+.report-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.report-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.report-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.report-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.report-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.report-modal-close:hover {
+    color: #333;
+}
+
+.report-modal-body {
+    padding: 20px;
+}
+
+.report-type-container h4 {
+    margin: 0 0 15px 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.report-type-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.report-type-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.report-type-item:hover {
+    background: #e9ecef;
+}
+
+.report-type-item input[type="radio"] {
+    margin-right: 8px;
+}
+
+.report-type-item span {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.report-content-container {
+    margin-top: 20px;
+}
+
+.report-content-container h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.report-content {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.report-content:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.report-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-report-cancel {
+    padding: 8px 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-report-cancel:hover {
+    background: #f5f5f5;
+}
+
+.btn-report-submit {
+    padding: 8px 20px;
+    background: #007bff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-report-submit:hover {
+    background: #0056b3;
+}
+
+.btn-report-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* 举报按钮样式 */
+.blog-report-btn {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.blog-report-btn:hover {
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
+    text-decoration: none;
+}
+
+.btn-report-comment {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-report-comment:hover {
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
 }
 
 .blog-like-btn:hover {
@@ -977,6 +1199,16 @@ $(function () {
             html += '<span class="like-count" data-blog-id="' + blog.id + '">' + (blog.likeCount || 0) + '</span>';
             html += '&nbsp;';
             
+            if (currentUserId > 0 && blog.userId !== currentUserId) {
+                html += '<a href="#" class="blog-report-btn"';
+                html += ' data-blog-id="' + blog.id + '"';
+                html += ' data-target-type="1"';
+                html += '>';
+                html += '<i class="fa fa-flag"></i> 举报';
+                html += '</a>';
+                html += '&nbsp;';
+            }
+            
             if (currentUserId > 0 && blog.userId === currentUserId) {
                 html += '<div class="dropdown" style="display: inline-block; margin-right: 10px;">';
                 html += '<a href="#" class="blog-visible-type-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
@@ -1299,6 +1531,147 @@ $(function () {
                 loadComments(blogId);
             });
         });
+        
+        // 微博举报按钮点击事件
+        $('.blog-report-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var targetType = $btn.data('target-type');
+            
+            openReportModal(blogId, targetType, null);
+        });
+        
+        // 评论举报按钮点击事件
+        $(document).off('click', '.btn-report-comment').on('click', '.btn-report-comment', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $btn = $(this);
+            var commentId = $btn.data('comment-id');
+            var blogId = $btn.data('blog-id');
+            var targetType = $btn.data('target-type');
+            
+            openReportModal(blogId, targetType, commentId);
+        });
+    }
+    
+    // 打开举报弹窗
+    function openReportModal(blogId, targetType, commentId) {
+        // 创建弹窗HTML
+        var modalHtml = '<div id="report-modal" class="report-modal" style="display: block;">';
+        modalHtml += '<div class="report-modal-overlay"></div>';
+        modalHtml += '<div class="report-modal-content">';
+        modalHtml += '<div class="report-modal-header">';
+        modalHtml += '<h3>举报</h3>';
+        modalHtml += '<button class="report-modal-close">&times;</button>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="report-modal-body">';
+        modalHtml += '<div class="report-type-container">';
+        modalHtml += '<h4>请选择举报类型：</h4>';
+        modalHtml += '<div class="report-type-list">';
+        modalHtml += '<label class="report-type-item">';
+        modalHtml += '<input type="radio" name="reportType" value="1">';
+        modalHtml += '<span>色情</span>';
+        modalHtml += '</label>';
+        modalHtml += '<label class="report-type-item">';
+        modalHtml += '<input type="radio" name="reportType" value="2">';
+        modalHtml += '<span>暴力</span>';
+        modalHtml += '</label>';
+        modalHtml += '<label class="report-type-item">';
+        modalHtml += '<input type="radio" name="reportType" value="3">';
+        modalHtml += '<span>违法</span>';
+        modalHtml += '</label>';
+        modalHtml += '<label class="report-type-item">';
+        modalHtml += '<input type="radio" name="reportType" value="4">';
+        modalHtml += '<span>广告</span>';
+        modalHtml += '</label>';
+        modalHtml += '<label class="report-type-item">';
+        modalHtml += '<input type="radio" name="reportType" value="5">';
+        modalHtml += '<span>其他</span>';
+        modalHtml += '</label>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="report-content-container">';
+        modalHtml += '<h4>补充说明（可选）：</h4>';
+        modalHtml += '<textarea class="report-content" placeholder="请输入详细的举报说明..."></textarea>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        modalHtml += '<div class="report-modal-footer">';
+        modalHtml += '<button class="btn-report-cancel">取消</button>';
+        modalHtml += '<button class="btn-report-submit" data-blog-id="' + blogId + '" data-target-type="' + targetType + '" data-comment-id="' + (commentId || '') + '">提交举报</button>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        modalHtml += '</div>';
+        
+        // 添加到页面
+        $('body').append(modalHtml);
+        
+        // 绑定事件
+        bindReportModalEvents();
+    }
+    
+    // 绑定举报弹窗事件
+    function bindReportModalEvents() {
+        // 关闭按钮
+        $('.report-modal-close, .report-modal-overlay, .btn-report-cancel').off('click').on('click', function() {
+            closeReportModal();
+        });
+        
+        // 提交举报
+        $('.btn-report-submit').off('click').on('click', function() {
+            var $btn = $(this);
+            var blogId = $btn.data('blog-id');
+            var targetType = $btn.data('target-type');
+            var commentId = $btn.data('comment-id');
+            var reportType = $('input[name="reportType"]:checked').val();
+            var content = $('.report-content').val().trim();
+            
+            // 验证举报类型
+            if (!reportType) {
+                window.showToast('warning', '提示', '请选择举报类型');
+                return;
+            }
+            
+            // 禁用提交按钮
+            $btn.prop('disabled', true);
+            $btn.text('提交中...');
+            
+            // 准备提交数据
+            var submitData = {
+                targetType: parseInt(targetType),
+                reportType: parseInt(reportType),
+                content: content
+            };
+            
+            // 根据目标类型设置targetId
+            if (targetType === 1) { // 微博
+                submitData.targetId = parseInt(blogId);
+            } else if (targetType === 2) { // 评论
+                submitData.targetId = parseInt(commentId);
+            }
+            
+            // 提交举报
+            ajax.post('/api/report/create', submitData, function(err) {
+                // 恢复按钮状态
+                $btn.prop('disabled', false);
+                $btn.text('提交举报');
+                
+                if (err) {
+                    var errorMsg = err.message || err;
+                    window.showToast('error', '举报失败', errorMsg);
+                    return;
+                }
+                
+                window.showToast('success', '举报成功', '您的举报已提交，我们将尽快处理');
+                closeReportModal();
+            });
+        });
+    }
+    
+    // 关闭举报弹窗
+    function closeReportModal() {
+        $('#report-modal').remove();
     }
     
     function renderCommentItem(comment, level, blogId) {
@@ -1320,6 +1693,11 @@ $(function () {
             deleteBtn = '<button class="comment-action-btn btn-delete-comment" data-comment-id="' + comment.id + '" data-blog-id="' + blogId + '"><i class="fa fa-trash"></i> 删除</button>';
         }
         
+        var reportBtn = '';
+        if (currentUserId && currentUserId !== user.id) {
+            reportBtn = '<button class="comment-action-btn btn-report-comment" data-comment-id="' + comment.id + '" data-blog-id="' + blogId + '" data-target-type="2"><i class="fa fa-flag"></i> 举报</button>';
+        }
+        
         var html = '';
         html += '<div class="comment-item ' + (isRoot ? 'root-comment' : 'child-comment') + '" data-comment-id="' + comment.id + '" data-root-id="' + (comment.rootId || comment.id) + '">';
         html += '<img src="' + (user.picture || 'https://dwz.cn/rnTnftZs') + '" alt="' + (user.nickName || '用户') + '" class="comment-avatar">';
@@ -1339,6 +1717,7 @@ $(function () {
         html += '<i class="fa ' + likeIcon + '"></i> <span class="count">' + (comment.likeCount || 0) + '</span>';
         html += '</button>';
         html += deleteBtn;
+        html += reportBtn;
         html += '</div>';
         html += '</div>';
         

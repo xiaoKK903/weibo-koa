@@ -15,6 +15,7 @@ const Draft = require('./Draft')
 const UserLevel = require('./UserLevel')
 const PointLog = require('./PointLog')
 const Report = require('./Report')
+const Block = require('./Block')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -236,6 +237,27 @@ Comment.hasMany(Report, {
     as: 'reportRecords'
 })
 
+// 屏蔽关联
+Block.belongsTo(User, {
+    foreignKey: 'blockerId',
+    as: 'blocker'
+})
+
+Block.belongsTo(User, {
+    foreignKey: 'blockedId',
+    as: 'blocked'
+})
+
+User.hasMany(Block, {
+    foreignKey: 'blockerId',
+    as: 'blockedUsers'
+})
+
+User.hasMany(Block, {
+    foreignKey: 'blockedId',
+    as: 'beingBlockedUsers'
+})
+
 module.exports = {
     User,
     Blog,
@@ -248,5 +270,6 @@ module.exports = {
     Draft,
     UserLevel,
     PointLog,
-    Report
+    Report,
+    Block
 }

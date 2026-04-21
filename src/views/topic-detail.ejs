@@ -1,4 +1,4 @@
-<%- include('layout/header', { title: '微博 - #' + topicData.topic.name + '#', isNav: true, list: true })%>
+<%- include('layout/header', { title: '微博 - #' + topicData.topic.name + '#', isNav: true, list: true, isInputBlog: true })%>
 
 <div class="container margin-top-20">
     <div class="row">
@@ -8,7 +8,7 @@
             <div class="topic-header margin-bottom-20">
                 <div class="topic-info">
                     <h2 class="topic-title">
-                        <i class="fa fa-hashtag"></i> #<%= topicData.topic.name %>#
+                        #<%= topicData.topic.name %>#
                     </h2>
                     <div class="topic-stats">
                         <span class="stat-item">

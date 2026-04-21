@@ -1,0 +1,85 @@
+<% if (hotTopics && hotTopics.length > 0) { %>
+<div class="right-item">
+    <div class="right-item-title">
+        <i class="fa fa-fire"></i> 热门话题
+    </div>
+    <div class="hot-topics-list">
+        <% for (let i = 0; i < hotTopics.length; i++) { 
+            const topic = hotTopics[i];
+        %>
+        <div class="hot-topic-item">
+            <div class="hot-topic-rank">
+                <span class="<%= i < 3 ? 'rank-top' : 'rank-normal' %>"><%= i + 1 %></span>
+            </div>
+            <div class="hot-topic-content">
+                <a href="/topic/<%= encodeURIComponent(topic.name) %>" class="hot-topic-link">#<%= topic.name %>#</a>
+                <div class="hot-topic-meta">
+                    <span class="hot-topic-count"><%= topic.blogCount %> 条动态</span>
+                </div>
+            </div>
+        </div>
+        <% } %>
+    </div>
+</div>
+<% } %>
+<style>
+.right-item {
+    margin-bottom: 20px;
+}
+.right-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+.hot-topics-list {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 10px;
+}
+.hot-topic-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+.hot-topic-item:last-child {
+    border-bottom: none;
+}
+.hot-topic-rank {
+    width: 24px;
+    text-align: center;
+    margin-right: 10px;
+}
+.rank-top {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+.rank-normal {
+    color: #6c757d;
+    font-size: 12px;
+}
+.hot-topic-content {
+    flex: 1;
+}
+.hot-topic-link {
+    color: #007bff;
+    font-size: 13px;
+    text-decoration: none;
+}
+.hot-topic-link:hover {
+    text-decoration: underline;
+}
+.hot-topic-meta {
+    font-size: 11px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+</style>

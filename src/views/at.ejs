@@ -49,7 +49,7 @@
                                     <div class="at-divider">— 评论于 —</div>
                                     <% } %>
                                     <a href="/detail/<%= atItem.blog.id %>" class="at-blog-link" data-at-id="<%= atItem.id %>">
-                                        <span class="at-blog-content"><%= atItem.blog.contentSummary || atItem.blog.content %></span>
+                                        <span class="at-blog-content"><%- atItem.blog.contentSummary || atItem.blog.content %></span>
                                     </a>
                                 </div>
                                 <% } else if (atItem.type === 'comment' && atItem.comment) { %>
@@ -378,7 +378,7 @@ $(function () {
                     <div class="at-blog-preview">
                         ${commentHtml}
                         <a href="/detail/${atItem.blog.id}" class="at-blog-link" data-at-id="${atItem.id}">
-                            <span class="at-blog-content">${escapeHtml(atItem.blog.contentSummary || atItem.blog.content)}</span>
+                            <span class="at-blog-content">${atItem.blog.contentSummary || atItem.blog.content}</span>
                         </a>
                     </div>
                 </div>

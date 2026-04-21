@@ -14,7 +14,7 @@
                 <% } %>
             </div>
             <div class="hot-post-content">
-                <a href="/detail/<%= post.id %>" class="hot-post-link"><%= post.contentSummary %></a>
+                <a href="/detail/<%= post.id %>" class="hot-post-link"><%- post.contentSummary %></a>
                 <div class="hot-post-meta">
                     <span class="hot-post-user"><%= post.user.nickName %></span>
                     <span class="hot-post-time"><%= post.createdAtFormat %></span>

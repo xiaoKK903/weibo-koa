@@ -32,6 +32,9 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const squareResult = await getSquareBlogList(0);
   const hotPosts = squareResult.data ? squareResult.data.blogList.slice(0, 3) : [];
 
+  // 获取热门话题
+  const hotTopics = await getHotTopics(10);
+
   // 获取关注数和粉丝数
   const followingCount = await getFollowingCount(userId);
   const followerCount = await getFollowerCount(userId);
@@ -64,6 +67,7 @@ router.get("/", loginRedirect, async (ctx, next) => {
       count,
     },
     hotPosts,
+    hotTopics,
   });
 });
 

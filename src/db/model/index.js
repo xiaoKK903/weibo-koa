@@ -19,6 +19,8 @@ const Block = require('./Block')
 const Repost = require('./Repost')
 const Topic = require('./Topic')
 const BlogTopic = require('./BlogTopic')
+const Conversation = require('./Conversation')
+const Message = require('./Message')
 
 Blog.belongsTo(User, {
     foreignKey: 'userId'
@@ -342,6 +344,44 @@ Topic.hasMany(BlogTopic, {
     foreignKey: 'topicId'
 })
 
+Conversation.belongsTo(User, {
+    foreignKey: 'user1Id',
+    as: 'user1'
+})
+
+Conversation.belongsTo(User, {
+    foreignKey: 'user2Id',
+    as: 'user2'
+})
+
+Message.belongsTo(User, {
+    foreignKey: 'fromUserId',
+    as: 'fromUser'
+})
+
+Message.belongsTo(User, {
+    foreignKey: 'toUserId',
+    as: 'toUser'
+})
+
+Message.belongsTo(Conversation, {
+    foreignKey: 'conversationId'
+})
+
+User.hasMany(Message, {
+    foreignKey: 'fromUserId',
+    as: 'sentMessages'
+})
+
+User.hasMany(Message, {
+    foreignKey: 'toUserId',
+    as: 'receivedMessages'
+})
+
+Conversation.hasMany(Message, {
+    foreignKey: 'conversationId'
+})
+
 module.exports = {
     User,
     Blog,
@@ -358,5 +398,7 @@ module.exports = {
     Block,
     Repost,
     Topic,
-    BlogTopic
+    BlogTopic,
+    Conversation,
+    Message
 }

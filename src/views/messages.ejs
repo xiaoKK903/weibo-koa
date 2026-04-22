@@ -1,0 +1,259 @@
+<%- include('layout/header', { title: '微博 - 私信', isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-4">
+            <div class="conversation-list-header d-flex justify-content-between align-items-center">
+                <h4>私信</h4>
+            </div>
+            <div class="conversation-list-container">
+                <% if (conversationData.isEmpty) { %>
+                    <div class="no-conversation">
+                        <div class="text-center">
+                            <i class="fa fa-envelope-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                            <h5 class="text-muted">暂无私信</h5>
+                            <p class="text-muted">去关注一些用户，开始聊天吧</p>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div id="conversation-list">
+                        <% conversationData.conversations.forEach(function(conv) { %>
+                        <a href="/message/<%= conv.targetUser.userName %>" class="conversation-item <%= conv.unreadCount > 0 ? 'has-unread' : '' %>" data-target-user-id="<%= conv.targetUser.id %>">
+                            <div class="conversation-avatar">
+                                <img src="<%= conv.targetUser.picture %>" alt="<%= conv.targetUser.nickName %>">
+                                <% if (conv.unreadCount > 0) { %>
+                                <span class="unread-badge"><%= conv.unreadCount > 99 ? '99+' : conv.unreadCount %></span>
+                                <% } %>
+                            </div>
+                            <div class="conversation-info">
+                                <div class="conversation-header">
+                                    <span class="conversation-name"><%= conv.targetUser.nickName %></span>
+                                    <% if (conv.lastMessage && conv.lastMessageAt) { %>
+                                    <span class="conversation-time"><%= formatTime(conv.lastMessageAt) %></span>
+                                    <% } %>
+                                </div>
+                                <div class="conversation-preview">
+                                    <% if (conv.lastMessage) { %>
+                                        <% if (conv.lastMessage.fromUserId === currentUserId) { %>
+                                        <span class="preview-prefix">我：</span>
+                                        <% } %>
+                                        <span class="preview-content"><%= truncateText(conv.lastMessage.content, 30) %></span>
+                                    <% } else { %>
+                                        <span class="preview-content text-muted">暂无消息</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="col-8">
+            <div class="chat-empty-state">
+                <div class="text-center">
+                    <i class="fa fa-comments-o" style="font-size: 80px; color: #ddd; margin-bottom: 20px;"></i>
+                    <h5 class="text-muted">选择一个会话开始聊天</h5>
+                    <p class="text-muted">或者从用户主页发起私信</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<% function formatTime(date) {
+    if (!date) return '';
+    var d = new Date(date);
+    var now = new Date();
+    var diff = now - d;
+    var oneDay = 24 * 60 * 60 * 1000;
+    
+    if (diff < 60 * 1000) {
+        return '刚刚';
+    } else if (diff < 60 * 60 * 1000) {
+        return Math.floor(diff / (60 * 1000)) + '分钟前';
+    } else if (diff < oneDay && d.getDate() === now.getDate()) {
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
+        return (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes);
+    } else if (diff < 2 * oneDay) {
+        return '昨天';
+    } else {
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        return month + '-' + (day < 10 ? '0' + day : day);
+    }
+} %>
+
+<% function truncateText(text, maxLength) {
+    if (!text) return '';
+    text = text.replace(/\s+/g, ' ').trim();
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength) + '...';
+} %>
+
+<%- include('layout/footer')%>
+
+<style>
+.conversation-list-header {
+    padding: 15px 20px;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.conversation-list-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.conversation-list-container {
+    background: #fff;
+    border-radius: 0 0 8px 8px;
+    min-height: 500px;
+}
+
+.no-conversation {
+    padding: 80px 20px;
+}
+
+.conversation-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.conversation-item:last-child {
+    border-bottom: none;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+}
+
+.conversation-item.has-unread {
+    background: rgba(0, 123, 255, 0.02);
+}
+
+.conversation-item.has-unread:hover {
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.conversation-avatar {
+    position: relative;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.conversation-avatar img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+.unread-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+
+.conversation-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conversation-item.has-unread .conversation-name {
+    color: #007bff;
+}
+
+.conversation-time {
+    font-size: 12px;
+    color: #999;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.conversation-preview {
+    font-size: 13px;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conversation-item.has-unread .conversation-preview {
+    color: #333;
+    font-weight: 500;
+}
+
+.preview-prefix {
+    color: #007bff;
+}
+
+.preview-content {
+    color: #666;
+}
+
+.chat-empty-state {
+    background: #fff;
+    border-radius: 8px;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .conversation-list-container {
+        min-height: 300px;
+    }
+    
+    .chat-empty-state {
+        display: none;
+    }
+}
+</style>

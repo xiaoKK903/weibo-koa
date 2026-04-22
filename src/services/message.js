@@ -213,8 +213,7 @@ async function getConversationList(userId) {
         const convData = conv.dataValues
         
         const isUser1 = convData.user1Id === userId
-        const otherUser = isUser1 ? convData.user1 : convData.user2
-        const targetUser = isUser1 ? convData.user2 : convData.user1
+        const targetUser = isUser1 ? conv.user2 : conv.user1
         
         const unreadCount = isUser1 ? convData.user1Unread : convData.user2Unread
         

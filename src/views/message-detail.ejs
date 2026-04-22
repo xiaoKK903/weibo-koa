@@ -79,7 +79,7 @@
                                 <div class="message-sender"><%= msg.fromUser.nickName %></div>
                                 <% } %>
                                 <div class="message-bubble">
-                                    <%= escapeHtml(msg.content) %>
+                                    <%= msg.content %>
                                 </div>
                                 <div class="message-time"><%= formatMessageTime(msg.createdAt) %></div>
                             </div>
@@ -610,10 +610,10 @@ function escapeHtml(text) {
 $(function () {
     var currentUserId = <%= currentUserId %>;
     var targetUserId = <%= targetUser.id %>;
-    var targetUserNickName = '<%= escapeHtml(targetUser.nickName) %>';
-    var targetUserPicture = '<%= targetUser.picture %>';
-    var currentUserPicture = '<%= userData.userInfo.picture %>';
-    var currentUserNickName = '<%= escapeHtml(userData.userInfo.nickName) %>';
+    var targetUserNickName = <%= JSON.stringify(targetUser.nickName) %>;
+    var targetUserPicture = <%= JSON.stringify(targetUser.picture) %>;
+    var currentUserPicture = <%= JSON.stringify(userData.userInfo.picture) %>;
+    var currentUserNickName = <%= JSON.stringify(userData.userInfo.nickName) %>;
     
     var $messageInput = $('#message-input');
     var $sendBtn = $('#send-btn');

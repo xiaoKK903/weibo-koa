@@ -12,7 +12,8 @@ const {
     getHistory,
     getUnreadCount,
     markAsRead,
-    checkCanSend
+    checkCanSend,
+    recall
 } = require('../../controller/message')
 
 router.prefix('/api/message')
@@ -43,6 +44,11 @@ router.post('/mark-read', loginCheck, async (ctx, next) => {
 router.get('/check-can-send', loginCheck, async (ctx, next) => {
     const { targetUserId } = ctx.query
     ctx.body = await checkCanSend(ctx, { targetUserId })
+})
+
+router.post('/recall', loginCheck, async (ctx, next) => {
+    const { messageId } = ctx.request.body
+    ctx.body = await recall(ctx, { messageId })
 })
 
 module.exports = router

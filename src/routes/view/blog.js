@@ -13,6 +13,7 @@ const { getBlogDetail } = require("../../controller/blog-detail");
 const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
 const { getTotalUnreadCount } = require("../../services/message");
+const { checkBlockStatus } = require("../../services/block");
 const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
 const { getRecycleList } = require("../../controller/recycle");
 const { getTopicList, getTopicDetail, getTopicBlogs, getHotTopics } = require("../../services/topic");
@@ -99,8 +100,10 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
   let amIFollowed = false;
+  let amIBlocked = false;
   if (!isMe) {
     amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
+    amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
   }
 
   const followingCount = await getFollowingCount(curUserInfo.id);
@@ -134,6 +137,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
         list: [],
       },
       amIFollowed,
+      amIBlocked,
       atCount: 0,
     },
   });
@@ -165,6 +169,13 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
   const followingCount = await getFollowingCount(curUserInfo.id);
   const followerCount = await getFollowerCount(curUserInfo.id);
 
+  let amIFollowed = false;
+  let amIBlocked = false;
+  if (!isMe) {
+    amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
+    amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
+  }
+
   await ctx.render("following", {
     isLogin: true,
     unreadAtCount,
@@ -182,6 +193,8 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
         count: followingCount,
         list: [],
       },
+      amIFollowed,
+      amIBlocked,
     },
   });
 });
@@ -212,6 +225,13 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
   const followingCount = await getFollowingCount(curUserInfo.id);
   const followerCount = await getFollowerCount(curUserInfo.id);
 
+  let amIFollowed = false;
+  let amIBlocked = false;
+  if (!isMe) {
+    amIFollowed = await checkFollowStatus(myUserInfo.id, curUserInfo.id);
+    amIBlocked = await checkBlockStatus(myUserInfo.id, curUserInfo.id);
+  }
+
   await ctx.render("follower", {
     isLogin: true,
     unreadAtCount,
@@ -229,6 +249,8 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
         count: followingCount,
         list: [],
       },
+      amIFollowed,
+      amIBlocked,
     },
   });
 });

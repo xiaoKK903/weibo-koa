@@ -14,7 +14,7 @@
                 </div>
             <% } else { %>
                 <div class="user-list">
-                    <% userData.list.forEach(user => { %>
+                    <% userData.list.forEach(function(user) { %>
                         <div class="user-item margin-bottom-20 padding-bottom-20 border-bottom clear-fix">
                             <a href="/profile/<%= user.userName %>" class="float-left">
                                 <img src="<%= user.picture %>" class="header-img"/>
@@ -40,7 +40,8 @@
                 <%- include('widgets/user-info', {
                     userInfo: userData.userInfo,
                     isMe: userData.isMe,
-                    amIFollowed: false,
+                    amIFollowed: userData.amIFollowed,
+                    amIBlocked: userData.amIBlocked,
                     followersData: userData.followersData,
                     fansData: userData.fansData
                 });%>

@@ -304,6 +304,8 @@ async function getMessageList(userId, targetUserId, pageIndex = 0, pageSize = 20
             toUserId: msgData.toUserId,
             content: msgData.content,
             isRead: msgData.isRead,
+            isRecalled: msgData.isRecalled,
+            recalledAt: msgData.recalledAt,
             createdAt: msgData.createdAt,
             fromUser: msgData.fromUser ? formatUser(msgData.fromUser.dataValues) : null,
             toUser: msgData.toUser ? formatUser(msgData.toUser.dataValues) : null,
@@ -412,6 +414,84 @@ async function getTotalUnreadCount(userId) {
     return total
 }
 
+/**
+ * 撤回消息
+ * @param {number} userId 当前用户 ID
+ * @param {number} messageId 消息 ID
+ * @returns {Object} 操作结果
+ */
+async function recallMessage(userId, messageId) {
+    if (!userId || !messageId) {
+        return {
+            success: false,
+            message: '参数不完整'
+        }
+    }
+    
+    const message = await Message.findOne({
+        where: {
+            id: messageId,
+            ...DEFAULT_WHERE
+        }
+    })
+    
+    if (!message) {
+        return {
+            success: false,
+            message: '消息不存在'
+        }
+    }
+    
+    const msgData = message.dataValues
+    
+    if (msgData.fromUserId !== userId) {
+        return {
+            success: false,
+            message: '只能撤回自己发送的消息'
+        }
+    }
+    
+    if (msgData.isRecalled) {
+        return {
+            success: false,
+            message: '消息已撤回'
+        }
+    }
+    
+    const now = new Date()
+    const msgTime = new Date(msgData.createdAt)
+    const diffMinutes = (now - msgTime) / (1000 * 60)
+    
+    if (diffMinutes > 2) {
+        return {
+            success: false,
+            message: '只能撤回2分钟内发送的消息'
+        }
+    }
+    
+    await Message.update(
+        {
+            isRecalled: true,
+            recalledAt: now
+        },
+        {
+            where: {
+                id: messageId
+            }
+        }
+    )
+    
+    return {
+        success: true,
+        message: '撤回成功',
+        data: {
+            messageId: messageId,
+            isRecalled: true,
+            recalledAt: now
+        }
+    }
+}
+
 module.exports = {
     isUserBlocked,
     getOrCreateConversation,
@@ -420,5 +500,6 @@ module.exports = {
     getConversationList,
     getMessageList,
     markMessagesAsRead,
-    getTotalUnreadCount
+    getTotalUnreadCount,
+    recallMessage
 }

@@ -10,7 +10,8 @@ const {
     getMessageList,
     markMessagesAsRead,
     getTotalUnreadCount,
-    isUserBlocked
+    isUserBlocked,
+    recallMessage
 } = require('../services/message')
 const { getUserInfo } = require('../services/user')
 
@@ -177,11 +178,36 @@ async function checkCanSend(ctx, { targetUserId }) {
     return new SuccessModel({ canSend: true })
 }
 
+/**
+ * 撤回消息
+ * @param {Object} ctx koa ctx
+ * @param {Object} param0 { messageId }
+ */
+async function recall(ctx, { messageId }) {
+    const { id: userId } = ctx.session.userInfo
+    
+    if (!messageId) {
+        return new ErrorModel(messageParamFailInfo)
+    }
+    
+    const result = await recallMessage(userId, messageId)
+    
+    if (result.success) {
+        return new SuccessModel(result.data)
+    }
+    
+    return new ErrorModel({
+        errno: 19006,
+        message: result.message
+    })
+}
+
 module.exports = {
     create,
     getList,
     getHistory,
     getUnreadCount,
     markAsRead,
-    checkCanSend
+    checkCanSend,
+    recall
 }

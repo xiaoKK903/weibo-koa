@@ -33,6 +33,17 @@ const Message = seq.define('message', {
         defaultValue: false,
         comment: '是否已读'
     },
+    isRecalled: {
+        type: BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: '是否已撤回'
+    },
+    recalledAt: {
+        type: DATE,
+        allowNull: true,
+        comment: '撤回时间'
+    },
     deletedAt: {
         type: DATE,
         allowNull: true,

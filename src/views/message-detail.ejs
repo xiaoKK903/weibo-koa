@@ -430,6 +430,41 @@
     margin-top: 6px;
 }
 
+.message-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.message-actions .message-time {
+    margin-top: 0;
+    margin-right: 8px;
+}
+
+.btn-recall {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 11px;
+    color: #007bff;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.btn-recall:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.message-mine:hover .btn-recall {
+    display: inline-block;
+}
+
+.message-mine .message-content-wrapper {
+    text-align: right;
+}
+
 .chat-input-area {
     padding: 15px 20px;
     border-top: 1px solid #e9ecef;
@@ -674,12 +709,42 @@ $(function () {
         
         var bubbleStyle = isMine ? 'background: #007bff; color: #fff; border-top-right-radius: 4px;' : 'background: #fff; color: #333; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);';
         
+        if (msg.isRecalled) {
+            var recalledBubbleStyle = 'background: transparent; color: #999; font-style: italic; border: 1px dashed #ddd;';
+            
+            if (isMine) {
+                return `
+                    <div class="chat-message ${messageClass}" data-message-id="${msg.id}" data-is-recalled="true">
+                        <div class="message-content-wrapper">
+                            <div class="message-bubble" style="${recalledBubbleStyle}">你撤回了一条消息</div>
+                            <div class="message-time">${formatMessageTime(msg.createdAt)}</div>
+                        </div>
+                        <img src="${avatar}" alt="我" class="message-avatar">
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="chat-message ${messageClass}" data-message-id="${msg.id}" data-is-recalled="true">
+                        <img src="${avatar}" alt="${escapeHtml(senderName)}" class="message-avatar">
+                        <div class="message-content-wrapper">
+                            <div class="message-sender">${escapeHtml(senderName)}</div>
+                            <div class="message-bubble" style="${recalledBubbleStyle}">对方撤回了一条消息</div>
+                            <div class="message-time">${formatMessageTime(msg.createdAt)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
         if (isMine) {
             return `
-                <div class="chat-message ${messageClass}" data-message-id="${msg.id}">
+                <div class="chat-message ${messageClass}" data-message-id="${msg.id}" data-created-at="${msg.createdAt}">
                     <div class="message-content-wrapper">
                         <div class="message-bubble" style="${bubbleStyle}">${escapeHtml(msg.content)}</div>
-                        <div class="message-time">${formatMessageTime(msg.createdAt)}</div>
+                        <div class="message-actions">
+                            <span class="message-time">${formatMessageTime(msg.createdAt)}</span>
+                            <button class="btn-recall" title="撤回消息">撤回</button>
+                        </div>
                     </div>
                     <img src="${avatar}" alt="我" class="message-avatar">
                 </div>
@@ -801,6 +866,48 @@ $(function () {
             $badge.remove();
         }
     }
+    
+    function recallMessage(messageId) {
+        if (!messageId) {
+            return;
+        }
+        
+        if (!confirm('确定要撤回这条消息吗？')) {
+            return;
+        }
+        
+        $.ajax({
+            url: '/api/message/recall',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                messageId: messageId
+            }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    var $msg = $chatMessages.find('[data-message-id="' + messageId + '"]');
+                    if ($msg.length > 0) {
+                        $msg.attr('data-is-recalled', 'true');
+                        $msg.find('.message-bubble').html('你撤回了一条消息');
+                        $msg.find('.message-bubble').attr('style', 'background: transparent; color: #999; font-style: italic; border: 1px dashed #ddd;');
+                        $msg.find('.btn-recall').remove();
+                    }
+                } else {
+                    alert(res.message || '撤回失败');
+                }
+            },
+            error: function () {
+                alert('撤回失败，请重试');
+            }
+        });
+    }
+    
+    $chatMessages.on('click', '.btn-recall', function (e) {
+        e.preventDefault();
+        var $msg = $(this).closest('.chat-message');
+        var messageId = $msg.data('message-id');
+        recallMessage(messageId);
+    });
     
     var emojiData = {
         emoji: ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😍', '🥰', '😘', '😗', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '💩', '👻', '👽', '🤖', '🎃'],

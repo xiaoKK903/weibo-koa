@@ -22,11 +22,15 @@
         </a>
     </p>
 <% } else { %>
-    <%# 不是当前登录用户，显示关注按钮和屏蔽按钮%>
+    <%# 不是当前登录用户，显示关注按钮、私信按钮和屏蔽按钮%>
     <div class="margin-top-10">
         <button class="btn btn-primary btn-sm follow-btn" data-user-id="<%= userInfo.id%>" data-followed="<%= amIFollowed%>">
             <%= amIFollowed ? '已关注' : '关注' %>
         </button>
+        &nbsp;
+        <a href="/message/<%= userInfo.userName %>" class="btn btn-info btn-sm">
+            <i class="fa fa-envelope"></i> 私信
+        </a>
         &nbsp;
         <button class="btn btn-danger btn-sm block-btn" data-user-id="<%= userInfo.id%>" data-blocked="<%= amIBlocked || false%>">
             <%= amIBlocked ? '取消屏蔽' : '屏蔽该用户' %>

@@ -25,8 +25,7 @@ async function isUserBlocked(blockerId, blockedId) {
     const block = await Block.findOne({
         where: {
             blockerId,
-            blockedId,
-            ...DEFAULT_WHERE
+            blockedId
         }
     })
     

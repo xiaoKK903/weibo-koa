@@ -6,6 +6,7 @@
 const { Conversation, Message, User, Block } = require('../db/model/index')
 const { formatUser } = require('./_format')
 const { Op } = require('sequelize')
+const seq = require('../db/seq')
 
 const DEFAULT_WHERE = {
     deletedAt: null
@@ -129,13 +130,18 @@ async function sendMessage(fromUserId, toUserId, content) {
     
     const isFromSmaller = fromUserId === smallerUserId
     
-    const message = await Message.create({
-        conversationId: conversation.id,
-        fromUserId,
-        toUserId,
-        content: content.trim(),
-        isRead: false
-    })
+    const message = await Message.create(
+        {
+            conversationId: conversation.id,
+            fromUserId,
+            toUserId,
+            content: content.trim(),
+            isRead: false
+        },
+        {
+            fields: ['conversationId', 'fromUserId', 'toUserId', 'content', 'isRead']
+        }
+    )
     
     const now = new Date()
     
@@ -144,7 +150,7 @@ async function sendMessage(fromUserId, toUserId, content) {
             {
                 lastMessageId: message.id,
                 lastMessageAt: now,
-                user2Unread: Op.col('user2Unread') + 1
+                user2Unread: seq.literal('user2Unread + 1')
             },
             {
                 where: {
@@ -157,7 +163,7 @@ async function sendMessage(fromUserId, toUserId, content) {
             {
                 lastMessageId: message.id,
                 lastMessageAt: now,
-                user1Unread: Op.col('user1Unread') + 1
+                user1Unread: seq.literal('user1Unread + 1')
             },
             {
                 where: {

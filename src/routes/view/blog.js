@@ -12,6 +12,7 @@ const { getHomeBlogList } = require("../../controller/blog-home");
 const { getBlogDetail } = require("../../controller/blog-detail");
 const { checkFollowStatus, getFollowingCount, getFollowerCount, getFollowingList, getFollowerList } = require("../../services/follow");
 const { getAtListByUserId, getUnreadAtCount } = require("../../services/at");
+const { getTotalUnreadCount } = require("../../services/message");
 const { recordViewHistory, getViewHistoryList } = require("../../controller/viewHistory");
 const { getRecycleList } = require("../../controller/recycle");
 const { getTopicList, getTopicDetail, getTopicBlogs, getHotTopics } = require("../../services/topic");
@@ -21,31 +22,27 @@ router.get("/", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
   const { id: userId } = userInfo;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userId);
+  const unreadMessageCount = await getTotalUnreadCount(userId);
 
-  // 获取第一页数据
   const result = await getHomeBlogList(userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data;
 
-  // 获取热门帖子（使用广场数据作为热门帖子）
   const squareResult = await getSquareBlogList(0);
   const hotPosts = squareResult.data ? squareResult.data.blogList.slice(0, 3) : [];
 
-  // 获取热门话题
   const hotTopics = await getHotTopics(10);
 
-  // 获取关注数和粉丝数
   const followingCount = await getFollowingCount(userId);
   const followerCount = await getFollowerCount(userId);
 
-  // 获取关注列表（用于 @ 自动补全）
   const followingList = await getFollowingList(userId);
 
   await ctx.render("index", {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userInfo.id,
     userData: {
@@ -81,6 +78,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
   const myUserName = myUserInfo.userName;
 
   const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(myUserInfo.id);
 
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
@@ -114,6 +112,7 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: myUserInfo.id,
     blogData: {
@@ -142,32 +141,26 @@ router.get("/profile/:userName", loginRedirect, async (ctx, next) => {
 
 // 关注列表页面
 router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
-  // 已登录用户的信息
   const myUserInfo = ctx.session.userInfo;
   const myUserName = myUserInfo.userName;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(myUserInfo.id);
 
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
   const isMe = myUserName === curUserName;
   if (isMe) {
-    // 是当前登录用户
     curUserInfo = myUserInfo;
   } else {
-    // 不是当前登录用户
     const existResult = await isExist(curUserName);
     if (existResult.errno !== 0) {
-      // 用户名不存在
       ctx.redirect("/");
       return;
     }
-    // 用户名存在
     curUserInfo = existResult.data;
   }
 
-  // 获取关注列表
   const followingList = await getFollowingList(curUserInfo.id);
   const followingCount = await getFollowingCount(curUserInfo.id);
   const followerCount = await getFollowerCount(curUserInfo.id);
@@ -175,6 +168,7 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
   await ctx.render("following", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     userData: {
       userInfo: curUserInfo,
       isMe,
@@ -194,32 +188,26 @@ router.get("/profile/:userName/following", loginRedirect, async (ctx, next) => {
 
 // 粉丝列表页面
 router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
-  // 已登录用户的信息
   const myUserInfo = ctx.session.userInfo;
   const myUserName = myUserInfo.userName;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(myUserInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(myUserInfo.id);
 
   let curUserInfo;
   const { userName: curUserName } = ctx.params;
   const isMe = myUserName === curUserName;
   if (isMe) {
-    // 是当前登录用户
     curUserInfo = myUserInfo;
   } else {
-    // 不是当前登录用户
     const existResult = await isExist(curUserName);
     if (existResult.errno !== 0) {
-      // 用户名不存在
       ctx.redirect("/");
       return;
     }
-    // 用户名存在
     curUserInfo = existResult.data;
   }
 
-  // 获取粉丝列表
   const followerList = await getFollowerList(curUserInfo.id);
   const followingCount = await getFollowingCount(curUserInfo.id);
   const followerCount = await getFollowerCount(curUserInfo.id);
@@ -227,6 +215,7 @@ router.get("/profile/:userName/follower", loginRedirect, async (ctx, next) => {
   await ctx.render("follower", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     userData: {
       userInfo: curUserInfo,
       isMe,
@@ -249,13 +238,11 @@ router.get("/square", loginRedirect, async (ctx, next) => {
   const { keyword } = ctx.query;
   const userId = ctx.session.userInfo?.id;
   
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userId);
+  const unreadMessageCount = await getTotalUnreadCount(userId);
   
-  // 获取关注列表（用于 @ 自动补全）
   const followingList = await getFollowingList(userId);
   
-  // 获取微博数据，第一页
   const result = await getSquareBlogList(0, keyword, userId);
   const { isEmpty, blogList, pageSize, pageIndex, count } = result.data || {};
 
@@ -263,6 +250,7 @@ router.get("/square", loginRedirect, async (ctx, next) => {
     isLogin: true,
     canReply: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userId,
     blogData: {
@@ -280,16 +268,16 @@ router.get("/square", loginRedirect, async (ctx, next) => {
 router.get("/at", loginRedirect, async (ctx, next) => {
   const userId = ctx.session.userInfo.id;
   
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userId);
+  const unreadMessageCount = await getTotalUnreadCount(userId);
   
-  // 获取 @提醒列表
   const result = await getAtListByUserId(userId, 0, 10);
   const { count, atList } = result;
 
   await ctx.render("at", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     atData: {
       isEmpty: atList.length === 0,
       atList,
@@ -310,40 +298,34 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
   const { blogId } = ctx.params;
   const userInfo = ctx.session.userInfo;
 
-  // 转换 blogId 为数字类型
   const blogIdNum = parseInt(blogId);
   if (isNaN(blogIdNum)) {
-    // 无效的微博 ID，跳转到首页
     ctx.redirect("/");
     return;
   }
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
 
-  // 获取关注列表（用于 @ 自动补全）
   const followingList = await getFollowingList(userInfo.id);
 
-  // 获取微博详情
   const result = await getBlogDetail(blogIdNum, userInfo.id);
   if (result.errno !== 0) {
-    // 微博不存在，跳转到首页
     ctx.redirect("/");
     return;
   }
 
-  // 记录浏览历史
   await recordViewHistory(userInfo.id, blogIdNum);
 
   const blog = result.data;
 
-  // 获取关注数和粉丝数
   const followingCount = await getFollowingCount(userInfo.id);
   const followerCount = await getFollowerCount(userInfo.id);
 
   await ctx.render("detail", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userInfo.id,
     userData: {
@@ -367,16 +349,16 @@ router.get("/detail/:blogId", loginRedirect, async (ctx, next) => {
 router.get("/view-history", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
 
-  // 获取第一页浏览历史
   const result = await getViewHistoryList(userInfo.id, 0, 10);
   const { count, validCount, historyList } = result.data;
 
   await ctx.render("view-history", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     currentUserId: userInfo.id,
     historyData: {
       isEmpty: historyList.length === 0,
@@ -391,16 +373,16 @@ router.get("/view-history", loginRedirect, async (ctx, next) => {
 router.get("/recycle", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
 
-  // 获取第一页回收站数据
   const result = await getRecycleList(userInfo.id, 0, 10);
   const { count, blogList } = result.data;
 
   await ctx.render("recycle", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     currentUserId: userInfo.id,
     recycleData: {
       isEmpty: blogList.length === 0,
@@ -414,12 +396,13 @@ router.get("/recycle", loginRedirect, async (ctx, next) => {
 router.get("/drafts", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
 
   await ctx.render("drafts", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     currentUserId: userInfo.id,
   });
 });
@@ -429,10 +412,9 @@ router.get("/topics", loginRedirect, async (ctx, next) => {
   const userInfo = ctx.session.userInfo;
   const { keyword, pageIndex, sortBy } = ctx.query;
 
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
   
-  // 获取关注列表（用于 @ 自动补全）
   const followingList = await getFollowingList(userInfo.id);
   
   let topicResult;
@@ -442,12 +424,12 @@ router.get("/topics", loginRedirect, async (ctx, next) => {
     topicResult = await getTopicList(parseInt(pageIndex) || 0, 20, sortBy || 'hot');
   }
   
-  // 获取热门话题
   const hotTopics = await getHotTopics(10);
 
   await ctx.render("topics", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userInfo.id,
     topicData: {
@@ -468,16 +450,13 @@ router.get("/topic/:topicName", loginRedirect, async (ctx, next) => {
   const { topicName } = ctx.params;
   const { pageIndex } = ctx.query;
 
-  // URL 解码话题名称
   const decodedTopicName = decodeURIComponent(topicName);
   
-  // 获取未读 @提醒数量
   const unreadAtCount = await getUnreadAtCount(userInfo.id);
+  const unreadMessageCount = await getTotalUnreadCount(userInfo.id);
   
-  // 获取关注列表（用于 @ 自动补全）
   const followingList = await getFollowingList(userInfo.id);
   
-  // 获取话题详情
   const topic = await getTopicDetail(decodedTopicName);
   
   if (!topic) {
@@ -485,15 +464,14 @@ router.get("/topic/:topicName", loginRedirect, async (ctx, next) => {
     return;
   }
   
-  // 获取话题下的微博
   const blogResult = await getTopicBlogs(topic.id, parseInt(pageIndex) || 0, 10, userInfo.id);
   
-  // 获取热门话题
   const hotTopics = await getHotTopics(10);
 
   await ctx.render("topic-detail", {
     isLogin: true,
     unreadAtCount,
+    unreadMessageCount,
     followingList: JSON.stringify(followingList),
     currentUserId: userInfo.id,
     currentTopicName: decodedTopicName,

@@ -92,8 +92,18 @@
                 </div>
                 
                 <div class="chat-input-area">
+                    <div class="emoji-panel" id="emoji-panel">
+                        <div class="emoji-tabs">
+                            <span class="emoji-tab active" data-category="emoji">表情</span>
+                            <span class="emoji-tab" data-category="gesture">手势</span>
+                            <span class="emoji-tab" data-category="animal">动物</span>
+                            <span class="emoji-tab" data-category="object">物品</span>
+                        </div>
+                        <div class="emoji-grid" id="emoji-grid">
+                        </div>
+                    </div>
                     <div class="chat-input-toolbar">
-                        <button type="button" class="toolbar-btn" title="表情">
+                        <button type="button" class="toolbar-btn" title="表情" id="emoji-btn">
                             <i class="fa fa-smile-o"></i>
                         </button>
                         <button type="button" class="toolbar-btn" title="图片">
@@ -427,6 +437,74 @@
     background: #fff;
 }
 
+.emoji-panel {
+    display: none;
+    margin-bottom: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.emoji-panel.show {
+    display: block;
+}
+
+.emoji-tabs {
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0 10px;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.emoji-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.emoji-tab:hover {
+    color: #007bff;
+}
+
+.emoji-tab.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.emoji-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.emoji-item:hover {
+    background: #e9ecef;
+    transform: scale(1.15);
+}
+
+.emoji-item:active {
+    background: #007bff;
+}
+
 .chat-input-toolbar {
     margin-bottom: 10px;
 }
@@ -721,6 +799,81 @@ $(function () {
             $badge.remove();
         }
     }
+    
+    var emojiData = {
+        emoji: ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '👻', '👽', '🤖', '🎃'],
+        gesture: ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🖐️', '🖖', '👋', '🤚', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '💋', '🩸', '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💝', '💘', '💌', '💤', '💨', '💫', '💬', '🗯️', '💭', '💯', '🔞', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '⬛', '⬜', '◼️', '◻️', '◾', '◽', '▪️', '▫️', '🔶', '🔷', '🔸', '🔹', '🔺', '🔻'],
+        animal: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🕸️', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🐕', '🐩', '🦮', '🐈', '🐓', '🦃', '🐇', '🐁', '🐀', '🐿️', '🦔', '🐾'],
+        object: ['⌚', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '🗜️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱️', '⏲️', '⏰', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯️', '🧯', '🛢️', '💸', '💵', '💴', '💶', '💷', '💰', '💳', '💎', '⚖️', '🧰', '🔧', '🔨', '⚒️', '🛠️', '⛏️', '🪓', '🔩', '⚙️', '🧱', '⛓️', '💣', '🔫', '🪖', '🛡️', '📧', '📨', '📩', '📤', '📥', '📦', '📯', '📮', '✉️', '📪', '📫', '📬', '📭', '📄', '📃', '📑', '📊', '📈', '📉', '📜', '📋', '📰', '🗞️', '📑', '🔖', '🏷️', '💰', '💴', '💶', '💷', '💵', '💸', '💳', '💎', '⚖️', '🧰', '🔧', '🔨', '⚒️', '🛠️', '⛏️', '🪓', '🔩', '⚙️', '🧱', '⛓️', '💣', '🔫', '🪖', '🛡️']
+    };
+    
+    var $emojiBtn = $('#emoji-btn');
+    var $emojiPanel = $('#emoji-panel');
+    var $emojiGrid = $('#emoji-grid');
+    var $emojiTabs = $('.emoji-tab');
+    var currentCategory = 'emoji';
+    
+    function renderEmojiGrid(category) {
+        var emojis = emojiData[category] || emojiData.emoji;
+        var html = '';
+        emojis.forEach(function(emoji) {
+            html += '<span class="emoji-item" data-emoji="' + emoji + '">' + emoji + '</span>';
+        });
+        $emojiGrid.html(html);
+    }
+    
+    function toggleEmojiPanel() {
+        $emojiPanel.toggleClass('show');
+    }
+    
+    function hideEmojiPanel() {
+        $emojiPanel.removeClass('show');
+    }
+    
+    function insertEmoji(emoji) {
+        var text = $messageInput.val();
+        var start = $messageInput[0].selectionStart;
+        var end = $messageInput[0].selectionEnd;
+        
+        var newText = text.substring(0, start) + emoji + text.substring(end);
+        $messageInput.val(newText);
+        
+        var newPos = start + emoji.length;
+        $messageInput[0].selectionStart = newPos;
+        $messageInput[0].selectionEnd = newPos;
+        
+        $messageInput.focus();
+        updateCharCount();
+    }
+    
+    renderEmojiGrid(currentCategory);
+    
+    $emojiBtn.click(function(e) {
+        e.stopPropagation();
+        toggleEmojiPanel();
+    });
+    
+    $emojiTabs.click(function() {
+        var category = $(this).data('category');
+        if (category !== currentCategory) {
+            currentCategory = category;
+            $emojiTabs.removeClass('active');
+            $(this).addClass('active');
+            renderEmojiGrid(currentCategory);
+        }
+    });
+    
+    $emojiGrid.on('click', '.emoji-item', function(e) {
+        e.stopPropagation();
+        var emoji = $(this).data('emoji');
+        insertEmoji(emoji);
+    });
+    
+    $(document).click(function(e) {
+        if (!$(e.target).closest('.emoji-panel').length && !$(e.target).closest('#emoji-btn').length) {
+            hideEmojiPanel();
+        }
+    });
     
     $messageInput.focus();
 });

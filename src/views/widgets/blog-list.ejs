@@ -1,4 +1,4 @@
-<% blogList.forEach(blog => { %>    
+<% blogList.forEach(function(blog) { %>    
     <div class="item-wrapper" data-blog-id="<%= blog.id %>">
         <img class="user-picture" src="<%= blog.user.picture%>"/>
         <div class="content clear-fix blog-content-wrapper">

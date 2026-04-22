@@ -303,8 +303,8 @@ async function getMessageList(userId, targetUserId, pageIndex = 0, pageSize = 20
             toUserId: msgData.toUserId,
             content: msgData.content,
             isRead: msgData.isRead,
-            isRecalled: msgData.isRecalled,
-            recalledAt: msgData.recalledAt,
+            isRecalled: msgData.isRecalled || false,
+            recalledAt: msgData.recalledAt || null,
             createdAt: msgData.createdAt,
             fromUser: msgData.fromUser ? formatUser(msgData.fromUser.dataValues) : null,
             toUser: msgData.toUser ? formatUser(msgData.toUser.dataValues) : null,
@@ -468,17 +468,25 @@ async function recallMessage(userId, messageId) {
         }
     }
     
-    await Message.update(
-        {
-            isRecalled: true,
-            recalledAt: now
-        },
-        {
-            where: {
-                id: messageId
+    try {
+        await Message.update(
+            {
+                isRecalled: true,
+                recalledAt: now
+            },
+            {
+                where: {
+                    id: messageId
+                }
             }
+        )
+    } catch (err) {
+        console.error('撤回消息失败（可能数据库缺少isRecalled字段）:', err.message)
+        return {
+            success: false,
+            message: '撤回功能暂不可用，请联系管理员添加数据库字段'
         }
-    )
+    }
     
     return {
         success: true,

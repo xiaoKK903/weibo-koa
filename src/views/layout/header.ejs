@@ -109,7 +109,7 @@
                 <a class="nav-link" href="/message">
                     <i class="fa fa-envelope"></i>
                     私信
-                    <% if (locals.unreadMessageCount && locals.unreadMessageCount > 0) { %>
+                    <% if (typeof locals.unreadMessageCount !== 'undefined' && locals.unreadMessageCount && locals.unreadMessageCount > 0) { %>
                     <span class="badge badge-danger badge-unread" id="unread-message-count"><%= locals.unreadMessageCount > 99 ? '99+' : locals.unreadMessageCount %></span>
                     <% } %>
                 </a>

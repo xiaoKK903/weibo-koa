@@ -1,0 +1,727 @@
+<%- include('layout/header', { title: '微博 - 私信 - ' + targetUser.nickName, isNav: true, list: true })%>
+
+<div class="container margin-top-20">
+    <div class="row">
+        <div class="col-4">
+            <div class="conversation-list-header d-flex justify-content-between align-items-center">
+                <h4>私信</h4>
+            </div>
+            <div class="conversation-list-container">
+                <% if (conversationData.isEmpty) { %>
+                    <div class="no-conversation">
+                        <div class="text-center">
+                            <i class="fa fa-envelope-o" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                            <h5 class="text-muted">暂无私信</h5>
+                            <p class="text-muted">去关注一些用户，开始聊天吧</p>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div id="conversation-list">
+                        <% conversationData.conversations.forEach(function(conv) { %>
+                        <a href="/message/<%= conv.targetUser.userName %>" class="conversation-item <%= conv.unreadCount > 0 ? 'has-unread' : '' %> <%= conv.targetUser.id === targetUser.id ? 'active' : '' %>" data-target-user-id="<%= conv.targetUser.id %>">
+                            <div class="conversation-avatar">
+                                <img src="<%= conv.targetUser.picture %>" alt="<%= conv.targetUser.nickName %>">
+                                <% if (conv.unreadCount > 0 && conv.targetUser.id !== targetUser.id) { %>
+                                <span class="unread-badge"><%= conv.unreadCount > 99 ? '99+' : conv.unreadCount %></span>
+                                <% } %>
+                            </div>
+                            <div class="conversation-info">
+                                <div class="conversation-header">
+                                    <span class="conversation-name"><%= conv.targetUser.nickName %></span>
+                                    <% if (conv.lastMessage && conv.lastMessageAt) { %>
+                                    <span class="conversation-time"><%= formatTime(conv.lastMessageAt) %></span>
+                                    <% } %>
+                                </div>
+                                <div class="conversation-preview">
+                                    <% if (conv.lastMessage) { %>
+                                        <% if (conv.lastMessage.fromUserId === currentUserId) { %>
+                                        <span class="preview-prefix">我：</span>
+                                        <% } %>
+                                        <span class="preview-content"><%= truncateText(conv.lastMessage.content, 30) %></span>
+                                    <% } else { %>
+                                        <span class="preview-content text-muted">暂无消息</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="col-8">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-target-info">
+                        <img src="<%= targetUser.picture %>" alt="<%= targetUser.nickName %>" class="chat-target-avatar">
+                        <div class="chat-target-name"><%= targetUser.nickName %></div>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <% if (messageData.isEmpty) { %>
+                        <div class="chat-empty-messages">
+                            <div class="text-center">
+                                <i class="fa fa-comment-o" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                                <h5 class="text-muted">还没有消息</h5>
+                                <p class="text-muted">发送第一条消息开始聊天</p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <% messageData.messages.forEach(function(msg) { %>
+                        <div class="chat-message <%= msg.isMine ? 'message-mine' : 'message-other' %>" data-message-id="<%= msg.id %>">
+                            <% if (!msg.isMine) { %>
+                            <img src="<%= msg.fromUser.picture %>" alt="<%= msg.fromUser.nickName %>" class="message-avatar">
+                            <% } %>
+                            <div class="message-content-wrapper">
+                                <% if (!msg.isMine) { %>
+                                <div class="message-sender"><%= msg.fromUser.nickName %></div>
+                                <% } %>
+                                <div class="message-bubble">
+                                    <%= escapeHtml(msg.content) %>
+                                </div>
+                                <div class="message-time"><%= formatMessageTime(msg.createdAt) %></div>
+                            </div>
+                            <% if (msg.isMine) { %>
+                            <img src="<%= userData.userInfo.picture %>" alt="我" class="message-avatar">
+                            <% } %>
+                        </div>
+                        <% }) %>
+                    <% } %>
+                </div>
+                
+                <div class="chat-input-area">
+                    <div class="chat-input-toolbar">
+                        <button type="button" class="toolbar-btn" title="表情">
+                            <i class="fa fa-smile-o"></i>
+                        </button>
+                        <button type="button" class="toolbar-btn" title="图片">
+                            <i class="fa fa-image"></i>
+                        </button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <textarea id="message-input" class="chat-input" placeholder="输入消息..." rows="1"></textarea>
+                    </div>
+                    <div class="chat-input-footer">
+                        <span class="char-count" id="char-count">0/500</span>
+                        <button type="button" id="send-btn" class="btn btn-primary btn-sm" disabled>
+                            <i class="fa fa-paper-plane"></i> 发送
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<% function formatTime(date) {
+    if (!date) return '';
+    var d = new Date(date);
+    var now = new Date();
+    var diff = now - d;
+    var oneDay = 24 * 60 * 60 * 1000;
+    
+    if (diff < 60 * 1000) {
+        return '刚刚';
+    } else if (diff < 60 * 60 * 1000) {
+        return Math.floor(diff / (60 * 1000)) + '分钟前';
+    } else if (diff < oneDay && d.getDate() === now.getDate()) {
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
+        return (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes);
+    } else if (diff < 2 * oneDay) {
+        return '昨天';
+    } else {
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        return month + '-' + (day < 10 ? '0' + day : day);
+    }
+} %>
+
+<% function formatMessageTime(date) {
+    if (!date) return '';
+    var d = new Date(date);
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+    var month = d.getMonth() + 1;
+    var day = d.getDate();
+    return month + '-' + (day < 10 ? '0' + day : day) + ' ' + (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes);
+} %>
+
+<% function truncateText(text, maxLength) {
+    if (!text) return '';
+    text = text.replace(/\s+/g, ' ').trim();
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength) + '...';
+} %>
+
+<%- include('layout/footer')%>
+
+<style>
+.conversation-list-header {
+    padding: 15px 20px;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.conversation-list-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.conversation-list-container {
+    background: #fff;
+    border-radius: 0 0 8px 8px;
+    min-height: 500px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+.no-conversation {
+    padding: 80px 20px;
+}
+
+.conversation-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.conversation-item:last-child {
+    border-bottom: none;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+}
+
+.conversation-item.has-unread {
+    background: rgba(0, 123, 255, 0.02);
+}
+
+.conversation-item.has-unread:hover {
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.conversation-item.active {
+    background: rgba(0, 123, 255, 0.1);
+    border-left: 3px solid #007bff;
+}
+
+.conversation-avatar {
+    position: relative;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.conversation-avatar img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+.unread-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+
+.conversation-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conversation-item.has-unread .conversation-name {
+    color: #007bff;
+}
+
+.conversation-time {
+    font-size: 12px;
+    color: #999;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.conversation-preview {
+    font-size: 13px;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conversation-item.has-unread .conversation-preview {
+    color: #333;
+    font-weight: 500;
+}
+
+.preview-prefix {
+    color: #007bff;
+}
+
+.preview-content {
+    color: #666;
+}
+
+.chat-container {
+    background: #fff;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px);
+    min-height: 500px;
+}
+
+.chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.chat-target-info {
+    display: flex;
+    align-items: center;
+}
+
+.chat-target-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    border: 2px solid #e9ecef;
+}
+
+.chat-target-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.chat-empty-messages {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-message {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: flex-start;
+}
+
+.chat-message.message-mine {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.message-content-wrapper {
+    max-width: 60%;
+    margin: 0 12px;
+}
+
+.message-mine .message-content-wrapper {
+    text-align: right;
+}
+
+.message-sender {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+}
+
+.message-bubble {
+    display: inline-block;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.message-other .message-bubble {
+    background: #fff;
+    color: #333;
+    border-top-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.message-mine .message-bubble {
+    background: #007bff;
+    color: #fff;
+    border-top-right-radius: 4px;
+}
+
+.message-time {
+    font-size: 11px;
+    color: #999;
+    margin-top: 6px;
+}
+
+.chat-input-area {
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.chat-input-toolbar {
+    margin-bottom: 10px;
+}
+
+.toolbar-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-right: 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.toolbar-btn:hover {
+    background: #f0f0f0;
+    color: #007bff;
+}
+
+.chat-input-wrapper {
+    margin-bottom: 10px;
+}
+
+.chat-input {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    resize: none;
+    max-height: 120px;
+    transition: border-color 0.2s ease;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.chat-input:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.chat-input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.char-count {
+    font-size: 12px;
+    color: #999;
+}
+
+.char-count.warning {
+    color: #ffc107;
+}
+
+.char-count.error {
+    color: #dc3545;
+}
+
+#send-btn {
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+#send-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .conversation-list-container {
+        min-height: 300px;
+        max-height: none;
+    }
+    
+    .chat-container {
+        min-height: 400px;
+        height: auto;
+    }
+    
+    .message-content-wrapper {
+        max-width: 70%;
+    }
+}
+</style>
+
+<script>
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+$(function () {
+    var currentUserId = <%= currentUserId %>;
+    var targetUserId = <%= targetUser.id %>;
+    var targetUserNickName = '<%= escapeHtml(targetUser.nickName) %>';
+    var targetUserPicture = '<%= targetUser.picture %>';
+    var currentUserPicture = '<%= userData.userInfo.picture %>';
+    var currentUserNickName = '<%= escapeHtml(userData.userInfo.nickName) %>';
+    
+    var $messageInput = $('#message-input');
+    var $sendBtn = $('#send-btn');
+    var $charCount = $('#char-count');
+    var $chatMessages = $('#chat-messages');
+    var maxChars = 500;
+    
+    function scrollToBottom() {
+        setTimeout(function () {
+            $chatMessages.scrollTop($chatMessages[0].scrollHeight);
+        }, 100);
+    }
+    
+    scrollToBottom();
+    
+    function updateCharCount() {
+        var text = $messageInput.val();
+        var count = text.length;
+        
+        $charCount.text(count + '/' + maxChars);
+        
+        $charCount.removeClass('warning error');
+        if (count > maxChars) {
+            $charCount.addClass('error');
+        } else if (count > maxChars * 0.8) {
+            $charCount.addClass('warning');
+        }
+        
+        var canSend = count > 0 && count <= maxChars && text.trim() !== '';
+        $sendBtn.prop('disabled', !canSend);
+    }
+    
+    $messageInput.on('input', updateCharCount);
+    
+    function autoResize() {
+        $messageInput.css('height', 'auto');
+        $messageInput.css('height', Math.min($messageInput[0].scrollHeight, 120) + 'px');
+    }
+    
+    $messageInput.on('input', autoResize);
+    
+    function formatMessageTime(date) {
+        var d = new Date(date);
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        return month + '-' + (day < 10 ? '0' + day : day) + ' ' + (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes);
+    }
+    
+    function createMessageHtml(msg) {
+        var isMine = msg.isMine;
+        var messageClass = isMine ? 'message-mine' : 'message-other';
+        var avatar = isMine ? currentUserPicture : (msg.fromUser ? msg.fromUser.picture : targetUserPicture);
+        var senderName = isMine ? currentUserNickName : (msg.fromUser ? msg.fromUser.nickName : targetUserNickName);
+        
+        var bubbleStyle = isMine ? 'background: #007bff; color: #fff; border-top-right-radius: 4px;' : 'background: #fff; color: #333; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);';
+        
+        if (isMine) {
+            return `
+                <div class="chat-message ${messageClass}" data-message-id="${msg.id}">
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble" style="${bubbleStyle}">${escapeHtml(msg.content)}</div>
+                        <div class="message-time">${formatMessageTime(msg.createdAt)}</div>
+                    </div>
+                    <img src="${avatar}" alt="我" class="message-avatar">
+                </div>
+            `;
+        } else {
+            return `
+                <div class="chat-message ${messageClass}" data-message-id="${msg.id}">
+                    <img src="${avatar}" alt="${escapeHtml(senderName)}" class="message-avatar">
+                    <div class="message-content-wrapper">
+                        <div class="message-sender">${escapeHtml(senderName)}</div>
+                        <div class="message-bubble" style="${bubbleStyle}">${escapeHtml(msg.content)}</div>
+                        <div class="message-time">${formatMessageTime(msg.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    function sendMessage() {
+        var content = $messageInput.val().trim();
+        
+        if (!content || content.length > maxChars) {
+            return;
+        }
+        
+        $sendBtn.prop('disabled', true).text('发送中...');
+        $messageInput.prop('disabled', true);
+        
+        var tempMessage = {
+            id: 'temp_' + Date.now(),
+            content: content,
+            isMine: true,
+            createdAt: new Date().toISOString()
+        };
+        
+        if ($chatMessages.find('.chat-empty-messages').length > 0) {
+            $chatMessages.html('');
+        }
+        
+        $chatMessages.append(createMessageHtml(tempMessage));
+        scrollToBottom();
+        
+        $messageInput.val('');
+        updateCharCount();
+        $messageInput.css('height', 'auto');
+        
+        $.ajax({
+            url: '/api/message/create',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toUserId: targetUserId,
+                content: content
+            }),
+            success: function (res) {
+                if (res.errno === 0) {
+                    var message = res.data;
+                    var $tempMsg = $chatMessages.find('[data-message-id="' + tempMessage.id + '"]');
+                    $tempMsg.attr('data-message-id', message.id);
+                    
+                    updateUnreadCount();
+                } else {
+                    alert(res.message || '消息发送失败');
+                    $chatMessages.find('[data-message-id="' + tempMessage.id + '"]').remove();
+                }
+            },
+            error: function () {
+                alert('消息发送失败，请重试');
+                $chatMessages.find('[data-message-id="' + tempMessage.id + '"]').remove();
+            },
+            complete: function () {
+                $sendBtn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> 发送');
+                $messageInput.prop('disabled', false);
+                $messageInput.focus();
+            }
+        });
+    }
+    
+    $sendBtn.click(function (e) {
+        e.preventDefault();
+        sendMessage();
+    });
+    
+    $messageInput.keydown(function (e) {
+        if (e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            if (!$sendBtn.prop('disabled')) {
+                sendMessage();
+            }
+        }
+    });
+    
+    function updateUnreadCount() {
+        $.ajax({
+            url: '/api/message/unread-count',
+            type: 'GET',
+            success: function (res) {
+                if (res.errno === 0) {
+                    var count = res.data.count;
+                    updateNavUnreadCount(count);
+                }
+            }
+        });
+    }
+    
+    function updateNavUnreadCount(count) {
+        var $badge = $('#unread-message-count');
+        
+        if (count > 0) {
+            var displayCount = count > 99 ? '99+' : count;
+            if ($badge.length === 0) {
+                $('a.nav-link[href="/message"]').append(
+                    '<span class="badge badge-danger badge-unread" id="unread-message-count">' + displayCount + '</span>'
+                );
+            } else {
+                $badge.text(displayCount);
+            }
+        } else {
+            $badge.remove();
+        }
+    }
+    
+    $messageInput.focus();
+});
+</script>
